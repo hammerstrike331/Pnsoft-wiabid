@@ -1,0 +1,192 @@
+<?php
+session_start();
+include_once('lib/common.php');
+
+// 관리자 세션 확인
+if(!isset($_SESSION['ADMIN_GRPNAME'])) {
+    alertMove('로그인 후 이용해 주세요', "index.html");
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <?php
+    include_once ('./include/head.html');
+    ?>
+
+</head>
+<body class="fixed-left">
+
+<!-- Begin page -->
+<div id="wrapper">
+
+    <?php
+    include_once ('./include/menu.html');
+    ?>
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+<?php
+
+$sql ="SELECT term1, term2, term3 FROM `tbl_term`  WHERE idx = '1'";
+$row = sql_fetch($sql);
+
+?>
+    <div class="content-page">
+        <!-- Start content -->
+        <div class="content">
+            <div class="container">
+                <div class="row">
+
+                    <div class="col-lg-12">
+                        <div class="card-box p-b-0">
+
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <!--<form method="post" name="fupdate" id="fupdate" action="/admin/php/update_trems.php">-->
+                                    <form method="post" name="fupdate" id="fupdate" >
+
+                                    <ul class="nav nav-tabs">
+                                        <li role="presentation" class="active">
+                                            <a href="#tab1" role="tab" data-toggle="tab">서비스이용약관</a>
+                                        </li>
+                                        <li role="presentation">
+                                            <a href="#tab2" role="tab" data-toggle="tab">개인정보 수집 및 이용</a>
+                                        </li>
+                                        <li role="presentation">
+                                            <a href="#tab3" role="tab" data-toggle="tab">면책약관</a>
+                                        </li>
+                                        <li role="presentation">
+                                            <a href="#tab4" role="tab" data-toggle="tab">가격정책</a>
+                                        </li>
+                                    </ul>
+                                    <div class="tab-content p-0">
+
+                                        <div role="tabpanel" class="tab-pane fade in active" id="tab1">
+                                            <div class="row">
+                                                <div class="col-lg-12">
+                                                        <textarea class="form-control" rows="10" name="term1" id="term1"><?=$row['term1'];?></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div role="tabpanel" class="tab-pane fade" id="tab2">
+                                            <div class="row">
+                                                <div class="col-lg-12">
+                                                    <textarea class="form-control" rows="10"  name="term2" id="term2" ><?=$row['term2'];?></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div role="tabpanel" class="tab-pane fade" id="tab3">
+                                            <div class="row">
+                                                <div class="col-lg-12">
+                                                    <textarea class="form-control" rows="10"  name="term3" id="term3" ><?=$row['term3'];?></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div role="tabpanel" class="tab-pane fade" id="tab4">
+                                            <div class="row">
+                                                <div class="col-lg-12">
+                                                    <textarea class="form-control" rows="10"  name="term3" id="term3" ><?=$row['term4'];?></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row m-t-10">
+                                        <div class="col-lg-12">
+                                                <div class="form-group">
+                                                    <div class="text-center">
+                                                        <button type="button" class="btn btn-primary waves-effect m-l-5 waves-light" onclick="member_stop_submit();" >
+                                                            저장
+                                                        </button>
+                                                        <button type="reset" class="btn btn-inverse waves-effect m-l-5">
+                                                            취소
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                        </div>
+                                    </div>
+                                    </form>
+                                  </div>
+                                </div><!-- end col -->
+                            </div><!-- end row -->
+
+                        </div>
+                    </div>
+
+            </div><!-- end row -->
+            </div> <!-- container -->
+        </div> <!-- content -->
+    <script type="text/javascript">
+
+        function member_stop_submit(f)
+        {
+            var fupdate = document.fupdate;
+
+            var term1 = $('#term1').val();
+            var term2 = $('#term2').val();
+            var term3 = $('#term3').val();
+
+            swal({
+                title: "약관 수정",
+                text: "약관을 수정 하시겠습니까?",
+                icon: "warning",
+                buttons: ["취소", "수정"],
+                dangerMode: true,
+            }) .then(function(result) {
+                if (result) {
+
+                    $.ajax({
+                        type: 'POST',
+                        url: './php/ajax_update_terms.php',
+                        data: {
+                            "term1": term1,
+                            "term2": term2,
+                            "term3": term3
+                        },
+                        success: function (data) {
+                            var str_data = data.split('|');
+                            var rslt = str_data[0];
+                            var msg = str_data[1];
+
+                            if (rslt == 'ok') {
+                                swal({
+                                    title: "약관수정 완료",
+                                    text: msg,
+                                    //text: data,
+                                    icon: "success",
+                                })
+                                    .then(function () {
+                                        window.location.href = "manageTerms.html";
+                                    });
+                            } else {
+                                swal({
+                                    title: "약관수정 실패",
+                                    text: msg,
+                                    icon: "warning",
+                                })
+                                    .then(function () {
+                                        window.location.href = "manageTerms.html";
+                                    });
+                            }
+
+                        },  //success
+                        error: function (request,status,error) {
+                            alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                        } //error
+
+                    });    //end ajax
+
+                } else {
+                    swal({
+                        title: "취소 처리",
+                        text: "취소 되었습니다.",
+                        icon: "info",
+                    });
+                }
+            });
+
+        }  // member_stop_submit
+    </script>
+<?php
+    include_once ('./include/footer.html');
+?>

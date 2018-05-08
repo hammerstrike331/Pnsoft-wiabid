@@ -1,0 +1,83 @@
+
+<!-- term -->
+<?php 
+$sql ="SELECT term1, term2, term3 FROM `tbl_term`  WHERE idx = '1'";
+$terms = sql_fetch($sql);
+
+?>
+<div id="termModal" class="modal login-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="close term" id="close" data-dismiss="modal" aria-hidden="true">&times;</span>
+            <p>이용약관</p>
+        </div>
+        <div class="modal-body">
+            <div class="clearfix">
+                <div class="inner-left">
+                    <?php echo nl2br($terms['term1']); ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- prevacy -->
+<div id="prevacyModal" class="modal login-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="close prevacy" id="close" data-dismiss="modal" aria-hidden="true">&times;</span>
+            <p>개인정보취급방침</p>
+        </div>
+        <div class="modal-body">
+            <div class="clearfix">
+                <div class="inner-left">
+                    <?php echo nl2br($terms['term2']); ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="inner">
+        <div class="footer-bottom clearfix">
+            <div class="logo">
+                <img src="<?php echo BASE_URL2; ?>/img/logo.png" alt="">
+
+            </div>
+            <ul class="site-links clearfix">
+                <li><a href="javascript:void(0)" id="terms">이용약관</a></li>
+                <li><a href="javascript:void(0)" id="prevacy">개인정보취급방침</a></li>
+            </ul>
+            <a href="#" class="btn-top"><img src="<?php echo BASE_URL2; ?>/img/top_btn.png" alt="위로"></a>
+            <ul class="address">
+                <li>Email info@wiabid.com</li>
+                <li>Copyright © 2017 ㈜한국국제물류플랫폼 All rights reserved.</li>
+            </ul>
+
+        </div>
+    </div>
+</footer>
+
+<script>
+    $(function () {
+        $("#datepicker, #datepicker1, #datepicker2, #datepicker3, #datepicker4, #datepicker5").datepicker(
+            {
+                dateFormat: 'yy-mm-dd',
+                prevText: '이전 달',
+                nextText: '다음 달',
+                monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                monthNamesShort: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+                dayNames: ['일', '월', '화', '수', '목', '금', '토'],
+                dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
+                dayNamesMin: ['일', '월', '화', '수', '목', '금', '토'],
+                showMonthAfterYear: true,
+                changeMonth: true,
+                changeYear: true,
+                yearSuffix: '년'
+            }
+        );
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,110 @@
+<div class="row">
+    <div class="col-12">
+        <div class="portlet view">
+            <div class="form-group">
+                <div class="col-3">
+                    선적지
+                </div>
+                <div class="col-9">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="row mb10">
+                                <div class="col-4">
+                                    선적항<span class="text-primary">*</span>
+                                </div>
+                                <div class="width70 port">
+                                    <input type="text" name="POL_CD" class="input searchPort" id="POL_CD" placeholder="선적항" data-type="AIR" data-path="<?php echo RT_PATH; ?>" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-4 mb10">
+                                    PICK UP지
+                                </div>
+                                <div class="width70">
+                                    <input type="text" class="input mr-2" name="DOOR_NM" value="<?php echo $DOOR_NM;?>">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-4">
+                                    PICK UP 일자
+                                </div>
+                                <div class="width70 relative1">
+                                    <input type="text" class="input mr-2"  id="datepicker2" name="DOOR_YMD" value="<?php echo $DOOR_YMD;?>">
+                                    <img src="../../img/icon/icon-calendar.png" alt="" class="icon-calendar-2">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-3">
+                    도착지
+                </div>
+                <div class="col-9">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="row mb10">
+                                <div class="col-4">
+                                    양하항<span class="text-primary">*</span>
+                                </div>
+                                <div class="width70 port">
+                                    <input type="text" name="POD_CD" class="input searchPort" id="POD_CD" placeholder="양하항" data-type="AIR" data-path="<?php echo RT_PATH; ?>" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-4 mb10">
+                                    DELIVERY 장소
+                                </div>
+                                <div class="width70">
+                                    <input type="text" class="input mr-2" name="FDS_NM" value="<?php echo $FDS_NM;?>">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-4">
+                                    도착요구 일자
+                                </div>
+                                <div class="width70 relative1">
+                                    <input type="text" class="input mr-2" id="datepicker3" name="FDS_YMD" value="<?php echo $FDS_YMD;?>">
+                                    <img src="../../img/icon/icon-calendar.png" alt="" class="icon-calendar-2">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-3">
+                    거래조건
+                </div>
+                <div class="col-9">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="row">
+                                <div class="col-4">
+                                    무역거래조건<span class="text-primary">*</span>
+                                </div>
+                                <div class="width70">
+                                    <select class="input" name="INCTRMS_CD">
+                                        <?php echo list_options(INCTRMS); ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-4">
+                                    운송노선<span class="text-primary">*</span>
+                                </div>
+                                <div class="width70 ">
+                                    <label class="font14"><input type="radio" name="TRS_ROUTE_CD" id="TRS_ROUTE_CD_DR" value="DR" <?php if($TRS_ROUTE_CD == "DR") echo "checked";?> />Direct</label>
+                                    <label class="font14"><input type="radio" name="TRS_ROUTE_CD" id="TRS_ROUTE_CD_TS" value="TS" <?php if($TRS_ROUTE_CD == "TS") echo "checked";?>>T/S</label>
+                                    <label class="font14"><input type="radio" name="TRS_ROUTE_CD" id="TRS_ROUTE_CD_NO" value="NO" <?php if($TRS_ROUTE_CD == "NO") echo "checked";?>>Not Adjustment</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group border-none"></div>
+        </div>
+    </div>
+</div>

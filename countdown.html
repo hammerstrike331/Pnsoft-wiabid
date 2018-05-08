@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>사이트 오픈</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:600,700" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Righteous" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="/css/countdown.demo.css" type="text/css">
+</head>
+<body>
+<style>
+    .center {
+        margin: auto;
+        width: 50%;
+        padding: 10px;
+        text-align: center;
+        color: white;
+    }
+</style>
+<div id="content">
+
+    <h1 class="center" style="margin-top: 200px;">Open  ::  Count Down [  2018-03-24 10:00 AM ]</h1>
+        <!--  참고 : https://developer.mozilla.org/en-US/docs/Web/API/HTMLTimeElement/dateTime  -->
+    <div class="center" style="margin-left: calc(100vh - 360px);"><time>2018-03-24T10:00:00+0900</time></div><!-- UTC -->
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="/js/jquery.countdown.js"></script>
+<script>
+    window.jQuery(function ($) {
+        "use strict";
+
+        $('time').countDown({
+            with_separators: false
+        });
+        $('.alt-1').countDown({
+            css_class: 'countdown-alt-1'
+        });
+        $('.alt-2').countDown({
+            css_class: 'countdown-alt-2'
+        });
+
+    });
+
+</script>
+
+</body>
+</html>

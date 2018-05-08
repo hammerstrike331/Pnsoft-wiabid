@@ -1,0 +1,1163 @@
+<?php
+    session_start();
+    include_once ('../../admin/lib/common.php');
+    include_once ('../../include/html_head.html');
+
+    $pid = $_GET['pid'];
+    
+    $mst = sql_fetch("SELECT * FROM tbid_ntc_mst WHERE NTC_NO = '{$pid}'");
+    $crgo = sql_fetch("SELECT * FROM tbid_ntc_crgo WHERE NTC_NO = '{$pid}'");
+
+    $MBM_NO = $_SESSION['MBM_NO'];
+    $NTC_PIC_NM = $_SESSION['MBM_NM'];
+
+    //*****기업정보*****//
+    $bidSql = "SELECT count(*) as cnt FROM tbid_qtn_mst WHERE QTN_PIC_NO = '{$MBM_NO}'";
+    $bidCntRow = sql_fetch($bidSql);
+    $bidCnt = $bidCntRow['cnt'];
+
+    $firstBidSql = "SELECT INS_DT FROM tbid_qtn_mst WHERE QTN_PIC_NO = '{$MBM_NO}' ORDER BY INS_DT LIMIT 1";
+    $firstBidRow = sql_fetch($firstBidSql);
+    $firstBidDate = $firstBidRow['INS_DT'];
+
+    $companySql = "SELECT REG_NO, COMP_NM FROM tcmn_mbr_join WHERE MBR_NO = '{$MBM_NO}'";
+    $companyRow = sql_fetch($companySql);
+
+    $companyCDSql = "SELECT COMP_CD FROM tcmn_mbr_comp WHERE REG_NO = '{$companyRow['REG_NO']}'";
+    $companyCDRow = sql_fetch($companyCDSql);
+    ////////////////
+    
+    //*****기본정보*****//
+    $NTC_NO = $pid;
+    $QTN_NO = "";
+    $NTC_NM = $mst['NTC_NM'];
+    $COMP_CD = $companyCDRow['COMP_CD'];
+    $COMP_NM = $companyRow['COMP_NM'];
+    $NTC_CLS_CD = $mst['NTC_CLS_CD'];
+    $SA_CLS_CD = $mst['SA_CLS_CD'];
+    $IO_TYP_CD = $mst['IO_TYP_CD'];    
+    $CRG_TYP_CD = $mst['CRG_TYP_CD'];    
+    $NTC_CLOSE_YMD = $mst['NTC_CLOSE_YMD'];
+    $NTC_CLOSE_TM = $mst['NTC_CLOSE_TM'];
+    $FDS_NM = $crgo['FDS_NM'];
+    $EX_RATE = $mst['EX_RATE'];
+    //////////////
+
+    //*****선적정보*****//
+    $POL = sql_fetch("SELECT LOC_CD, LOC_NM FROM tcmn_unloc_code WHERE LOC_CD = '{$crgo['POL_CD']}' ORDER BY LOC_NM ASC");  // 선적항
+    $POD = sql_fetch("SELECT LOC_CD, LOC_NM FROM tcmn_unloc_code WHERE LOC_CD = '{$crgo['POD_CD']}' ORDER BY LOC_NM ASC");  // 양하항
+    $districtList = sql_query("SELECT LOC_CD, LOC_NM FROM tcmn_unloc_code ORDER BY LOC_NM ASC");                            // 경유지
+    /////////////
+    
+    //*****물동량*****//
+    $INCTRMS = sql_fetch("SELECT CODE_CD, CODE_NM FROM tcmn_code_dtl WHERE CODE_CD = '{$crgo['INCTRMS_CD']}' AND CLSS_CD = 'INCTRMS'");
+    $PKG = sql_fetch("SELECT CODE_CD, CODE_NM FROM tcmn_code_dtl WHERE CODE_CD = '{$crgo['PKG_CD']}' AND CLSS_CD = 'PKG_CD'");
+    $CRG_NM = $crgo['CRG_NM'];
+    $PKG_CD = $crgo['PKG_CD'];
+    $CRG_CNT = $crgo['CRG_CNT'];
+    $CRG_WGT = $crgo['CRG_WGT'];
+    $CRG_VOL = $crgo['CRG_VOL'];
+    $DIM_LEN = $crgo['DIM_LEN'];
+    $DIM_WID = $crgo['DIM_WID'];
+    $DIM_HGT = $crgo['DIM_HGT'];
+    ////////////
+
+    $qtn_mst = sql_fetch("SELECT * FROM tbid_qtn_mst WHERE NTC_NO = '{$pid}' AND QTN_PIC_NO='{$MBM_NO}'"); 
+        
+    if(count($qtn_mst) < 1){        
+        $row = sql_fetch("SELECT COUNT(*) AS cnt FROM tbid_qtn_mst WHERE INS_DT LIKE '".date('Y-m')."%'");        
+        $num = $row['cnt'] + 1;
+        $tempBidNo = "";
+        if($num < 10){
+            $num = "0".$num;
+        }
+        if($num < 100)
+            $tempBidNo = date('Ymd')."000".$num;
+        else if($num < 1000)
+            $tempBidNo = date('Ymd')."00".$num;
+        else if($num < 10000)
+            $tempBidNo = date('Ymd')."0".$num;
+        
+        $tempBidNo = substr($tempBidNo, 2);
+        $QTN_NO = "QTN".$tempBidNo;        
+        $sql1 = "INSERT INTO tbid_qtn_mst SET 
+                    QTN_NO = '{$QTN_NO}',                    
+                    COMP_CD = '{$COMP_CD}',
+                    COMP_NM = '{$COMP_NM}',
+                    QTN_PIC_NO = '{$MBM_NO}',
+                    QTN_PIC_NM = '{$NTC_PIC_NM}',
+                    NTC_NO  = '{$NTC_NO}',
+                    SA_CLS_CD = '{$SA_CLS_CD}',
+                    IO_TYP_CD = '{$IO_TYP_CD}',
+                    CRG_TYP_CD = '{$CRG_TYP_CD}',
+                    QTN_STS_CD = '00',
+                    QTN_CLS_CD = '{$NTC_CLS_CD}',
+                    EX_RATE = '{$EX_RATE}',
+                    INS_DT = NOW(),
+                    INS_ID = '{$MBM_NO}'
+                ";
+        sql_query($sql1);
+
+        $sql2 = "INSERT INTO tbid_qtn_trs SET 
+                    QTN_NO = '{$QTN_NO}',                    
+                    QTN_SEQ = 1,
+                    NTC_SEQ = 1,
+                    NTC_NO  = '{$NTC_NO}',
+                    INS_DT = NOW(),
+                    INS_ID = '{$MBM_NO}'
+                ";
+        sql_query($sql2);
+    }
+    else {
+        $QTN_NO = $qtn_mst['QTN_NO'];
+    }
+    
+    //*****총 운임정보*****//
+    // 선적지 비용
+    $DOM_FRG_AMT = $qtn_mst['DOM_FRG_AMT'];             // 금액
+    $DOM_CURR_CD = $qtn_mst['DOM_CURR_CD'];             // 화폐코드
+    $DOM_KOR_AMT = $qtn_mst['DOM_KOR_AMT'];             // 원화금액
+    $DOM_TAX_TOT_AMT = $qtn_mst['DOM_TAX_TOT_AMT'];     // 금액합계
+    $DOM_KOR_TOT_AMT = $qtn_mst['DOM_KOR_TOT_AMT'];     // TAX
+    // 해상 운임
+    $SA_FRG_AMT = $qtn_mst['SA_FRG_AMT'];
+    $SA_CURR_CD = $qtn_mst['SA_CURR_CD'];
+    $SA_KOR_AMT = $qtn_mst['SA_KOR_AMT'];
+    $SA_TAX_TOT_AMT = $qtn_mst['SA_TAX_TOT_AMT'];
+    $SA_KOR_TOT_AMT = $qtn_mst['SA_KOR_TOT_AMT'];
+    // 도착지 비용
+    $ARV_FRG_AMT = $qtn_mst['ARV_FRG_AMT'];
+    $ARV_CURR_CD = $qtn_mst['ARV_CURR_CD'];
+    $ARV_KOR_AMT = $qtn_mst['ARV_KOR_AMT'];
+    $ARV_TAX_TOT_AMT = $qtn_mst['ARV_TAX_TOT_AMT'];
+    $ARV_KOR_TOT_AMT = $qtn_mst['ARV_KOR_TOT_AMT'];
+    
+    $SPLY_AMT = $qtn_mst['SPLY_AMT'];   // 공급가액
+    $TAX_AMT = $qtn_mst['TAX_AMT'];     // TAX
+    $TOT_AMT = $qtn_mst['TOT_AMT'];     // 총금액
+    ////////////
+    
+    //*****참조사항*****//
+    $REMARK = $qtn_mst['REMARK'];
+
+    //*****기본정보*****//
+    // 견적명
+    $QTN_NM = $qtn_mst['QTN_NM'];    
+    // 견적일자
+    $QTN_YMD = $qtn_mst['QTN_YMD'];
+    if(!$QTN_YMD)
+        $QTN_YMD = date('Ymd');
+    
+    //*****선적정보*****//
+    $qtn_trs = sql_fetch("SELECT * FROM tbid_qtn_trs WHERE QTN_NO = '{$QTN_NO}' ");
+    $VSL_NM = $qtn_trs['VSL_NM'];                   // 선사명
+    $LINER_NM = $qtn_trs['LINER_NM'];               // 선(기)명
+    $VOY_NO = $qtn_trs['VOY_NO'];                   // 항차
+    $DOC_CLOSE_YMD = $qtn_trs['DOC_CLOSE_YMD'];     // 서류마감
+    if(!$DOC_CLOSE_YMD)
+        $DOC_CLOSE_YMD = date('Y-m-d');
+
+    $CRG_CLOSE_YMD = $qtn_trs['CRG_CLOSE_YMD'];     // 화물마감
+    if(!$CRG_CLOSE_YMD)
+        $CRG_CLOSE_YMD = date('Y-m-d');
+
+    $ETD_YMD = $qtn_trs['ETD_YMD'];                 // ETD
+    if(!$ETD_YMD)
+        $ETD_YMD = date('Y-m-d');
+
+    $VIA_YMD = $qtn_trs['VIA_YMD'];                 // ETA(via)
+    if(!$VIA_YMD)
+        $VIA_YMD = date('Y-m-d');
+
+    $ETA_YMD = $qtn_trs['ETA_YMD'];                 // ETA
+    if(!$ETA_YMD)
+        $ETA_YMD = date('Y-m-d');
+
+    $TRS_DAYS_CNT = $qtn_trs['TRS_DAYS_CNT'];       // 운송일수
+
+    $DISTRICT = $qtn_trs['DISTRICT'];               // 경유지
+
+    $qtn_frt1 = sql_query("SELECT * FROM tbid_qtn_frt WHERE QTN_NO = '{$QTN_NO}' AND QTN_SEQ = '1'");
+    $qtn_frt2 = sql_query("SELECT * FROM tbid_qtn_frt WHERE QTN_NO = '{$QTN_NO}' AND QTN_SEQ = '2'");
+    $qtn_frt3 = sql_query("SELECT * FROM tbid_qtn_frt WHERE QTN_NO = '{$QTN_NO}' AND QTN_SEQ = '3'");
+?>
+<style type="text/css">
+    table.table-sample-8 th {
+        background-color: #f2f2f2;
+        border: 1px solid #7f7f7f !important;
+        color: #555;
+        vertical-align: middle;
+    }
+    table.table-sample-8 td {
+        border: 1px solid #7f7f7f !important;
+        text-align: right !important;
+        font-size: 1.6rem;
+    }
+    table.table-sample-8 td.ltext {
+        text-align: left !important;
+        letter-spacing: 0px;
+    }
+    .ml20 {
+        margin-left: 20px;
+    }
+    button {
+        cursor: pointer;
+    }
+    .m-table {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+    .plr12 {
+        padding-left: 12px;
+        padding-right: 12px;   
+    }
+    .portlet > .portlet-title button{
+        line-height: 30px;
+    }
+    .btn-left > button, .btn-right > button {
+        padding: 0px 10px;
+    }
+</style>
+<div class="container">
+    <form name="Join" id="Join" method="post" action="">
+        <input type="hidden" id="login_session" value="<?php echo $_SESSION['MBM_NM']?>">        
+        <input type="hidden" name="MBM_NO" id="MBM_NO" value="<?php echo $MBM_NO?>">        
+        <input type="hidden" name="QTN_NO" id="QTN_NO" value="<?php echo $QTN_NO?>">
+        <input type="hidden" name="TRS_DAYS_CNT" id="TRS_DAYS_CNT" class="input" value="<?php echo $TRS_DAYS_CNT?>">
+                
+        <div class="page-content">
+            <div class="quotation-title">
+                <h1>견적서</h1>
+                <h3 class="text-center">QUOTATION</h3>
+            </div>                            
+            <div class="content">                    
+                <!-- <p class="pd5 text-right">진행상태 : <span class="text-brown">견적작성중</span></p> -->
+                <!-- 기본정보 -->
+                <div class="portlet">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="row view">
+                                <div class="form-group m-border-top">
+                                    <div class="col-3">견적서번호</div>
+                                    <div class="col-9"><?php echo $QTN_NO?></div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-3">견적명<span class="text-primary">*</span></div>
+                                    <div class="col-9">
+                                        <input type="text" class="input" name="QTN_NM" id="QTN_NM" value="<?php echo $QTN_NM?>">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-3">작성자<span class="text-primary">*</span></div>
+                                    <div class="col-9">
+                                        <?php echo $NTC_PIC_NM?>
+                                    </div>
+                                </div>
+                                <div class="form-group border-none">
+                                    <div class="col-3">견적일자</div>
+                                    <div class="col-9 relative1">
+                                        <input type="text" class="input mr-2"  id="datepicker" name="QTN_YMD" value="<?php echo substr($QTN_YMD, 0, 4).'-'.substr($QTN_YMD, 4, 2).'-'.substr($QTN_YMD, 6, 2)?>">
+                                        <img src="../../img/icon/icon-calendar.png" alt="" class="icon-calendar-0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="row view border-left">
+                                <div class="form-group m-border-top">
+                                    <div class="col-3">입찰공고번호</div>
+                                    <div class="col-9 l-height4"><?php echo $NTC_NO?></div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-3">공고명</div>
+                                    <div class="col-9 l-height4"><?php echo $NTC_NM?></div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-3">화물구분</div>
+                                    <div class="col-9 l-height4"><?php echo $SA_CLS_CD."-".$CRG_TYP_CD?></div>
+                                </div>
+                                <div class="form-group border-none">
+                                    <div class="col-3">입찰마감일시</div>
+                                    <div class="col-9 l-height4">                                        
+                                        <?php echo substr($NTC_CLOSE_YMD, 0, 4).'-'.substr($NTC_CLOSE_YMD, 4, 2).'-'.substr($NTC_CLOSE_YMD, 6, 2).' '.substr($NTC_CLOSE_TM, 0,2) .':'.  substr($NTC_CLOSE_TM, 2, 2); ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>                
+                <!-- 선적정보 -->
+                <div class="portlet mt20">
+                    <div class="portlet-title">
+                        <caption>선적정보</caption>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="row view">
+                                <div class="form-group">
+                                    <div class="col-3 l-height4">선적지</div>
+                                    <div class="col-3 l-height4">선적항</div>
+                                    <div class="col-6 l-height4"><?php echo "(".$POL['LOC_CD'].")".$POL['LOC_NM']?></div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-3 l-height4">&nbsp;</div>
+                                    <div class="col-3 l-height4">경유지</div>
+                                    <div class="col-6 l-height4">
+                                        <select class="input" name="DISTRICT">
+                                            <option value="">경유지가 있다면 선택해주세요.</option>
+                                            <?php for ($i = 0; $row = sql_fetch_array($districtList); $i++){ ?>
+                                                <option value="<?php echo $row['LOC_CD']?>" <?php if($DISTRICT==$row['LOC_CD']) echo 'selected'?>><?php echo $row['LOC_NM']?></option>
+                                            <?php } ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-3 l-height4">선사명</div>
+                                    <div class="col-9">
+                                        <input type="text" name="VSL_NM" class="input" value="<?php echo $VSL_NM?>">
+                                    </div>
+                                </div>
+                                <div class="form-group">                                    
+                                    <div class="col-3 l-height4">선(기)명</div>
+                                    <div class="col-9">
+                                        <input type="text" name="LINER_NM" class="input" value="<?php echo $LINER_NM?>">
+                                    </div>
+                                </div>
+                                <div class="form-group">                                    
+                                    <div class="col-3 l-height4">항차</div>
+                                    <div class="col-9">
+                                        <input type="text" name="VOY_NO" class="input" value="<?php echo $VOY_NO?>">
+                                    </div>
+                                </div>
+                                <div class="form-group">                                    
+                                    <div class="col-3 l-height4">서류마감</div>
+                                    <div class="col-9 relative1">
+                                        <input type="text" id="datepicker1" name="DOC_CLOSE_YMD" class="input mr-2" value="<?php echo $DOC_CLOSE_YMD?>">
+                                        <img src="../../img/icon/icon-calendar.png" alt="" class="icon-calendar-0">
+                                    </div>                                    
+                                </div>
+                                <div class="form-group border-none">
+                                    <div class="col-3 l-height4">운송일수<span class="text-primary">*</span></div>
+                                    <div class="col-9 trs_days_cnt">
+                                        <?php echo $TRS_DAYS_CNT?>
+                                    </div>
+                                </div>                        
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="row view border-left">
+                                <div class="form-group m-border-top">
+                                    <div class="col-3 l-height4">도착지</div>
+                                    <div class="col-3 l-height4">양하항</div>
+                                    <div class="col-6 l-height4"><?php echo "(".$POD['LOC_CD'].")".$POD['LOC_NM']?></div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-3 l-height4">&nbsp;</div>
+                                    <div class="col-3 l-height4">최종목적지</div>
+                                    <div class="col-6 l-height4"><?php echo $FDS_NM?></div>
+                                </div>
+                                <div class="form-group">                                    
+                                    <div class="col-3 l-height4">화물마감</div>
+                                    <div class="col-9 relative1">
+                                        <input type="text" id="datepicker2" name="CRG_CLOSE_YMD" class="input mr-2" value="<?php echo $CRG_CLOSE_YMD?>">
+                                        <img src="../../img/icon/icon-calendar.png" alt="" class="icon-calendar-0">
+                                    </div>                                    
+                                </div>
+                                <div class="form-group">
+                                    <div class="col-3 l-height4">ETD</div>
+                                    <div class="col-9 relative1">
+                                        <input type="text" id="datepicker3" name="ETD_YMD" class="input mr-2" value="<?php echo $ETD_YMD?>" onChange="javascript:onChangeDate()">
+                                        <img src="../../img/icon/icon-calendar.png" alt="" class="icon-calendar-0">
+                                    </div>
+                                </div>
+                                <div class="form-group">                                    
+                                    <div class="col-3 l-height4">ETA(via)</div>
+                                    <div class="col-9 relative1">
+                                        <input type="text" id="datepicker4" name="VIA_YMD" class="input mr-2" value="<?php echo $VIA_YMD?>">
+                                        <img src="../../img/icon/icon-calendar.png" alt="" class="icon-calendar-0">
+                                    </div>
+                                </div>
+                                <div class="form-group">                                    
+                                    <div class="col-3 l-height4">ETA</div>
+                                    <div class="col-9 relative1">
+                                        <input type="text" id="datepicker5" name="ETA_YMD" class="input mr-2" value="<?php echo $ETA_YMD?>" onChange="javascript:onChangeDate()">
+                                        <img src="../../img/icon/icon-calendar.png" alt="" class="icon-calendar-0">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 총 운임정보 -->
+                <div class="portlet mt20">
+                    <div class="portlet-title">
+                        <caption>총 운임정보</caption>
+                    </div>
+                    <div class="row">
+                        <div class="form-group m-table">
+                            <div class="table">
+                                <div class="table-responsive">
+                                    <table class="table-sample-8">
+                                        <tbody>
+                                            <tr>
+                                                <th rowspan="2">운임구분</th>
+                                                <th colspan="2">외화금액</th>
+                                                <th rowspan="2">원화금액(\)</th>
+                                                <th rowspan="2">금액합계(\)</th>
+                                                <th rowspan="2">TAX(\)</th>
+                                            </tr>
+                                            <tr>
+                                                <th>금액</th>
+                                                <th>화폐코드</th>
+                                            </tr>
+                                            <tr class="text-right">
+                                                <th>선적지 비용</th>
+                                                <td><?php echo $DOM_FRG_AMT?></td>
+                                                <td><?php echo $DOM_CURR_CD?></td>
+                                                <td><?php echo $DOM_KOR_AMT?></td>
+                                                <td><?php echo $DOM_KOR_TOT_AMT?></td>
+                                                <td><?php echo $DOM_TAX_TOT_AMT?></td>
+                                            </tr>
+                                            <tr class="text-right">
+                                                <th>해상 운임</th>
+                                                <td><?php echo $SA_FRG_AMT?></td>
+                                                <td><?php echo $SA_CURR_CD?></td>
+                                                <td><?php echo $SA_KOR_AMT?></td>
+                                                <td><?php echo $SA_KOR_TOT_AMT?></td>
+                                                <td><?php echo $SA_TAX_TOT_AMT?></td>
+                                            </tr>
+                                            <tr class="text-right">
+                                                <th>도착지 비용</th>
+                                                <td><?php echo $ARV_FRG_AMT?></td>
+                                                <td><?php echo $ARV_CURR_CD?></td>
+                                                <td><?php echo $ARV_KOR_AMT?></td>
+                                                <td><?php echo $ARV_KOR_TOT_AMT?></td>
+                                                <td><?php echo $ARV_TAX_TOT_AMT?></td>
+                                            </tr>
+                                            <tr>
+                                                <th colspan="3" class="text-right">기준환율</th>
+                                                <td colspan="3" class="text-right"><?php echo $EX_RATE?> (KRW)</td>
+                                            </tr>
+                                            <tr>
+                                                <th colspan="3" class="text-right">공급가액</th>
+                                                <td colspan="3" class="text-right text-brown"><?php echo $SPLY_AMT?> (KRW)</td>
+                                            </tr>
+                                            <tr>
+                                                <th colspan="3" class="text-right">TAX</th>
+                                                <td colspan="3" class="text-right"><?php echo $TAX_AMT?> (KRW)</td>
+                                            </tr>
+                                            <tr>
+                                                <th colspan="3" class="text-right">총금액</th>
+                                                <td colspan="3" class="text-right"><?php echo $TOT_AMT?> (KRW)</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 참조사항 -->
+                <div class="portlet mt20">
+                    <div class="portlet-title">
+                        <caption>참조사항</caption>
+                    </div>
+                    <div class="row">                        
+                        <div class="form-group border-none plr12">                            
+                            <textarea id="REMARK" name="REMARK" class="input height166"><?php echo $REMARK?></textarea>                            
+                        </div>                        
+                    </div>
+                </div>
+                <!-- 물동량 -->
+                <div class="portlet mt20">
+                    <div class="portlet-title">
+                        <caption>물동량</caption>
+                    </div>
+                    <div class="row">
+                        <div class="form-group m-table">
+                            <div class="table">
+                                <div class="table-responsive">
+                                    <table class="table-sample-8">
+                                        <tbody>
+                                            <tr>
+                                                <th style="width: 20%;">무역거래조건</th>
+                                                <td class="ltext"><?php echo "(".$INCTRMS['CODE_CD'].")".$INCTRMS['CODE_NM']?></td>
+                                            </tr>
+                                            <tr>
+                                                <th>품목명</th>
+                                                <td class="ltext"><?php echo $CRG_NM?></td>
+                                            </tr>
+                                            <tr>
+                                                <th>물동량</th>
+                                                <td class="ltext">
+                                                    <?php echo "(".$PKG['CODE_CD'].")".$PKG['CODE_NM']?>
+                                                    <span class="ml20">수량 : <?php echo $CRG_CNT?></span>
+                                                    <span class="ml20"">중량 : <?php echo $CRG_WGT?> KGS</span>
+                                                    <span class="ml20"">용적 : <?php echo $CRG_VOL?> CBM</span>
+                                                </td>
+                                            </tr> 
+                                            <tr>
+                                                <th>Dimension</th>
+                                                <td class="ltext">
+                                                    <?php echo $DIM_LEN?> (L)
+                                                    <span class="ml20"><?php echo $DIM_WID?> (W)</span>
+                                                    <span class="ml20""><?php echo $DIM_HGT?> (H)(cm)</span>
+                                                </td>
+                                            </tr>                                            
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 운임 상세 정보 -->
+                <div class="portlet mt20">
+                    <div class="portlet-title">
+                        <caption>운임 상세 정보</caption>
+                    </div>
+                    <div class="portlet-title">
+                        <caption>선적지 비용
+                            <div class="btn-right">
+                                <button type="button" onClick="javascript:AddFreightCharge(1);">+ 운임추가</button>
+                                <button type="button" onClick="javascript:DelFreightCharge(1);" class="bg-red">- 운임삭제</button>
+                            </div>
+                        </caption>
+                    </div>
+                    <div class="row">
+                        <div class="form-group m-table">
+                            <div class="table">
+                                <div class="table-responsive">
+                                    <table class="table-sample-8">
+                                        <tbody id="fgt_chg_1">                                            
+                                            <tr>
+                                                <th style="width: 2%;">X</th>
+                                                <th style="width: 2%;">NO</th>
+                                                <th style="width: 16%;">운임종류</th>
+                                                <th style="width: 10%;">요율구분</th>
+                                                <th style="width: 10%;">수량</th>
+                                                <th style="width: 10%;">단가</th>
+                                                <th style="width: 9%;">화폐단위</th>
+                                                <th style="width: 10%;">금액</th>
+                                                <th style="width: 10%;">원화금액</th>
+                                                <th style="width: 10%;">부가세</th>
+                                                <th style="width: 11%;">원화총금액</th>
+                                            </tr>
+                                            <tr>
+                                                <td></td>
+                                                <td style="text-align: center !important;"></td>
+                                                <td>                                                    
+                                                    <select class="input" name="FRT_GRP_CD_1" id="FRT_GRP_CD_1">
+                                                        <?php
+                                                            $sql_fre = "SELECT name FROM tbl_freight1 WHERE kind='{$SA_CLS_CD}' ORDER BY id ASC";
+                                                            $result = sql_query($sql_fre);
+                                                            for ($i=0; $row=sql_fetch_array($result); $i++) {                   
+                                                                $NAME = $row['name']; ?>
+                                                                <option value="<?php echo $NAME?>"><?php echo $NAME?></option>
+                                                        <?php } ?>
+                                                    </select>
+                                                </td>
+                                                <td><input type="text" class="input" id="TRF_TYP_CD_1"></td>
+                                                <td><input type="text" class="input" id="TRF_QTY_1" onblur="javascript:changeQTY_1(this)"></td>
+                                                <td><input type="text" class="input" id="TRF_PRC_1" onblur="javascript:changeNumber(this)"></td>
+                                                <td>
+                                                    <select class="input" name="TRF_CURR_CD_1" id="TRF_CURR_CD_1">
+                                                        <option value="KRW">KRW</option>
+                                                        <option value="USD">USD</option>
+                                                        <option value="EUR">EUR</option>
+                                                        <option value="CNY">CNY</option>
+                                                        <option value="JPY">JPY</option>
+                                                    </select>
+                                                </td>
+                                                <td><input type="text" class="input" id="FRT_AMT_1" onblur="javascript:changeNumber(this)" disabled></td>
+                                                <td><input type="text" class="input" id="FRT_KOR_AMT_1" onblur="javascript:changeNumber(this)"></td>
+                                                <td><input type="text" class="input" id="FRT_TAX_AMT_1" onblur="javascript:changeNumber(this)"></td>
+                                                <td><input type="text" class="input" id="FRT_TOT_AMT_1" onblur="javascript:changeNumber(this)" disabled></td>
+                                            </tr>
+                                        <?php for ($i = 0; $row = sql_fetch_array($qtn_frt1); $i++){ ?>
+                                            <tr id="qtn_row_<?php echo $row['ID']?>">
+                                                <td style="text-align: center !important;"><input type="radio" name="radio_1" id="radio_1_<?php echo $row['ID']?>"></td>
+                                                <td style="text-align: center !important;"><?php echo $i+1?></td>
+                                                <td style="text-align: center !important;"><?php echo $row['FRT_GRP_CD']?></td>
+                                                <td style="text-align: center !important;"><?php echo $row['TRF_TYP_CD']?></td>
+                                                <td style="text-align: center !important;"><?php echo (int)$row['TRF_QTY']?></td>
+                                                <td><?php echo number_format($row['TRF_PRC'])?></td>
+                                                <td style="text-align: center !important;"><?php echo $row['TRF_CURR_CD']?></td>
+                                                <td><?php echo number_format($row['FRT_AMT'])?></td>
+                                                <td><?php echo number_format($row['FRT_KOR_AMT'])?></td>
+                                                <td><?php echo number_format($row['FRT_TAX_AMT'])?></td>
+                                                <td><?php echo number_format($row['FRT_TOT_AMT'])?></td>
+                                            </tr>
+                                        <?php } ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="portlet-title">
+                        <caption><?php if($SA_CLS_CD == "SEA") echo "해상 운임"; else echo "항공 운임";?>
+                            <div class="btn-right">
+                                <button type="button" onClick="javascript:AddFreightCharge(2);">+ 운임추가</button>
+                                <button type="button" onClick="javascript:DelFreightCharge(2);" class="bg-red">- 운임삭제</button>
+                            </div>
+                        </caption>
+                    </div>
+                    <div class="row">
+                        <div class="form-group m-table">
+                            <div class="table">
+                                <div class="table-responsive">
+                                    <table class="table-sample-8">
+                                        <tbody id="fgt_chg_2">                                            
+                                            <tr>
+                                                <th style="width: 2%;">X</th>
+                                                <th style="width: 2%;">NO</th>
+                                                <th style="width: 16%;">운임종류</th>
+                                                <th style="width: 10%;">요율구분</th>
+                                                <th style="width: 10%;">수량</th>
+                                                <th style="width: 10%;">단가</th>
+                                                <th style="width: 9%;">화폐단위</th>
+                                                <th style="width: 10%;">금액</th>
+                                                <th style="width: 10%;">원화금액</th>
+                                                <th style="width: 10%;">부가세</th>
+                                                <th style="width: 11%;">원화총금액</th>                                                
+                                            </tr>
+                                            <tr>
+                                                <td></td>
+                                                <td style="text-align: center !important;"></td>
+                                                <td>
+                                                    <select class="input" name="FRT_GRP_CD_2" id="FRT_GRP_CD_2">
+                                                        <?php
+                                                            $sql_fre = "SELECT name FROM tbl_freight2 WHERE kind='{$SA_CLS_CD}' ORDER BY id ASC";
+                                                            $result = sql_query($sql_fre);
+                                                            for ($i=0; $row=sql_fetch_array($result); $i++) {                   
+                                                                $NAME = $row['name']; ?>
+                                                                <option value="<?php echo $NAME?>"><?php echo $NAME?></option>
+                                                        <?php } ?>
+                                                    </select>
+                                                </td>
+                                                <td><input type="text" class="input" id="TRF_TYP_CD_2"></td>
+                                                <td><input type="text" class="input" id="TRF_QTY_2" onblur="javascript:changeQTY_2(this)"></td>
+                                                <td><input type="text" class="input" id="TRF_PRC_2" onblur="javascript:changeNumber(this)"></td>
+                                                <td>
+                                                    <select class="input" name="TRF_CURR_CD_2" id="TRF_CURR_CD_2" style="width: 85px;">
+                                                        <option value="KRW">KRW</option>
+                                                        <option value="USD">USD</option>
+                                                        <option value="EUR">EUR</option>
+                                                        <option value="CNY">CNY</option>
+                                                        <option value="JPY">JPY</option>
+                                                    </select>
+                                                </td>
+                                                <td><input type="text" class="input" id="FRT_AMT_2" onblur="javascript:changeNumber(this)" disabled></td>
+                                                <td><input type="text" class="input" id="FRT_KOR_AMT_2" onblur="javascript:changeNumber(this)"></td>
+                                                <td><input type="text" class="input" id="FRT_TAX_AMT_2" onblur="javascript:changeNumber(this)"></td>
+                                                <td><input type="text" class="input" id="FRT_TOT_AMT_2" onblur="javascript:changeNumber(this)" disabled></td>
+                                            </tr>
+                                        <?php for ($i = 0; $row = sql_fetch_array($qtn_frt2); $i++){ ?>
+                                            <tr id="qtn_row_<?php echo $row['ID']?>">
+                                                <td style="text-align: center !important;"><input type="radio" name="radio_2" id="radio_2_<?php echo $row['ID']?>"></td>
+                                                <td style="text-align: center !important;"><?php echo $i+1?></td>
+                                                <td style="text-align: center !important;"><?php echo $row['FRT_GRP_CD']?></td>
+                                                <td style="text-align: center !important;"><?php echo $row['TRF_TYP_CD']?></td>
+                                                <td style="text-align: center !important;"><?php echo (int)$row['TRF_QTY']?></td>
+                                                <td><?php echo number_format($row['TRF_PRC'])?></td>
+                                                <td style="text-align: center !important;"><?php echo $row['TRF_CURR_CD']?></td>
+                                                <td><?php echo number_format($row['FRT_AMT'])?></td>
+                                                <td><?php echo number_format($row['FRT_KOR_AMT'])?></td>
+                                                <td><?php echo number_format($row['FRT_TAX_AMT'])?></td>
+                                                <td><?php echo number_format($row['FRT_TOT_AMT'])?></td>
+                                            </tr>
+                                        <?php } ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="portlet-title">
+                        <caption>도착지 운임
+                            <div class="btn-right">
+                                <button type="button" onClick="javascript:AddFreightCharge(3);">+ 운임추가</button>
+                                <button type="button" onClick="javascript:DelFreightCharge(3);" class="bg-red">- 운임삭제</button>
+                            </div>
+                        </caption>
+                    </div>
+                    <div class="row">
+                        <div class="form-group m-table">
+                            <div class="table">
+                                <div class="table-responsive">
+                                    <table class="table-sample-8">
+                                        <tbody id="fgt_chg_3">                                            
+                                            <tr>
+                                                <th style="width: 2%;">X</th>
+                                                <th style="width: 2%;">NO</th>
+                                                <th style="width: 16%;">운임종류</th>
+                                                <th style="width: 10%;">요율구분</th>
+                                                <th style="width: 10%;">수량</th>
+                                                <th style="width: 10%;">단가</th>
+                                                <th style="width: 9%;">화폐단위</th>
+                                                <th style="width: 10%;">금액</th>
+                                                <th style="width: 10%;">원화금액</th>
+                                                <th style="width: 10%;">부가세</th>
+                                                <th style="width: 11%;">원화총금액</th>                                                
+                                            </tr>
+                                            <tr>
+                                                <td></td>
+                                                <td style="text-align: center !important;"></td>
+                                                <td>
+                                                    <select class="input" name="FRT_GRP_CD_3" id="FRT_GRP_CD_3">
+                                                        <?php
+                                                            $sql_fre = "SELECT name FROM tbl_freight3 WHERE kind='{$SA_CLS_CD}' ORDER BY id ASC";
+                                                            $result = sql_query($sql_fre);
+                                                            for ($i=0; $row=sql_fetch_array($result); $i++) {                   
+                                                                $NAME = $row['name']; ?>
+                                                                <option value="<?php echo $NAME?>"><?php echo $NAME?></option>
+                                                        <?php } ?>
+                                                    </select>
+                                                </td>
+                                                <td><input type="text" class="input" id="TRF_TYP_CD_3"></td>
+                                                <td><input type="text" class="input" id="TRF_QTY_3" onblur="javascript:changeQTY_3(this)"></td>
+                                                <td><input type="text" class="input" id="TRF_PRC_3" onblur="javascript:changeNumber(this)"></td>
+                                                <td>
+                                                    <select class="input" name="TRF_CURR_CD_3" id="TRF_CURR_CD_3" style="width: 85px;">
+                                                        <option value="KRW">KRW</option>
+                                                        <option value="USD">USD</option>
+                                                        <option value="EUR">EUR</option>
+                                                        <option value="CNY">CNY</option>
+                                                        <option value="JPY">JPY</option>
+                                                    </select>
+                                                </td>
+                                                <td><input type="text" class="input" id="FRT_AMT_3" onblur="javascript:changeNumber(this)" disabled></td>
+                                                <td><input type="text" class="input" id="FRT_KOR_AMT_3" onblur="javascript:changeNumber(this)"></td>
+                                                <td><input type="text" class="input" id="FRT_TAX_AMT_3" onblur="javascript:changeNumber(this)"></td>
+                                                <td><input type="text" class="input" id="FRT_TOT_AMT_3" onblur="javascript:changeNumber(this)" disabled></td>
+                                            </tr>
+                                        <?php for ($i = 0; $row = sql_fetch_array($qtn_frt3); $i++){ ?>
+                                            <tr id="qtn_row_<?php echo $row['ID']?>">
+                                                <td style="text-align: center !important;"><input type="radio" name="radio_3" id="radio_3_<?php echo $row['ID']?>"></td>
+                                                <td style="text-align: center !important;"><?php echo $i+1?></td>
+                                                <td style="text-align: center !important;"><?php echo $row['FRT_GRP_CD']?></td>
+                                                <td style="text-align: center !important;"><?php echo $row['TRF_TYP_CD']?></td>
+                                                <td style="text-align: center !important;"><?php echo (int)$row['TRF_QTY']?></td>
+                                                <td><?php echo number_format($row['TRF_PRC'])?></td>
+                                                <td style="text-align: center !important;"><?php echo $row['TRF_CURR_CD']?></td>
+                                                <td><?php echo number_format($row['FRT_AMT'])?></td>
+                                                <td><?php echo number_format($row['FRT_KOR_AMT'])?></td>
+                                                <td><?php echo number_format($row['FRT_TAX_AMT'])?></td>
+                                                <td><?php echo number_format($row['FRT_TOT_AMT'])?></td>
+                                            </tr>
+                                        <?php } ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 기업정보 -->
+                <div class="portlet mt20">
+                    <div class="portlet-title">
+                        <caption>기업정보</caption>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="row view">
+                                <div class="form-group">
+                                    <div class="col-3 l-height4">업체명</div>
+                                    <div class="col-9 l-height4"><?php echo $COMP_NM?></div>
+                                </div>
+                                <div class="form-group border-none">
+                                    <div class="col-3 l-height4">입찰참여</div>
+                                    <div class="col-9 l-height4"><?php echo $bidCnt?>건</div>
+                                </div>                       
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="row view border-left">
+                                <div class="form-group m-border-top">
+                                    <div class="col-3 l-height4">최초참여일</div>
+                                    <div class="col-9 l-height4"><?php echo $firstBidDate?></div>
+                                </div>
+                                <!-- <div class="form-group border-none">
+                                    <div class="col-3 l-height4">주요서비스</div>
+                                    <div class="col-9 l-height4">해운수출</div>
+                                </div>                        -->
+                            </div>
+                        </div>                       
+                    </div>
+                </div>
+                <div class="mt20 inner-right">
+                    <button type="button" onClick="javascript:Save();" class="btn caption" style="width: 12rem;">제출</button>                    
+                    <button type="button" onClick="location.href='bid_info.html?NTC_CLS_CD=<?php echo $NTC_CLS_CD?>'" class="btn caption bg-silver" style="width: 12rem;">닫기</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">            
+    var login = $("#login_session").val();
+    if(!login) {
+        window.location.href = "bid_info.html";
+    }
+
+    function onChangeDate() {
+        var ETD_YMD = $("#datepicker3").val();
+        var ETA_YMD = $("#datepicker5").val();
+        
+        var date1 = new Date(ETD_YMD);
+        var date2 = new Date(ETA_YMD);
+        var diffDay = (date2 - date1)/1000/3600/24;
+        
+        $(".trs_days_cnt").text(diffDay);
+        $("#TRS_DAYS_CNT").val(diffDay);
+    }
+
+    function numberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function uncomma(str) {
+        str = String(str);
+        return str.replace(/[^\d]+/g, '');
+    }
+
+    function changeNumber(obj) {        
+        if(obj.id == "TRF_PRC_1") {
+            var PRC_1 = uncomma(obj.value);
+            var QTY_1 = $("#TRF_QTY_1").val();            
+            if(PRC_1 && QTY_1) {                
+                $("#FRT_AMT_1").val(numberWithCommas(PRC_1*QTY_1));
+            }    
+        }
+        if(obj.id == "TRF_PRC_2") {
+            var PRC_2 = uncomma(obj.value);
+            var QTY_2 = $("#TRF_QTY_2").val();
+            if(PRC_2 && QTY_2) {
+                $("#FRT_AMT_2").val(numberWithCommas(PRC_2*QTY_2));
+            }    
+        }
+        if(obj.id == "TRF_PRC_3") {
+            var PRC_3 = uncomma(obj.value);
+            var QTY_3 = $("#TRF_QTY_3").val();
+            if(PRC_3 && QTY_3) {
+                $("#FRT_AMT_3").val(numberWithCommas(PRC_3*QTY_3));
+            }    
+        }
+
+        if(obj.id == "FRT_KOR_AMT_1") {
+            if($("#TRF_CURR_CD_1").val() == "KRW") {
+                var FRT_KOR_AMT_1 = parseFloat(uncomma(obj.value));                
+                var FRT_TAX_AMT_1 = FRT_KOR_AMT_1*0.1;
+                if(FRT_KOR_AMT_1)
+                    $("#FRT_TAX_AMT_1").val(numberWithCommas(FRT_TAX_AMT_1));
+
+                var SUM1 = 0;
+                if(FRT_KOR_AMT_1)
+                    SUM1 += FRT_KOR_AMT_1;
+                if(FRT_TAX_AMT_1)
+                    SUM1 += FRT_TAX_AMT_1;
+
+                if(SUM1 > 0)
+                    $("#FRT_TOT_AMT_1").val(numberWithCommas(SUM1));
+                else
+                    $("#FRT_TOT_AMT_1").val("");
+            }
+            else {
+                var FRT_KOR_AMT_1 = parseFloat(uncomma(obj.value));
+                var FRT_TAX_AMT_1 = parseFloat(uncomma($("#FRT_TAX_AMT_1").val()));
+                var SUM1 = 0;
+                if(FRT_KOR_AMT_1)
+                    SUM1 += FRT_KOR_AMT_1;
+                if(FRT_TAX_AMT_1)
+                    SUM1 += FRT_TAX_AMT_1;
+
+                if(SUM1 > 0)
+                    $("#FRT_TOT_AMT_1").val(numberWithCommas(SUM1));
+                else
+                    $("#FRT_TOT_AMT_1").val("");
+            }
+        }
+        if(obj.id == "FRT_KOR_AMT_2") {
+            if($("#TRF_CURR_CD_2").val() == "KRW") {
+                var FRT_KOR_AMT_2 = parseFloat(uncomma(obj.value));
+                var FRT_TAX_AMT_2 = FRT_KOR_AMT_2*0.1;
+                if(FRT_KOR_AMT_2)
+                    $("#FRT_TAX_AMT_2").val(numberWithCommas(FRT_TAX_AMT_2));
+
+                var SUM2 = 0;
+                if(FRT_KOR_AMT_2)
+                    SUM2 += FRT_KOR_AMT_2;
+                if(FRT_TAX_AMT_2)
+                    SUM2 += FRT_TAX_AMT_2;
+
+                if(SUM2 > 0)
+                    $("#FRT_TOT_AMT_2").val(numberWithCommas(SUM2));
+                else
+                    $("#FRT_TOT_AMT_2").val("");
+            }
+            else {
+                var FRT_KOR_AMT_2 = parseFloat(uncomma(obj.value));
+                var FRT_TAX_AMT_2 = parseFloat(uncomma($("#FRT_TAX_AMT_2").val()));
+                var SUM2 = 0;
+                if(FRT_KOR_AMT_2)
+                    SUM2 += FRT_KOR_AMT_2;
+                if(FRT_TAX_AMT_2)
+                    SUM2 += FRT_TAX_AMT_2;
+                
+                if(SUM2 > 0)
+                    $("#FRT_TOT_AMT_2").val(numberWithCommas(SUM2));
+                else
+                    $("#FRT_TOT_AMT_2").val("");
+            }
+        }
+        if(obj.id == "FRT_KOR_AMT_3") {
+            if($("#TRF_CURR_CD_3").val() == "KRW") {
+                var FRT_KOR_AMT_3 = parseFloat(uncomma(obj.value));
+                var FRT_TAX_AMT_3 = FRT_KOR_AMT_3*0.1;
+                if(FRT_KOR_AMT_3)
+                    $("#FRT_TAX_AMT_3").val(numberWithCommas(FRT_TAX_AMT_3));
+
+                var SUM3 = 0;
+                if(FRT_KOR_AMT_3)
+                    SUM3 += FRT_KOR_AMT_3;
+                if(FRT_TAX_AMT_3)
+                    SUM3 += FRT_TAX_AMT_3;
+
+                if(SUM3 > 0)
+                    $("#FRT_TOT_AMT_3").val(numberWithCommas(SUM3));
+                else
+                    $("#FRT_TOT_AMT_3").val("");
+            }
+            else {
+                var FRT_KOR_AMT_3 = parseFloat(uncomma(obj.value));
+                var FRT_TAX_AMT_3 = parseFloat(uncomma($("#FRT_TAX_AMT_3").val()));
+                var SUM3 = 0;
+                if(FRT_KOR_AMT_3)
+                    SUM3 += FRT_KOR_AMT_3;
+                if(FRT_TAX_AMT_3)
+                    SUM3 += FRT_TAX_AMT_3;
+                
+                if(SUM3 > 0)
+                    $("#FRT_TOT_AMT_3").val(numberWithCommas(SUM3));
+                else
+                    $("#FRT_TOT_AMT_3").val("");
+            }
+        }
+
+        if(obj.id == "FRT_TAX_AMT_1") {
+            var FRT_KOR_AMT_1 = parseFloat(uncomma($("#FRT_KOR_AMT_1").val()));
+            var FRT_TAX_AMT_1 = parseFloat(uncomma(obj.value));
+            var SUM1 = 0;
+            if(FRT_KOR_AMT_1)
+                SUM1 += FRT_KOR_AMT_1;
+            if(FRT_TAX_AMT_1)
+                SUM1 += FRT_TAX_AMT_1;
+
+            if(SUM1 > 0)
+                $("#FRT_TOT_AMT_1").val(numberWithCommas(SUM1));
+            else
+                $("#FRT_TOT_AMT_1").val("");
+        }
+        if(obj.id == "FRT_TAX_AMT_2") {
+            var FRT_KOR_AMT_2 = parseFloat(uncomma($("#FRT_KOR_AMT_2").val()));
+            var FRT_TAX_AMT_2 = parseFloat(uncomma(obj.value));
+            var SUM2 = 0;
+            if(FRT_KOR_AMT_2)
+                SUM2 += FRT_KOR_AMT_2;
+            if(FRT_TAX_AMT_2)
+                SUM2 += FRT_TAX_AMT_2;
+
+            if(SUM2 > 0)
+                $("#FRT_TOT_AMT_2").val(numberWithCommas(SUM2));
+            else
+                $("#FRT_TOT_AMT_2").val("");
+        }
+        if(obj.id == "FRT_TAX_AMT_3") {
+            var FRT_KOR_AMT_3 = parseFloat(uncomma($("#FRT_KOR_AMT_3").val()));
+            var FRT_TAX_AMT_3 = parseFloat(uncomma(obj.value));
+            var SUM3 = 0;
+            if(FRT_KOR_AMT_3)
+                SUM3 += FRT_KOR_AMT_3;
+            if(FRT_TAX_AMT_3)
+                SUM3 += FRT_TAX_AMT_3;
+
+            if(SUM3 > 0)
+                $("#FRT_TOT_AMT_3").val(numberWithCommas(SUM3));
+            else
+                $("#FRT_TOT_AMT_3").val("");
+        }
+        
+        obj.value = numberWithCommas(uncomma(obj.value));
+    }
+
+    function changeQTY_1(obj) {
+        var PRC_1 = uncomma($("#TRF_PRC_1").val());
+        var QTY_1 = obj.value;
+        if(PRC_1 && QTY_1) {            
+            $("#FRT_AMT_1").val(numberWithCommas(PRC_1*QTY_1));
+        }
+    }
+
+    function changeQTY_2(obj) {
+        var PRC_2 = uncomma($("#TRF_PRC_2").val());
+        var QTY_2 = obj.value;
+        if(PRC_2 && QTY_2) {
+            $("#FRT_AMT_2").val(numberWithCommas(PRC_2*QTY_2));
+        }
+    }
+
+    function changeQTY_3(obj) {
+        var PRC_3 = uncomma($("#TRF_PRC_3").val());
+        var QTY_3 = obj.value;
+        if(PRC_3 && QTY_3) {
+            $("#FRT_AMT_3").val(numberWithCommas(PRC_3*QTY_3));
+        }
+    }
+</script>
+
+<script>
+    function Save(){
+        if($("#QTN_NM").val() ==""){
+            swal("견적명을 입력해주세요","","info");
+            return false;
+        }
+        
+        var f = document.Join;
+        f.action="../../php/estimate_update_ok.php";
+        f.submit();
+    }
+
+    function AddFreightCharge(type) {
+        var QTN_NO = $("#QTN_NO").val();
+        var FRT_GRP_CD = $("#FRT_GRP_CD_"+type).val();
+        var TRF_TYP_CD = $("#TRF_TYP_CD_"+type).val();
+        var TRF_QTY = $("#TRF_QTY_"+type).val();
+        var TRF_PRC = $("#TRF_PRC_"+type).val();
+        var TRF_CURR_CD = $("#TRF_CURR_CD_"+type).val();
+        var FRT_AMT = $("#FRT_AMT_"+type).val();
+        var FRT_KOR_AMT = $("#FRT_KOR_AMT_"+type).val();
+        var FRT_TAX_AMT = $("#FRT_TAX_AMT_"+type).val();
+        var FRT_TOT_AMT = $("#FRT_TOT_AMT_"+type).val();
+        var MBM_NO = $("#MBM_NO").val();
+
+        if(FRT_GRP_CD ==""){                
+            swal("운임종류를 입력해주세요","","info");
+            return false;
+        }
+        if(TRF_TYP_CD ==""){                
+            swal("요율구분을 입력해주세요","","info");
+            return false;
+        }
+        if(TRF_QTY ==""){                
+            swal("수량을 입력해주세요","","info");
+            return false;
+        }
+        if(TRF_PRC ==""){                
+            swal("단가를 입력해주세요","","info");
+            return false;
+        }
+        if(TRF_CURR_CD ==""){                
+            swal("화폐단위를 입력해주세요","","info");
+            return false;
+        }
+        // if(FRT_AMT ==""){                
+        //     swal("금액을 입력해주세요","","info");
+        //     return false;
+        // }
+        if(FRT_KOR_AMT ==""){                
+            swal("원화금액을 입력해주세요","","info");
+            return false;
+        }
+        if(FRT_TAX_AMT ==""){                
+            swal("부가세를 입력해주세요","","info");
+            return false;
+        }
+        // if(FRT_TOT_AMT ==""){                
+        //     swal("원화총금액을 입력해주세요","","info");
+        //     return false;
+        // }
+
+        var params = { 
+            QTN_NO : QTN_NO,
+            QTN_SEQ: type, 
+            FRT_GRP_CD: FRT_GRP_CD,
+            TRF_TYP_CD: TRF_TYP_CD,
+            TRF_QTY: TRF_QTY,
+            TRF_PRC: TRF_PRC,
+            TRF_CURR_CD: TRF_CURR_CD,
+            FRT_AMT: FRT_AMT,
+            FRT_KOR_AMT: FRT_KOR_AMT,
+            FRT_TAX_AMT: FRT_TAX_AMT,
+            FRT_TOT_AMT: FRT_TOT_AMT,
+            INS_ID : MBM_NO
+        };
+
+        $.ajax({
+            type: "POST",
+            url: "<?php echo RT_PATH; ?>/php/add_freight_charge.php",            
+            data: params,
+            dataType: 'json',
+            success: function (result) {
+                if(result) {
+                    var split_data = result.split("-");
+                    var id = split_data[0];
+                    var cnt = split_data[1];
+                    $("#fgt_chg_"+type).append(
+                        '<tr id="qtn_row_'+id+'">'+
+                        '<td style="text-align: center !important;"><input type="radio" name="radio_'+type+'" id="radio_'+type+'_'+id+'"></td>'+
+                        '<td style="text-align: center !important;">'+cnt+'</td>'+
+                        '<td style="text-align: center !important;">'+FRT_GRP_CD+'</td>'+
+                        '<td style="text-align: center !important;">'+TRF_TYP_CD+'</td>'+
+                        '<td style="text-align: center !important;">'+TRF_QTY+'</td>'+
+                        '<td>'+TRF_PRC+'</td>'+
+                        '<td style="text-align: center !important;">'+TRF_CURR_CD+'</td>'+
+                        '<td>'+FRT_AMT+'</td>'+
+                        '<td>'+FRT_KOR_AMT+'</td>'+
+                        '<td>'+FRT_TAX_AMT+'</td>'+
+                        '<td>'+FRT_TOT_AMT+'</td>'+
+                        '</tr>'
+                    );                    
+                }
+            }
+        });
+    }
+
+    function DelFreightCharge(type) {
+        var id = $('input[name="radio_' + type + '"]:checked').attr("id");
+        if(!id) {
+            swal("항목을 선택해주세요","","info");
+            return false;
+        }
+
+        id = id.substr(8);        
+        
+        var params = { 
+            QTN_ID : id
+        };
+
+        $.ajax({
+            type: "POST",
+            url: "<?php echo RT_PATH; ?>/php/del_freight_charge.php",            
+            data: params,
+            dataType: 'json',
+            success: function (result) {
+                if(result) {
+                    $("#qtn_row_"+id).remove();
+                    var tbody = $('#fgt_chg_' + type);
+                    
+                    tbody.find("tr").each(function(idx) {
+                    
+                        if(idx > 1) {
+                            $(this).find("td:nth-child(2)").text(idx-1);
+                        }
+                    });
+                }
+            }
+        });
+    }
+</script>
+
+<?php
+    include_once ('../../include/html_foot.html');
+?>

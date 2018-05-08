@@ -1,0 +1,623 @@
+<?php 
+session_start();
+    include_once ('../../admin/lib/common.php');
+
+    if(!$_SESSION['MBM_EMAIL']){
+        alertMove("로그인후 이용해주세요.",RT_PATH);
+    }
+
+    include_once ('../../include/html_head.html');
+
+    if(!$_GET['mb_id']) {
+       $MBR_NO = $_SESSION['MBM_NO'];
+    }
+    else{
+        $MBR_NO = $_GET['mb_id'];
+    }
+    
+    $tab = addslashes($_GET['tab']);  //  내이력, 기업정보...
+
+$sql = "SELECT 
+            IFNULL(A.REG_NO, '') AS REG_NO, A.MBR_NO, A.COMP_NM, 
+            IFNULL(A.CEO_NM, IFNULL(B.CEO_NM,'')) AS CEONAME, A.MBR_NM, A.DEPT_NM, A.REG_TYP_CD, A.HP_NO, A.TEL_NO, A.FAX_NO, A.MBM_EMAIL_ID, A.COMP_KND_CD, 
+            IFNULL(A.COMP_DTL_KND_CD, IFNULL(B.COMP_DTL_KND_CD,'')) AS COMP_DTLKND_CD,  A.BID_KND_CD, A.MNGR_YN, A.SALE_PIC_YN, A.JOIN_STS_CD, 
+            IFNULL(A.UPD_USR,'') AS UPD_USR,
+            IFNULL(B.COMP_CD, IFNULL(D.COMP_CD, '')) AS COMPCD, 
+            IFNULL(B.COMP_KND_NM,'') AS COMP_KND_NM, 
+            IFNULL(B.PB_TYPE,'') AS PB_TYPE,
+            IFNULL(B.PREMIUM_YM,'') AS PREMIUM_YM,
+            C.FDR_NO, C.FDR_NM, C.CAREER_YY_CNT, C.CAREER_MM_CNT, C.SPC_DPRT_CD, C.IO_CLS_CD, C.ITEM_CD, C.ETC_DPRT_NM, C.AREA_CD, C.AREA_DTL_NM, C.CERI_NM,  C.WORK_LOC_NM, C.INTRDC_DESC, C.IMG_PATH_NM, C.IMG_FILE_NM, C.IMG_ORG_FILE_NM, C.ATT_PATH_NM, C.ATT_FILE_NM, C.ATT_ORG_FILE_NM, C.SERVICE,
+
+            D.EMP_CNT, D.EMP_TMP_CNT, D.SALES_AMT, D.MAIN_SVC_CD, D.DTL_SVC_DESC, D.MAIN_OPR_DESC, D.MAIN_INSR_DESC, D.SCALE_CD, D.CREDIT_CD, D.BID_ENTRY_CD, D.PRE_YEAR, D.DOM_BRN_CNT, D.EXP_BRN_CNT, D.EXP_PTN_CNT, D.LOGO_FILE_NM, D.BIZ_FILE_NM
+        FROM `tcmn_mbr_join` AS A 
+        LEFT OUTER JOIN `tcmn_mbr_comp` AS B 
+        ON A.REG_NO = B.REG_NO 
+        LEFT OUTER JOIN `tbid_spc_fdr` AS C 
+        ON A.MBR_NO = C.FDR_NO 
+        LEFT OUTER JOIN `tcmn_fwd_comp` AS D
+        ON B.COMP_CD = D.COMP_CD
+        WHERE A.MBR_NO = '{$MBR_NO}' LIMIT 1";
+
+$row = sql_fetch($sql);
+
+$COMPCD = $row['COMPCD'];
+$SERVICE = $row['SERVICE'];
+$AREA_CD = $row['AREA_DTL_NM'];
+$ITEM_CD = $row['ITEM_CD'];
+
+// echo $sql;
+
+$bidSql = "SELECT count(*) as cnt FROM tbid_qtn_mst WHERE QTN_PIC_NO = '{$MBR_NO}'";
+$bidCntRow = sql_fetch($bidSql);
+
+$firstBidSql = "SELECT INS_DT FROM tbid_qtn_mst WHERE QTN_PIC_NO = '{$MBR_NO}' ORDER BY INS_DT LIMIT 1";
+$firstBid = sql_fetch($firstBidSql);
+
+?>
+
+<?php
+    //입찰내역 ...
+
+    $self_path = RT_PATH."/html/my/my_info.html?tab=3&mb_id=".$MBR_NO;
+
+    // 검색 옵션
+    $CRG_TYP_CD = addslashes($_GET['CRG_TYP_CD']);  // ALL, FCL, LCL, BULK, AIR
+    $NTC_STS_CD = addslashes($_GET['NTC_STS_CD']);  //  마감, 진행, 미마감, 완료, 낙찰
+    $SA_CLS_CD  = addslashes($_GET['SA_CLS_CD']);
+    $sKEY = addslashes($_GET['sKEY']);    // Search kEY
+    $searchMODE = addslashes($_GET['searchMODE']);    // Search MODE
+    $orderSORT = addslashes($_GET['SORT']);    // 정렬
+    $bidType = addslashes($_GET['bidType']);    // 정렬
+    
+    $NTC_CLS_CD = "SPOT";
+    if(!$bidType) {
+        $bidType = "1";
+    }
+    
+    //  일반쿼리
+    if($bidType == "1" ) {
+        $sql_common = "FROM `tbid_ntc_mst` A LEFT JOIN `tbid_ntc_crgo` B ON A.NTC_NO = B.NTC_NO LEFT JOIN `tbid_qtn_mst` C ON A.NTC_NO = C.NTC_NO ";
+        $sql_search = " where  A.NTC_CLS_CD = '{$NTC_CLS_CD}' AND C.QTN_PIC_NO = '{$MBR_NO}'";
+    }
+    else if($bidType == "2" ) {
+        $sql_common = "FROM `tbid_ntc_mst` A LEFT JOIN `tbid_ntc_crgo` B ON A.NTC_NO = B.NTC_NO ";
+        $sql_search = " where  A.NTC_CLS_CD = '{$NTC_CLS_CD}' AND A.NTC_PIC_NO = '{$MBR_NO}'";
+    }
+    
+
+    if(!$orderSORT) {
+        $sql_order = " order by `INS_DT` desc ";
+        $order = "1";
+    } else if($orderSORT == 'BID') {
+        $sql_order = " order by `BID_NTC_YMD` desc ";
+        $order = "2";
+    } else if($orderSORT == 'CNT') {
+        $sql_order = " order by `ROUTE_CNT` desc ";
+        $order = "3";
+    }
+
+    $qstr = "tab=".$tab."&mb_id=".$MBR_NO."&searchMODE=".$searchMODE."&NTC_CLS_CD=".$NTC_CLS_CD."&CRG_TYP_CD=".$CRG_TYP_CD."&NTC_STS_CD=".$NTC_STS_CD."&sKEY=".$sKEY."&pageNum=".$pageNum."&bidType=".$bidType."&page=".$page;
+    #################################################################################################
+    if($searchMODE == "act") {
+
+        if($CRG_TYP_CD) {
+            $sql_search .= " AND A.CRG_TYP_CD = '{$CRG_TYP_CD}' ";
+        }
+
+        if($NTC_STS_CD) {
+            $sql_search .= " AND A.NTC_STS_CD = '{$NTC_STS_CD}' ";
+        }
+
+        if($sKEY) {
+            //$sql_search .= " AND  ( NTC_NM || QTN_NM || NTC_NO || QTN_NO ) like '%{$sKEY}%'";
+            $sql_search .= " AND  A.NTC_NM like '%{$sKEY}%'";
+        }
+    }
+    #################################################################################################
+
+    //검색
+    $cntSql = "select count(*) as cnt {$sql_common} {$sql_search} ";
+    $cntRow = sql_fetch($cntSql);
+    $total_count = $cntRow['cnt'];
+
+    $pageNum = (int)$_GET['pageNum'];
+
+    if(!$pageNum) {
+        $rows = 10;
+    } else {
+        $rows = $pageNum;
+    }
+
+    $page = (int)$_GET['page'];
+
+    $total_page  = ceil($total_count / $rows);  // 전체 페이지 계산
+    if ($page < 1) { $page = 1; } // 페이지가 없으면 첫 페이지 (1 페이지)
+    $from_record = ($page - 1) * $rows; // 시작 열을 구함
+
+    $list_page_rows = 10;
+    //순번
+    $list_num = $total_count - ($page - 1) * $list_page_rows;
+
+    $sql_bid ="SELECT A.NTC_NO,  A.NTC_NM, A.NTC_CLS_CD, A.COMP_CD, A.COMP_NM, B.POL_CD, B.POD_CD,
+    SUBSTRING(B.POL_CD,1,2) AS POL_FLAG,
+    SUBSTRING(B.POD_CD,1,2) AS POD_FLAG,    
+    (SELECT LOC_NM FROM tcmn_unloc_code WHERE LOC_CD = B.POL_CD AND SA_CLS_CD = A.SA_CLS_CD) AS POL_NM,
+    (SELECT LOC_NM FROM tcmn_unloc_code WHERE LOC_CD = B.POD_CD AND SA_CLS_CD = A.SA_CLS_CD) AS POD_NM,
+    (SELECT COUNT(*) AS cnt FROM `tbid_qtn_mst` WHERE NTC_NO = A.NTC_NO) AS ROUTE_CNT, 
+    A.* ";
+
+$sql_bid .= " {$sql_common} {$sql_search} {$sql_order} limit {$from_record}, {$rows} ";
+
+$result = sql_query($sql_bid);
+
+// echo $sql_bid;
+?>
+<div class="container">
+
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                    <li>My</li>
+                    <li class="active">마이페이지</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="jumbotron bg-dark-blue">
+            <img src="<?php if($row['IMG_FILE_NM']) echo $row['IMG_FILE_NM']; else echo '../../img/icon/icon-company.png'; ?>" id="blah1" alt="" data-src="../../img/icon/icon-company.png" style="border-radius: 50%;width: 80px; height: 80px;">
+            <h1 class="mb20 font40"><?php echo $row['MBR_NM']?></h1>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="row">
+            <div class="col-12">
+                <div id="main-tab">
+                    <ul class="tabs tabs-faq clearfix inner-left m-tabs">
+                        <li class='<?php if($tab=="1") echo "active";?>' rel="tab1">내이력</li>
+                        <li class='<?php if($tab=="2") echo "active";?>' rel="tab2">기업정보</li>
+                        <li class='<?php if($tab=="4") echo "active";?>' rel="tab4">해운운임</li>
+                        <li class='<?php if($tab=="5") echo "active";?>' rel="tab5">항공운임</li>
+                    </ul>
+
+                    <div class="tab_container clearfix">
+
+                        <?php //내이력  ?>
+                        <div id="tab1" class="tab_content my_history">
+                            <div class="row ">
+                                <div class="col-12">
+                                    <div class="portlet">
+                                        <div class="portlet-title">
+                                            <caption>About</caption>
+                                        </div>
+                                        <div class="row view">
+                                            <div class="form-group" style="padding: .5rem 0; border: none;">
+                                                <div class="col-12">
+                                                    <p class="l-height4">
+                                                        <?php echo nl2br($row['INTRDC_DESC']); ?>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt20">
+                                <div class="col-12">
+                                    <div class="portlet">
+                                        <div class="portlet-title">
+                                            <caption>Profile</caption>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="portlet">
+                                        <div class="row view">
+                                            <div class="form-group border-none checkCont">
+                                                <div class="col-3">업계경력</div>
+                                                <div class="col-9 row">
+                                                    <?php if($row['CAREER_YY_CNT']) echo $row['CAREER_YY_CNT']; else echo "0"; ?>년 
+                                                    <?php if($row['CAREER_MM_CNT']) echo $row['CAREER_MM_CNT']; else echo "0"; ?>개월
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="portlet">
+                                        <div class="row view">
+                                            <div class="form-group checkCont">
+                                                <div class="col-3">지역</div>
+                                                <div class="col-9">
+                                                    <?php echo $SERVICE; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="portlet">
+                                        <div class="row view">
+                                            <div class="form-group checkCont">
+                                                <div class="col-3">관심지역</div>
+                                                <div class="col-9">
+                                                    <?php echo $AREA_CD; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="portlet">
+                                        <div class="row view">
+                                            <div class="form-group checkCont">
+                                                <div class="col-3">ITEM</div>
+                                                <div class="col-9">
+                                                    <?php echo $ITEM_CD; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--내이력_수정-->
+                            <div class="row mt20">
+                                <div class="portlet">
+                                    <div class="portlet-title">
+                                        <caption>Contact</caption>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="portlet view pd12 border-radius-0">
+                                            <div class="form-group">
+                                                <div class="col-3">전화번호
+                                                </div>
+                                                <div class="col-9">
+                                                    <?php echo $row['TEL_NO']?>
+                                                </div>
+                                            </div>
+                                            <div class="form-group border-none">
+                                                <div class="col-3">Mobile</div>
+                                                <div class="col-9">
+                                                    <?php echo $row['HP_NO']?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="portlet view pd12 border-left border-radius-0">
+                                            <div class="form-group">
+                                                <div class="col-3">팩스번호</div>
+                                                <div class="col-9">
+                                                    <?php echo $row['FAX_NO']?>
+                                                </div>
+                                            </div>
+                                            <div class="form-group border-none">
+                                                <div class="col-3">
+                                                    E-mail
+                                                </div>
+                                                <div class="col-9">
+                                                    <?php echo $row['MBM_EMAIL_ID']?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <?php //내이력 / 기업정보 ?>
+                        <div id="tab2" class="tab_content">
+                            <div class="row">
+                                <div class="portlet">
+                                    <div class="portlet-title">
+                                        <caption>기업 규모 및 주요 서비스</caption>
+                                    </div>
+                                    <div class="portlet view pd12">
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                업체명 <span class="text-primary">*</span>
+                                            </div>
+                                            <div class="col-9">
+                                                <?php echo $row['COMP_NM']?>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                사업자번호
+                                            </div>
+                                            <div class="col-9">
+                                                <?php echo $row['REG_NO']?>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                직원수
+                                            </div>
+                                            <div class="col-9">
+                                                <div class="row">
+                                                    <div class="col-4">
+                                                        <?php if($row['EMP_CNT']) echo $row['EMP_CNT']; else echo "0"; ?>
+                                                        <span>명</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                매출액(전년도)
+                                            </div>
+                                            <div class="col-9">
+                                                <div class="row">
+                                                    <div class="col-4 xs-col-5">
+                                                        <?php if($row['PRE_YEAR']) echo $row['PRE_YEAR']."년도"; ?>
+                                                        
+                                                    </div>
+                                                    <div class="col-4 xs-col-5">
+                                                        <?php echo $row['SALES_AMT']?>
+                                                        <?php if($row['SALES_AMT']) echo $row['SALES_AMT']."백만원"; else echo "없음" ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                네트워크
+                                            </div>
+                                            <div class="col-9 xs-col-12">
+                                                <div class="row">
+                                                    <div class="col-4">
+                                                        <span class="mr-2 inner-left">국내지사</span>
+                                                        <?php if($row['DOM_BRN_CNT']) echo $row['DOM_BRN_CNT']; else echo "0"; ?>
+                                                        <span>개사</span>
+                                                    </div>
+                                                    <div class="col-4 m-mt10">
+                                                        <span class="mr-2 inner-left">해외지사</span>
+                                                        <?php if($row['EXP_BRN_CNT']) echo $row['EXP_BRN_CNT']; else echo "0"; ?>
+                                                        <span>개사</span>
+                                                    </div>
+                                                    <div class="col-4 m-mt10">
+                                                        <span class="mr-2 inner-left">해외파트너</span>
+                                                        <?php if($row['EXP_PTN_CNT']) echo $row['EXP_PTN_CNT']; else echo "0"; ?>
+                                                        <span>개사</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                입찰참여
+                                            </div>
+                                            <div class="col-9">
+                                                <div class="row">
+                                                    <div class="col-4">
+                                                        <span class="mr-2 inner-left">참여건수</span>
+                                                        <?php if($bidCntRow['cnt']) echo $bidCntRow['cnt']; else echo "0"; ?>
+                                                        <span>건</span>
+                                                    </div>
+                                                    <div class="col-8 m-mt10">
+                                                        <span class="mr-2 inner-left">최초참여일</span>
+                                                        <?php if($firstBid['INS_DT']) echo $firstBid['INS_DT']; else echo "없음"; ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                서비스상세
+                                            </div>
+                                            <div class="col-9">
+                                                <?php echo $row['DTL_SVC_DESC']?>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                주요수행실적
+                                            </div>
+                                            <div class="col-9">
+                                                <?php echo $row['MAIN_OPR_DESC']?>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                주요인증 및 공인기관 가입내역
+                                            </div>
+                                            <div class="col-9">
+                                                <?php echo $row['MAIN_INSR_DESC']?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt20">
+                                <div class="col-12">
+                                    <div class="portlet">
+                                        <div class="portlet-title">
+                                            <caption>회사로고 및 사업자 등록증</caption>
+                                        </div>
+                                        <div class="row view">
+                                            <div class="form-group">
+                                                <div class="col-3">
+                                                    회사로고
+                                                </div>
+                                                <div class="col-2 ">
+                                                    <div class="">
+                                                        <img src="<?php if($row['LOGO_FILE_NM']) echo $row['LOGO_FILE_NM']; else echo '../../img/icon/no_image_01.png'; ?>" id="blah2" alt="" data-src="../../img/icon/no_image_01.png" width="200" height="60" />
+                                                    </div>
+                                                </div>
+                                                <div class="col-6 uploadBtnCont" style="margin-top: 5px;">
+                                                </div>
+                                            </div>
+                                            <div class="form-group border-none">
+                                                <div class="col-3">
+                                                    사업자 등록증
+                                                </div>
+                                                <div class="col-2 ">
+                                                    <div class="">
+                                                        <img src="<?php if($row['BIZ_FILE_NM']) echo $row['BIZ_FILE_NM']; else echo '../../img/icon/no_image_02.jpg'; ?>" id="blah3" alt="" data-src="../../img/icon/no_image_02.jpg" width="200" height="135" />
+                                                    </div>
+                                                </div>
+                                                <div class="col-6 uploadBtnCont">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <?php //입찰내역 / 해운운임 ?>
+                        <div id="tab4" class="tab_content">
+                            <div class="table">
+                                <div class="table-responsive">
+                                    <table class="table-sample-6" id="seaRate">
+                                        <tr class="header">
+                                            <th></th>
+                                            <th>선적항<span class="small-span">(필수)</span></th>
+                                            <th>양하항<span class="small-span">(필수)</span></th>
+                                            <th>20</th>
+                                            <th>40</th>
+                                            <th>4HC</th>
+                                            <th>T/Time</th>
+                                            <th>적용화폐</th>
+                                            <th>적용일자</th>
+                                            <th>종료일자</th>
+                                            <th>비고</th>
+                                        </tr>
+                                        <tr class="table-blink"><td colspan="6"></td></tr>
+
+                                        <?php 
+
+                                        $sql = "SELECT * FROM tcmn_fwd_trf WHERE SA_CLS_CD ='SEA' AND COMP_CD = '$COMPCD' ORDER BY INP_YMD DESC ";
+                                        $result =sql_query($sql);
+                                        for ($i=0; $row=sql_fetch_array($result); $i++){
+
+                                            $p1_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$row[POL_CD]' ");
+                                            $p2_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$row[POD_CD]' ");
+
+                                            ?>
+
+                                            <tr class="table-blink"><td colspan="6"></td></tr>
+                                            <tr>
+                                                <td></td>
+                                                <td data-id="<?php echo $row[POL_CD]; ?>"><?php echo $p1_h[LOC_NM]?></td>
+                                                <td data-id="<?php echo $row[POD_CD]; ?>"><?php echo $p2_h[LOC_NM]?></td>
+                                                <td><?php echo $row[TRF_20]?></td>
+                                                <td><?php echo $row[TRF_40]?></td>
+                                                <td><?php echo $row[TRF_4H]?></td>
+                                                <td><?php echo $row[TRS_DAYS_CNT]?></td>
+                                                <td><?php echo $row[CURR_CD]?></td>
+                                                <td><?php echo $row[APLY_YMD]?></td>
+                                                <td><?php echo $row[EXPR_YMD]?></td>
+                                                <td><?php echo $row[REMARK]?></td>
+                                            </tr>
+                                        <?php }?>
+
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <?php //해운운임 / 항공운임 ?>
+                        <div id="tab5" class="tab_content">
+                            <div class="table-responsive tableSclroll">
+                                <table class="table-sample-6 table-sample-6-c" id="airRate">
+                                    <tr>
+                                        <th rowspan="2" style="width: 7rem;">선적항<span class="small-span">(필수)</span></th>
+                                        <th rowspan="2" style="width: 7rem;">도착항<span class="small-span">(필수)</span></th>
+                                        <th colspan="9">중량범위</th>
+                                        <th rowspan="2">적용화폐</th>
+                                        <th rowspan="2">적용일자</th>
+                                        <th rowspan="2">종료일자</th>
+                                        <th rowspan="2" style="width: 7rem;">비고</th>
+                                    </tr>
+                                    <tr class="custom">
+                                        <th>MIN</th>
+                                        <th>N</th>
+                                        <th>+45</th>
+                                        <th>+100</th>
+                                        <th>+300</th>
+                                        <th>+500</th>
+                                        <th>+1000</th>
+                                        <th>FSC</th>
+                                        <th>SSC</th>
+                                    </tr>
+                                    <tr class="table-blink"><td colspan="6"></td></tr>
+                                    <?php 
+                                    $sql = " SELECT * from tcmn_fwd_trf where SA_CLS_CD ='AIR' and COMP_CD = '$COMPCD' ORDER BY APLY_YMD DESC ";
+                                    $result =sql_query($sql);
+                                    for ($i=0; $row=sql_fetch_array($result); $i++){
+
+                                        $p1_h = sql_fetch("SELECT * from tcmn_unloc_code where LOC_CD = '$row[POL_CD]' ");
+                                        $p2_h = sql_fetch("SELECT * from tcmn_unloc_code where LOC_CD = '$row[POD_CD]' ");
+
+                                        ?>
+                                        <tr class="table-blink"><td colspan="6"></td></tr>
+                                        <tr>
+                                            <td data-id="<?php echo $row[POL_CD]; ?>"><?php echo $p1_h[LOC_NM]?></td>
+                                            <td data-id="<?php echo $row[POD_CD]; ?>"><?php echo $p2_h[LOC_NM]?></td>
+                                            <td><?php echo $row[TRF_MIN]?></td>
+                                            <td><?php echo $row[TRF_N]?></td>
+                                            <td><?php echo $row[TRF_45]?></td>
+                                            <td><?php echo $row[TRF_100]?></td>
+                                            <td><?php echo $row[TRF_300]?></td>
+                                            <td><?php echo $row[TRF_500]?></td>
+                                            <td><?php echo $row[TRF_1000]?></td>
+                                            <td><?php echo $row[TRF_FSC]?></td>
+                                            <td><?php echo $row[TRF_SSC]?></td>
+                                            <td><?php echo $row[CURR_CD]?></td>
+                                            <td><?php echo $row[APLY_YMD]?></td>
+                                            <td><?php echo $row[EXPR_YMD]?></td>
+                                            <td><?php echo $row[REMARK]?></td>
+                                        </tr>
+                                    <?php }?>
+                                </table>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style type="text/css">
+    .btn.caption { margin-top: 5px; }
+    .tableSclroll{ width:1170px; overflow: auto; }
+    .tableSclroll table{ width: 1190px; }
+    .uploadBtnCont { margin:30px 20px 0 0 ; }
+    a.bid_view { background: #0174bf; padding: 10px; border-radius: 5px; color: #fff; }
+</style>
+<script type="text/javascript">
+    
+///////////////////////////
+    $(document).ready(function() 
+    {
+        $("div.tab_content").each(function() {
+            $(this).css("display", "none");
+        });
+        <?php 
+            echo '$("#tab'.$tab.'").css("display", "block")';
+        ?>
+    });
+///////////////////////
+</script>
+
+<?php 
+include_once ('../../include/html_foot.html');
+?>
+

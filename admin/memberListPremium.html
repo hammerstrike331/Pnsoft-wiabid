@@ -1,0 +1,384 @@
+<?php
+session_start();
+include_once('lib/common.php');
+
+// 관리자 세션 확인
+if(!isset($_SESSION['ADMIN_GRPNAME'])) {
+    alertMove('로그인 후 이용해 주세요', "index.html");
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <?php
+    include_once ('./include/head.html');
+    ?>
+
+</head>
+<body class="fixed-left">
+
+<!-- Begin page -->
+<div id="wrapper">
+
+    <?php
+    include_once ('./include/menu.html');
+    ?>
+
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+    <?php
+    //  일반쿼리
+    $sql_common = " FROM `tcmn_mbr_join` A LEFT OUTER JOIN `tcmn_mbr_comp` B ON B.REG_NO = A.REG_NO ";
+    $sql_search = " where (1) and premium_ym = 'Y' ";
+    $sql_order = " order by A.mbr_idx desc ";
+
+    // 검색 옵션
+    $member_stats = addslashes($_GET['member_stats']);  // 가입탈퇴구분
+    $reg_type = addslashes($_GET['reg_type']);  //  ro가입구분
+    $bid_type = addslashes($_GET['bid_type']);  // 입찰분야
+    $member_type = addslashes($_GET['member_type']);    // 회원구분
+
+    $st_date = addslashes($_GET['st_date']);    //시작일자
+    $ed_date = addslashes($_GET['ed_date']);    //종료일자
+
+    $s_comp_nm = addslashes($_GET['s_comp_nm']);    //개인/기업명
+
+    $qstr = "member_stats=".$member_stats."&reg_type=".$reg_type."&bid_type=".$bid_type."&member_type=".$member_type."&st_date=".$st_date."&ed_date=".$ed_date."&s_comp_nm=".$s_comp_nm."&pageNum=".$pageNum."&page=".$page;
+    #################################################################################################
+    //가입탈퇴구분
+    if($member_stats) {
+        if($member_stats == 'JOIN') $sql_search .= "and `JOIN_STS_CD` = 'JOIN' ";
+        if($member_stats == 'WAIT') $sql_search .= "and `JOIN_STS_CD` = 'WAIT' ";
+        if($member_stats == 'SCDE') $sql_search .= "and `JOIN_STS_CD` = 'SCDE' ";
+    }
+
+    //입찰분야
+    if($reg_type) {
+        if($reg_type == 'P') $sql_search .= "and `reg_typ_cd` = 'P' ";
+        if($reg_type == 'B') $sql_search .= "and `reg_typ_cd` = 'B' ";
+    }
+
+    //가입구분
+    if($reg_type) {
+        if($reg_type == 'P') $sql_search .= "and `reg_typ_cd` = 'P' ";
+        if($reg_type == 'B') $sql_search .= "and `reg_typ_cd` = 'B' ";
+    }
+
+    //기업명
+    if($s_comp_nm) {
+        $sql_search .= " and `comp_nm` = '$s_comp_nm'";
+    }
+
+    //입찰분야
+    if($bid_type) {
+        if($bid_type == 'sea') $sql_search .= "and `bid_knd_cd` = 'sea' ";
+        if($bid_type == 'air') $sql_search .= "and `bid_knd_cd` = 'air' ";
+        if($bid_type == 'bulk') $sql_search .= "and `bid_knd_cd` = 'bulk' ";
+        if($bid_type == 'nobid') $sql_search .= "and `bid_knd_cd` = 'nobid' ";
+    }
+
+    //회원구분
+    if($member_type) {
+        if($member_type == 'gen') $sql_search .= "and `MNGR_YN` = 'N' ";
+        if($member_type == 'adm') $sql_search .= "and `MNGR_YN` = 'Y' ";
+        if($member_type == 'sale') $sql_search .= "and `SALE_PIC_YN` = 'Y' ";
+
+    }
+    #################################################################################################
+
+    //전체회원
+    $sql1 = "select count(*) as cnt {$sql_common}";
+    $row1 = sql_fetch($sql1);
+    $total_member = $row1['cnt'];
+
+
+    //검색
+    $sql = "select count(*) as cnt {$sql_common} {$sql_search} ";
+    $row = sql_fetch($sql);
+    $total_count = $row['cnt'];
+
+    $pageNum = (int)$_GET['pageNum'];
+
+    if(!$pageNum) {
+        $rows = 10;
+    } else {
+        $rows = $pageNum;
+    }
+
+    $page = (int)$_GET['page'];
+
+    $total_page  = ceil($total_count / $rows);  // 전체 페이지 계산
+    if ($page < 1) { $page = 1; } // 페이지가 없으면 첫 페이지 (1 페이지)
+    $from_record = ($page - 1) * $rows; // 시작 열을 구함
+
+    $list_page_rows = 10;
+    //순번
+    $list_num = $total_count - ($page - 1) * $list_page_rows;
+
+    $sql = " SELECT B.COMP_CD, IFNULL(B.REG_TYP_CD, A.REG_TYP_CD) AS REG_TYP_CD ,A.MBR_NO ,A.MBR_NM ,IFNULL(B.REG_NO, A.REG_NO) AS REG_NO ,IFNULL(B.COMP_KND_CD, A.COMP_KND_CD) AS COMP_KND_CD ,B.PB_TYPE, B.PREMIUM_YM 
+    {$sql_common} {$sql_search} {$sql_order} limit {$from_record}, {$rows} ";
+    $result = sql_query($sql);
+
+?>
+    <div class="content-page">
+        <!-- Start content -->
+        <div class="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card-box p-b-0">
+                            <h5 class="m-b-10"><b>회원 검색</b></h5>
+                            <hr class="m-t-0">
+
+                            <div class="row">
+
+                                <form class="form-horizontal group-border-dashed clearfix" name="fsearch" id="fsearch" method="get">
+                                    <div class="col-sm-12">
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-3 control-label">프리미엄 여부</label>
+                                                    <div class="col-sm-9">
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="pb_type1" value="" name="pb_type" <? if($pb_type == '') echo 'checked'; ?>>
+                                                            <label for="userRadio1"> 전체 </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="pb_type2" value="D" name="pb_type" <? if($pb_type == 'D') echo 'checked'; ?>>
+                                                            <label for="userRadio2"> 일반 </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="pb_type3" value="P" name="pb_type" <? if($pb_type == 'P') echo 'checked'; ?>>
+                                                            <label for="userRadio3"> 프리미엄 </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">회원명</label>
+                                                    <div class="col-sm-10">
+                                                        <div class="form-inline">
+                                                            <select class="form-control">
+                                                                <option>기업명</option>
+                                                                <option>기업명</option>
+                                                                <option>기업명</option>
+                                                                <option>기업명</option>
+                                                                <option>기업명</option>
+                                                            </select>
+
+                                                            <input type="text" class="form-control" placeholder=""/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-3 control-label">수수료 구분</label>
+                                                    <div class="col-sm-4">
+                                                        <select class="form-control">
+                                                            <option>ALL</option>
+                                                            <option>ALL</option>
+                                                            <option>ALL</option>
+                                                            <option>ALL</option>
+                                                            <option>ALL</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">입찰 참여 분야</label>
+                                                    <div class="col-sm-10">
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="inlineRadio1" value="option5" name="radioInline" checked>
+                                                            <label for="inlineRadio1"> 전체 </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="inlineRadio2" value="option6" name="radioInline">
+                                                            <label for="inlineRadio2"> 해상 </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="inlineRadio3" value="option7" name="radioInline">
+                                                            <label for="inlineRadio3"> Bulk </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="inlineRadio4" value="option7" name="radioInline">
+                                                            <label for="inlineRadio4"> Air </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="inlineRadio5" value="option7" name="radioInline">
+                                                            <label for="inlineRadio5"> 미참여 </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-3 control-label">기간 경과</label>
+                                                    <div class="col-sm-4">
+                                                        <div class="input-group">
+                                                            <input type="text" class="form-control" placeholder="0">
+                                                            <span class="input-group-addon">일</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="form-group">
+                                                    <div class="col-sm-offset-5 col-sm-7 m-t-15">
+                                                        <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                                            검색
+                                                        </button>
+                                                        <button type="reset" class="btn btn-inverse waves-effect m-l-5">
+                                                            초기화
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+
+<style>
+    .tableSclroll{
+        width: 100%
+        overflow: auto;
+    }
+    .tableSclroll table{
+        width:100%;
+    }
+</style>
+                <?     echo '<p>'. $sql . '<p>'; ?>
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card-box p-b-0">
+                            <div class="row m-b-10">
+                                <div class="col-sm-6">
+                                    <h5><b>회원 목록</b><span class="text-muted font-13 m-l-15"> 검색결과 <span class="font-bold text-dark"><?=number_format($total_count)?></span> 명</span></h5>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-inline pull-right">
+                                        <select class="form-control">
+                                            <option>프리미엄 회비(월)</option>
+                                            <option>프리미엄 회비(년)</option>
+                                            <option>무료</option>
+                                        </select>
+                                        <div class="form-group">
+                                            <button type="reset" class="btn btn-primary waves-effect">일괄적용</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="m-t-0">
+                            <div class="table-responsive tableSclroll">
+                                <form name="fupdate" id="fupdate">
+                                <table class="table table-bordered table-hover text-center">
+                                    <thead>
+                                    <tr class="bg-lightdark">
+                                        <th class="text-center" width="40"><input type="checkbox" name="chkall" value="1" id="chkall" onclick="check_all(this.form)"></th>
+                                        <th class="text-center" width="150">기업구분</th>
+                                        <th class="text-center" width="150">코드</th>
+                                        <th class="text-center">고객명</th>
+                                        <th class="text-center" width="150">사업자번호</th>
+                                        <th class="text-center" width="150">입찰참가분야</th>
+                                        <th class="text-center" width="100">프리미엄</th>
+                                        <th class="text-center" width="150">시작일시</th>
+                                        <th class="text-center" width="150">종료일시</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+                                    <?
+                                    for ($i=0; $row=sql_fetch_array($result); $i++) {
+                                    $num = $list_num - $i;
+
+                                        if($row['PB_TYPE'] == 'D') {
+                                            $pb_type = '국내';
+                                        } else if ($row['PB_TYPE'] == 'F') {
+                                            $pb_type = '해외';
+                                        } else {
+                                            $pb_type = '??';
+                                        }
+
+                                     if($row['REG_TYP_CD'] == 'B') {
+                                         $reg_typ_cd = '기업';
+                                     } else if ($row['REG_TYP_CD'] == 'P') {
+                                         $reg_typ_cd = '개인';
+                                     }
+
+                                        $comp_cd = $row['COMP_CD'];    // 코드
+                                        $comp_nm = $row['MBR_NM'];    // 고객명
+                                        $reg_number = $row['REG_NO'];  // 사업자번호
+                                        $comp_knd_nm = $row['COMP_KND_NM'];   // 입찰참가분야
+
+                                        if(strlen($reg_number) == 10) {
+                                            $reg_no = substr($reg_number,0,3) . '-' . substr($reg_number,3,2). '-' . substr($reg_number,-5);
+                                        }  else {
+                                            $reg_no = $reg_number;
+                                        }
+
+                                    ?>
+                                    <tr>
+                                        <td scope="row"><input type="checkbox" name="chk[]" value="<?php echo $row['comp_idx'] ?>" id="chk_<?php echo $i ?>"></td>
+                                        <td><?=$reg_typ_cd?></td>
+                                        <td><?=$comp_cd?></td>
+                                        <td><a href="viewInfo.html"><?=$comp_nm?></a></td>
+                                        <td><?=$reg_no?></td>
+                                        <td><?=$comp_knd_nm?></td>
+                                        <td><input type="checkbox" checked/></td>
+                                        <td>2016-11-01</td>
+                                        <td>2016-11-01</td>
+                                    </tr>
+                                    <? } ?>
+                                    </tbody>
+                                </table>
+                                </form>
+                            </div>
+                            <div class="clearfix">
+                                <div class="pull-right">
+                                    <select class="form-control" name="pageNum" id="pageNum" onchange="viewCount(this.options[this.selectedIndex].value)">
+                                        <option value="10" <? if($pageNum == '10') echo "selected"; ?>>10개 보기</option>
+                                        <option value="25" <? if($pageNum == '25') echo "selected"; ?>>25개 보기</option>
+                                        <option value="50" <? if($pageNum == '50') echo "selected"; ?>>50개 보기</option>
+                                        <option value="100" <? if($pageNum == '100') echo "selected"; ?>>100개 보기</option>
+                                        <option value="<?=$total_member?>" <? if($pageNum == $total_member) echo "selected"; ?>>전체보기</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <?php echo get_paging2(5, $page, $total_page, $_SERVER['SCRIPT_NAME'].'?'.$qstr.'&amp;page='); ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+<script type='text/javascript'>
+    /*
+     $(document).ready(function() {
+     $("#grid-basic").bootgrid();
+     });
+     */
+
+    function viewCount(val)
+    {
+        self.location = "<?=$_SERVER[PHP_SELF]?>?<?= $qstr ?>&pageNum=" + val;
+    }
+</script>
+<?php
+    include_once ('./include/footer.html');
+?>

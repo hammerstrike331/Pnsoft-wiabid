@@ -1,0 +1,229 @@
+<?php
+session_start();
+include_once('../../admin/lib/common.php');
+
+if ($_SESSION['MBM_EMAIL']) {
+    alertMove("이미 로그인 되어있습니다.", RT_PATH);
+}
+
+include_once('../../include/html_head.html');
+
+$mb_id  = clean_xss_tags($_POST['mb_id']);
+$mb_pw  = clean_xss_tags($_POST['mb_password']);
+$mb_name  = trim($_POST['mb_name1']).' '. trim($_POST['mb_name2']);
+$mb_type  = $_POST['mb_type'];
+if( $mb_type != "P" ) {
+    $PB_TYPE = $mb_type;
+    $mb_type = "B";
+}
+
+$reg_no =  clean_xss_tags($_POST['reg_no']);
+$reg_no =  str_replace('-', '', $reg_no);
+$reg_no =  str_replace(' ', '', $reg_no);
+
+$comp_nm  = clean_xss_tags($_POST['comp_nm']);
+$comp_knd_nm  = clean_xss_tags($_POST['comp_knd_nm']);  //업체구분
+
+switch ($comp_knd_nm) {
+    case '화주':
+        $comp_knd_cd = "SHP"; break;
+    case '포워더':
+        $comp_knd_cd = "FWD"; break;
+    case '선사':
+        $comp_knd_cd = "SEA"; break;
+    case '항공사':
+        $comp_knd_cd = "AIR"; break;
+    case '기타':
+        $comp_knd_cd = "ETC"; break;
+}
+
+$LIMIT_KND_CD  = clean_xss_tags($_POST['LIMIT_KND_CD']);  //입찰참가분야
+$COMP_KND_ETC_NM  = clean_xss_tags($_POST['COMP_KND_ETC_NM']);
+$dept_nm  = clean_xss_tags($_POST['dept_nm']);
+
+$mb_hp =  clean_xss_tags($_POST['mb_hp']);
+$mb_hp = str_replace('-', '', $mb_hp);
+$mb_hp = str_replace(' ', '', $mb_hp);
+
+$mb_tel =  clean_xss_tags($_POST['mb_tel']);
+$mb_tel  = str_replace('-', '', $mb_tel);
+$mb_tel  = str_replace(' ', '', $mb_tel);
+
+$mb_fax =  clean_xss_tags($_POST['mb_fax']);
+$mb_fax  = str_replace('-', '', $mb_fax);
+$mb_fax  = str_replace(' ', '', $mb_fax);
+
+// 전자정부표준프레임 encryptPassword 구현
+$hash_out = hash('sha256', $mb_id.$mb_pw,true);
+$salt_hash = base64_encode($hash_out);
+// =======================================
+
+// MBR_NO 생성
+    $lastSql = " SELECT MBR_NO FROM tcmn_mbr_join ORDER BY MBR_NO DESC LIMIT 1";
+    $lastRow = sql_fetch($lastSql);
+    $last = $lastRow['MBR_NO'];
+    $index = substr($last, -4);
+    $num = intval($index) + 1;
+    $MBR_NO = "";
+    if($num < 10){
+        $num = "0".$num;
+    }
+    
+    $date = date('Ymd');
+    $date = substr($date, 2);
+    if($num < 100)
+        $MBR_NO = $date."00".$num;
+    else if($num < 1000)
+        $MBR_NO = $date."0".$num;
+    else if($num < 10000)
+        $MBR_NO = $date.$num;
+//
+
+$randstr = generateRandomString(43);
+
+//  아이디(이메일) 체크
+$sql = "SELECT MBM_EMAIL_ID FROM  `tcmn_mbr_join`  WHERE MBM_EMAIL_ID = '{$mb_id}' LIMIT 1 ";
+$result = sql_fetch($sql);
+if($result['MBM_EMAIL_ID']) {
+    echo("<script> 
+            window.alert('이미 등록된 아이디(이메일)입니다.'); 
+            window.history.go(-1);
+        </script>");
+    exit;
+}
+//echo $sql;
+
+$insert_sql =" INSERT INTO `tcmn_mbr_join`
+		(
+			 MBR_NO
+			,MBM_EMAIL_ID
+			,PSWD_NO
+			,MBR_NM
+			,REG_TYP_CD
+			,REG_NO
+			,COMP_NM
+			,COMP_KND_CD     
+			,COMP_DTL_KND_CD
+			,DEPT_NM
+			,HP_NO
+			,TEL_NO
+			,FAX_NO
+			,SVC_TERM_YN
+			,EXMPT_TERM_YN
+			,PSNL_TERM_YN
+			,AUTHEN_CODE
+			,ENTER_DT
+			,INP_USR
+			,INP_YMD
+			,JOIN_STS_CD  
+		)
+		VALUES
+		(		
+		  '{$MBR_NO}', 
+		  '{$mb_id}',
+		  '{$salt_hash}',
+		  '{$mb_name}',
+		  '{$mb_type}',
+		  '{$reg_no}',
+		  '{$comp_nm}',
+		  '{$comp_knd_cd}',   
+		  '',
+		  '{$dept_nm}',
+		  '{$mb_hp}',
+		  '{$mb_tel}',
+		  '{$mb_fax}',
+		  'Y',
+		  'Y',
+		  'Y',
+		  '{$randstr}',
+		  now(),
+		  'USER',
+		  now(),
+		  'JOIN'
+		); ";
+
+sql_query($insert_sql);
+
+// 인증메일 발송 하기(필요)
+
+// COMP_CD 생성
+    $lastSql = " SELECT COMP_CD FROM tcmn_mbr_comp ORDER BY COMP_CD DESC LIMIT 1";
+    $lastRow = sql_fetch($lastSql);
+    $last = $lastRow['COMP_CD'];
+    $index = substr($last, -4);
+    $num = intval($index) + 1;
+    $COMP_CD = "";
+    if($num < 10){
+        $num = "0".$num;
+    }
+    
+    $date = date('Ymd');
+    $date = substr($date, 2, 4);
+    if($num < 100)
+        $COMP_CD = $date."00".$num;
+    else if($num < 1000)
+        $COMP_CD = $date."0".$num;
+    else if($num < 10000)
+        $COMP_CD = $date.$num;
+//
+    $sql_insert = "INSERT INTO `tcmn_mbr_comp`
+		  SET COMP_CD = '{$COMP_CD}'
+		    , REG_NO = '{$reg_no}'
+		  	, COMP_NM = '{$comp_nm}'
+		    , REG_TYP_CD = '{$mb_type}'
+            , PB_TYPE = '{$PB_TYPE}'
+		    , COMP_KND_NM = '{$comp_knd_nm}'
+		    , COMP_KND_CD = '{$comp_knd_cd}'
+            , COMP_KND_ETC_NM = '{$COMP_KND_ETC_NM}'
+            , LIMIT_KND_CD = '{$LIMIT_KND_CD}'
+            , INP_DT = NOW() 
+		    , INP_USR = '{$MBR_NO}' ";
+
+	sql_query($sql_insert);
+	//echo $sql_insert2;
+
+?>
+
+<div class="container">
+
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="<?php echo RT_PATH; ?>/img/icon/icon-home.png" alt="" width="16"></li>
+                    <li class="active">회원가입</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="jumbotron">
+            <h1 class="mb20">회원가입</h1>
+            <p> WiaBid 회원 가입을 진심으로 환영합니다.</p>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="row">
+            <div class="col-12 mb50 m-mb15">
+                <img src="<?php echo RT_PATH; ?>/img/sign-step3.png" alt="" class="sign-step m-hidden">
+                <img src="<?php echo RT_PATH; ?>/img/sign-step3-m.png" alt="" class="sign-step lg-hidden">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="portlet view sign-up-success">
+                    회원 가입이 정상적으로 완료되었습니다.
+                </div>
+            </div>
+        </div>
+        <div class="three-btn center mt20">
+            <a href="<?php echo RT_PATH; ?>/index.html" class="btn bg-silver">메인으로 이동</a>
+            <!-- <a href="#" data-toggle="modal" data-target="#myModal" class="btn">로그인</a> -->
+        </div>
+    </div>
+
+    </div>
+
+<?php
+include_once('../../include/html_foot.html');
+?>

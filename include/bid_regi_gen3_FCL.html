@@ -1,0 +1,142 @@
+<div class="row">
+    <div class="col-12">
+        <div class="portlet view">
+            <div class="form-group">
+                <div class="col-3">
+                    품목명<span class="text-primary">*</span>
+                </div>
+                <div class="col-9">
+                    <input type="text" class="input" name="CRG_NM" id="CRG_NM">
+                </div>
+            </div>
+            <div class="form-group ">
+                <div class="col-3">
+                    물동량<span class="text-primary">*</span>
+                </div>
+                <div class="col-9">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="row mb10">
+                                <div class="width38 xs-col-12 mr-2 m-mb3">
+                                    <select class="input" name="CNTR1_SZTP" id="CNTR1_SZTP">
+                                        <?php echo list_options(CNTR_SZTP); ?>
+                                    </select>
+                                </div>
+                                <div class="col-2 xs-col-3">
+                                    <input type="text" class="input" name="CNTR1_CNT" id="CNTR1_CNT">
+                                </div>
+                                <div class="col-1 xs-col-2">
+                                    <span class="small-span ml4">CNTRs</span>
+                                </div>
+                                <div class="col-2 xs-col-3">
+                                    <input type="text" class="input" name="CNTR1_WGT" id="CNTR1_WGT">
+                                </div>
+                                <div class="col-1 xs-col-2">
+                                    <span class="small-span ml4">KGS</span>
+                                </div>
+                            </div>
+                            <div class="row mb10">
+                                <div class="width38 xs-col-12 mr-2 m-mb3">
+                                    <select class="input" name="CNTR2_SZTP">
+                                        <?php echo list_options(CNTR_SZTP); ?>
+                                    </select>
+                                </div>
+                                <div class="col-2 xs-col-3">
+                                    <input type="text" class="input" name="CNTR2_CNT">
+                                </div>
+                                <div class="col-1 xs-col-2">
+                                    <span class="small-span ml4">CNTRs</span>
+                                </div>
+                                <div class="col-2 xs-col-3">
+                                    <input type="text" class="input" name="CNTR2_WGT">
+                                </div>
+                                <div class="col-1 xs-col-2">
+                                    <span class="small-span ml4">KGS</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="width38 xs-col-12 mr-2 m-mb3">
+                                    <select class="input" name="CNTR3_SZTP">
+                                        <?php echo list_options(CNTR_SZTP); ?>
+                                    </select>
+                                </div>
+                                <div class="col-2 xs-col-3">
+                                    <input type="text" class="input" name="CNTR3_CNT">
+                                </div>
+                                <div class="col-1 xs-col-2">
+                                    <span class="small-span ml4">CNTRs</span>
+                                </div>
+                                <div class="col-2 xs-col-3">
+                                    <input type="text" class="input" name="CNTR3_WGT">
+                                </div>
+                                <div class="col-1 xs-col-2">
+                                    <span class="small-span ml4">KGS</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-3">
+                    물품가 기준
+                </div>
+                <div class="col-9">
+                    <input type="text" class="input" placeholder="BL, CNTR. SHIPMENT 등" name="CRG_UNIT_NM">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-3">
+                    물품가액(FOB)
+                </div>
+                <div class="col-9">
+                    <div class="row">
+                        <div class="width29 mr-2">
+                            <input type="text" class="input" name="CRG_AMT" id="CRG_AMT" value="1,000">
+                        </div>
+                        <div class="width70">
+                            <select class="input" name="CRG_CURR_CD">
+                                <?php echo list_options(CURR_CD); ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>            
+            <div class="form-group">
+                <div class="col-3">
+                    위험물
+                </div>
+                <div class="col-9 ">
+                    <select class="input" name="IMDG_CD">
+                        <?php echo list_options(IMDG_CD); ?>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-3">
+                    견적적용환율 <span class="small-span">(1USD)</span><span class="text-primary">*</span>
+                </div>
+                <div class="col-9">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="width33 xs-col-5">
+                                <input type="text" class="input" placeholder="" value="1,130" name="EX_RATE" id="EX_RATE">
+                            </div>
+                            <span class="small-span">(KRW)</span>
+                        </div>
+                        <div class="col-6"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-3">
+                    기타요청사항
+                </div>
+                <div class="col-9 l-height0">
+                    <textarea  name="REMARK" id="REMARK" class="input height166" placeholder="미기재 필요사항 기술"></textarea>
+                </div>
+            </div>
+            <div class="form-group border-none"></div>
+        </div>
+    </div>
+</div>

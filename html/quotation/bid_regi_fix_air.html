@@ -1,0 +1,442 @@
+<?php
+    session_start();
+    include_once('../../admin/lib/common.php');
+    include_once('../../include/html_head.html');
+
+    $NTC_CLS_CD = addslashes($_POST['NTC_CLS_CD']); // 일반 / 정기
+    $CRG_TYP_CD = addslashes($_POST['CRG_TYP_CD']);  // 화물구분  SEA / AIR
+    $NTC_NM = addslashes($_POST['NTC_NM']);  // 공고명    
+    $NTC_PIC_NM = addslashes($_POST['NTC_PIC_NM']); // 공고자명
+    $NTC_CLOSE_YMD = addslashes($_POST['NTC_CLOSE_YMD']); // 입찰마감일시
+    $NTC_CLOSE_TM = addslashes($_POST['NTC_CLOSE_TM']); // 입찰마감일시
+    $CNTRCT_FR_YMD = addslashes($_POST['CNTRCT_FR_YMD']); //
+    $CNTRCT_TO_YMD = addslashes($_POST['CNTRCT_TO_YMD']); //
+    $CNTRCT_STND_CD = addslashes($_POST['CNTRCT_STND_CD']); //
+    $NTC_IO_TYP_CD = addslashes($_POST['NTC_IO_TYP_CD']); // 수출입구분  O / I / T / A
+    $PAY_COND_CD = addslashes($_POST['PAY_COND_CD']);  // 운임지불조건
+    $SEA_RQST_YN = addslashes($_POST['SEA_RQST_YN']);  // 해상운송
+    $AIR_RQST_YN = addslashes($_POST['AIR_RQST_YN']);  // 항공운송
+    $DOM_RQST_YN = addslashes($_POST['DOM_RQST_YN']);  // 국내운송
+    $CRG_RQST_YN = addslashes($_POST['CRG_RQST_YN']);  // 적하보험
+    $CSTM_RQST_YN = addslashes($_POST['CSTM_RQST_YN']);  // 통관
+    $REMARK = addslashes($_POST['REMARK']);  // 기타
+?>
+
+<div class="container">
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                    <li>Quotation</li>
+                    <li>입찰정보</li>
+                    <li class="active">입찰공고 등록</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="quotation-r-title mb40 clearfix">
+            <div class="row">
+                <div class="col-6">
+                    <h1 class="text-left">(정기) 입찰 공고 등록</h1>
+                </div>
+                <div class="col-6">
+                    <img src="../../img/steps2.png" alt="">
+                </div>
+            </div>
+        </div>
+
+        <form name="Join" id="Join" method="post" action="<?php echo RT_PATH."/php/bid_fix_ok.php";?>">
+            <input type="hidden" id="login_session" value="<?php echo $_SESSION['MBM_NM']?>">
+            <input type="hidden" name="ROUTE_LIST" id="ROUTE_LIST" value="">
+            <input type="hidden" name="NTC_CLS_CD" value="<?php echo $NTC_CLS_CD?>">
+            <input type="hidden" name="CRG_TYP_CD" value="<?php echo $CRG_TYP_CD?>">
+            <input type="hidden" name="NTC_NM" value="<?php echo $NTC_NM?>">            
+            <input type="hidden" name="NTC_PIC_NM" value="<?php echo $NTC_PIC_NM?>">
+            <input type="hidden" name="NTC_CLOSE_YMD" value="<?php echo $NTC_CLOSE_YMD?>">
+            <input type="hidden" name="NTC_CLOSE_TM" value="<?php echo $NTC_CLOSE_TM?>">
+            <input type="hidden" name="NTC_IO_TYP_CD" value="<?php echo $NTC_IO_TYP_CD?>">
+            <input type="hidden" name="CNTRCT_FR_YMD" value="<?php echo $CNTRCT_FR_YMD?>">
+            <input type="hidden" name="CNTRCT_TO_YMD" value="<?php echo $CNTRCT_TO_YMD?>">
+            <input type="hidden" name="CNTRCT_STND_CD" value="<?php echo $CNTRCT_STND_CD?>">
+            <input type="hidden" name="PAY_COND_CD" value="<?php echo $PAY_COND_CD?>">
+            <input type="hidden" name="SEA_RQST_YN" value="<?php echo $SEA_RQST_YN?>">
+            <input type="hidden" name="AIR_RQST_YN" value="<?php echo $AIR_RQST_YN?>">
+            <input type="hidden" name="DOM_RQST_YN" value="<?php echo $DOM_RQST_YN?>">
+            <input type="hidden" name="CRG_RQST_YN" value="<?php echo $CRG_RQST_YN?>">
+            <input type="hidden" name="CSTM_RQST_YN" value="<?php echo $CSTM_RQST_YN?>">
+            <input type="hidden" name="REMARK" value="<?php echo $REMARK?>">
+
+            <?php for($i = 0; $i < 10; $i++) { ?>
+                <div class="row" id="<?php echo 'route_'.$i?>" style="<?php if($i == 0){ echo "display: block;"; } else { echo "display: none;"; } ?>">
+                    <div class="col-12 mt20">
+                        <div class="portlet">
+                            <div class="portlet-sub">
+                                <caption>ROUTE <?php echo $i+1?></caption>
+                                <div class="btn-route">
+                                    <button type="button" onClick="javascript:deleteRoute(<?php echo $i?>);" class="btn caption bg-silver"> - ROUTE 삭제</button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="portlet view">
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                선적지
+                                            </div>
+                                            <div class="col-9">
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <div class="row mb10">
+                                                            <div class="col-2 xs-col-3 bold">
+                                                                선적항<span class="text-primary">*</span>
+                                                            </div>                                                            
+                                                            <div class="width70 port">                                                                
+                                                                <input type="text" name="POL_CD<?php echo $i?>" class="input searchPort" id="POL_CD<?php echo $i?>" placeholder="선적항" data-type="AIR" data-path="<?php echo RT_PATH; ?>" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-2 xs-col-3 bold">
+                                                                PICK UP지
+                                                            </div>
+                                                            <div class="width70">
+                                                                <input type="text" class="input mr-2" name="DOOR_NM<?php echo $i?>">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                도착지
+                                            </div>
+                                            <div class="col-9">
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <div class="row mb10">
+                                                            <div class="col-2 xs-col-3 bold">
+                                                                양하항<span class="text-primary">*</span>
+                                                            </div>                                                            
+                                                            <div class="width70 port">                                                                
+                                                                <input type="text" name="POD_CD<?php echo $i?>" class="input searchPort" id="POD_CD<?php echo $i?>" placeholder="양하항" data-type="AIR" data-path="<?php echo RT_PATH; ?>" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-2 xs-col-3 bold">
+                                                                DELIVERY 장소
+                                                            </div>
+                                                            <div class="width70">                                                                
+                                                                <input type="text" class="input mr-2" name="FDS_NM<?php echo $i?>">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="portlet view border-radius-0">
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                거래조건
+                                            </div>
+                                            <div class="col-9">
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <div class="row">
+                                                            <div class="col-2 xs-col-3 bold">
+                                                                무역거래조건<span class="text-primary">*</span>
+                                                            </div>
+                                                            <div class="width70">                                                                
+                                                                <select class="input" name="INCTRMS_CD<?php echo $i?>" id="INCTRMS_CD<?php echo $i?>">
+                                                                    <?php  echo list_options(INCTRMS); ?>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-2 xs-col-3 bold">
+                                                                운송노선<span class="text-primary">*</span>
+                                                            </div>
+                                                            <div class="width70">
+                                                                <label><input type="radio" name="TRS_ROUTE_CD<?php echo $i?>" value="DR" checked />Direct</label>
+                                                                <label><input type="radio" name="TRS_ROUTE_CD<?php echo $i?>" value="TS">T/S</label>
+                                                                <label><input type="radio" name="TRS_ROUTE_CD<?php echo $i?>" value="NO">Not Adjustment</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                품목명<span class="text-primary">*</span>
+                                            </div>
+                                            <div class="col-9">                                                
+                                                <input type="text" class="input" name="CRG_NM<?php echo $i?>" id="CRG_NM<?php echo $i?>">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                물동량<br/> <span class="small-span text-primary">계약기간내</span>
+                                            </div>
+                                            <div class="col-9">
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <div class="row mb10">
+                                                            <div class="col-2 xs-col-3 bold">
+                                                                포장형태
+                                                            </div>
+                                                            <div class="col-6 xs-col-7">                                                                
+                                                                <select class="input" name="PKG_CD<?php echo $i?>">
+                                                                    <?php echo list_options(PKG_CD); ?>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mb10">
+                                                            <div class="col-2 xs-col-3 bold">
+                                                                중량<span class="text-primary">*</span>
+                                                            </div>
+                                                            <div class="col-6 xs-col-4">
+                                                                <input type="text" min="0" class="input" name="CRG_WGT<?php echo $i?>" id="CRG_WGT<?php echo $i?>">
+                                                            </div>
+                                                            <div class="col-3 xs-col-3">
+                                                                <span class="small-span ml4">KGS</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mb10">
+                                                            <div class="col-2 xs-col-3 bold">
+                                                                용적
+                                                            </div>
+                                                            <div class="col-6 xs-col-4">
+                                                                <input type="text" min="0" class="input" name="CRG_VOL<?php echo $i?>" required>
+                                                            </div>
+                                                            <div class="col-3 xs-col-3">
+                                                                <span class="small-span ml4">CBM</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-2 xs-col-3 bold">
+                                                                선적건수 <small>(계약기간내)</small><span class="text-primary">*</span>
+                                                            </div>
+                                                            <div class="col-6 xs-col-4">
+                                                                <input type="text" class="input" name="SHIP_CNT<?php echo $i?>" id="SHIP_CNT<?php echo $i?>">
+                                                            </div>
+                                                            <div class="col-3 xs-col-3">
+                                                                <span class="small-span ml4">건</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="portlet view">
+                                        <div class="form-group m-border-top">
+                                            <div class="col-3">
+                                                물품가 기준
+                                            </div>
+                                            <div class="col-9 ">
+                                                <input type="text" class="input" name="CRG_UNIT_NM<?php echo $i?>" placeholder="예) B/L당, 컨테이너당, Shipment당...">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                물품가액(FOB)
+                                            </div>
+                                            <div class="col-9">
+                                                <div class="row">
+                                                    <div class="width29 mr-2">                                                        
+                                                        <input type="text" class="input" name="CRG_AMT<?php echo $i?>" id="CRG_AMT<?php echo $i?>" value="1,000" onBlur="javascript:clickCRGAMT(this)">
+                                                    </div>
+                                                    <div class="width70">                                                        
+                                                        <select class="input" name="CRG_CURR_CD<?php echo $i?>">
+                                                            <?php echo list_options(CURR_CD); ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>                                        
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                위험물
+                                            </div>
+                                            <div class="col-9 ">                                                
+                                                <select class="input" name="IMDG_CD<?php echo $i?>">
+                                                    <?php echo list_options(IMDG_CD); ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                견적적용환율 <span class="small-span">(1USD)</span><span class="text-primary">*</span>
+                                            </div>
+                                            <div class="col-9">
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <div class="width33">
+                                                            <input type="text" class="input" name="EX_RATE<?php echo $i?>" id="EX_RATE<?php echo $i?>" value="1,130" onBlur="javascript:clickEXRATE(this)">
+                                                        </div>
+                                                        <span class="small-span">(KRW)</span>
+                                                    </div>
+                                                    <div class="col-6"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                선호중량구간<span class="text-primary">*</span>
+                                            </div>
+                                            <div class="col-9">
+                                                <label><input type="radio" name="WGT_SECT_CD<?php echo $i?>" value="01" checked />MIN</label>
+                                                <label><input type="radio" name="WGT_SECT_CD<?php echo $i?>" value="02">N</label>
+                                                <label><input type="radio" name="WGT_SECT_CD<?php echo $i?>" value="03">+45</label>
+                                                <label><input type="radio" name="WGT_SECT_CD<?php echo $i?>" value="04">+100</label>
+                                                <label><input type="radio" name="WGT_SECT_CD<?php echo $i?>" value="05">+300</label>
+                                                <label><input type="radio" name="WGT_SECT_CD<?php echo $i?>" value="06">+500</label>
+                                                <label><input type="radio" name="WGT_SECT_CD<?php echo $i?>" value="07">+1000</label>
+                                            </div>
+                                        </div>
+                                        <div class="form-group border-none">
+                                            <div class="col-3">
+                                                기타요청사항
+                                            </div>
+                                            <div class="col-9 l-height0">
+                                                <textarea name="ETC_SVC_DESC<?php echo $i?>" class="input" placeholder="미기재 필요사항 기술"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php } ?>
+            <div class="col-12 pd11 border-top">
+                <div class="portlet view">
+                    <button type="button" id="add_route" class="btn caption bg-orange col-12" onClick="javascript:addRoute();"> + ROUTE 추가</button>
+                </div>
+            </div>
+        </form>
+        <div class="three-btn xs-btn center mt20">
+            <a href="javascript:BackForm();" class="btn center mt50">이전</a>
+            <a href="<?php echo RT_PATH."/html/quotation/bid_regi.html";?>" class="btn bg-dark-grey">취소</a>
+            <a href="javascript:CheckForm();" class="btn center mt50">등록 완료</a>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var login = $("#login_session").val();
+    if(!login) {
+        window.location.href = "bid_regi.html";
+    }
+
+    function numberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function clickCRGAMT(obj) {        
+        var num1 = numberWithCommas(obj.value);
+        obj.value = num1;
+    }
+
+    function clickEXRATE(obj) {     
+        var num2 = numberWithCommas(obj.value);
+        obj.value = num2;
+    }
+</script>
+
+<script type="text/javascript">
+    var routeList = [0];
+
+    function deleteRoute(id) {        
+        $("#route_"+id).css('display', 'none');
+        var index = routeList.indexOf(id);
+        routeList.splice(index, 1);
+        if(routeList.length < 10) {
+            $("#add_route").css('display', 'block');
+        }
+    }
+
+    function addRoute() {
+        var nextId = null;
+
+        for(var i = 0; i < 10; i++) {
+            var index = routeList.indexOf(i);
+            if(index < 0) {
+                nextId = i;
+                break;
+            }
+        }
+
+        if(nextId != null) {
+            $("#route_"+nextId).css('display', 'block');            
+            routeList.splice(nextId, 0, nextId);
+            // console.log(routeList);
+            if(routeList.length >= 10) {
+                $("#add_route").css('display', 'none');
+            }
+        }
+    }
+
+    function CheckForm(){        
+        var sendRoute = "";
+
+        for(var i = 0; i < routeList.length; i++) {      
+            var rIndex = parseInt(routeList[i]);
+                        
+            if($("#POL_CD"+rIndex).val() == ""){  
+                swal("ROUTE "+(rIndex+1)+" 선적항을 선택해주세요","","info");
+                return false;
+            }
+            if($("#POD_CD"+rIndex).val() == ""){            
+                swal("ROUTE "+(rIndex+1)+" 양하항을 선택해주세요","","info");
+                return false;
+            }
+            if($("#INCTRMS_CD"+rIndex).val() == ""){            
+                swal("ROUTE "+(rIndex+1)+" 무역거래조건을 선택해주세요","","info");
+                return false;
+            }
+            if($("#CRG_NM"+rIndex).val() == ""){            
+                swal("ROUTE "+(rIndex+1)+" 품목명을 입력해주세요","","info");
+                return false;
+            }     
+            if($("#CRG_WGT"+rIndex).val() == ""){            
+                swal("ROUTE "+(rIndex+1)+" 중량을 입력해주세요","","info");
+                return false;
+            }
+            if($("#SHIP_CNT"+rIndex).val() == ""){            
+                swal("ROUTE "+(rIndex+1)+" 선적건수를 입력해주세요","","info");
+                return false;
+            }
+            if($("#EX_RATE"+rIndex).val() == ""){            
+                swal("ROUTE "+(rIndex+1)+" 견적적용환율을 입력해주세요","","info");
+                return false;
+            }
+
+            if(i == 0)
+                sendRoute += rIndex;
+            else
+                sendRoute += "-" + rIndex;
+        }
+
+        $("#ROUTE_LIST").val(sendRoute);
+        var f = document.Join;
+        f.submit();
+    }
+
+    function BackForm(){
+        var f = document.Join;
+        f.action="bid_regi_fix.html";
+        f.submit();        
+    }
+</script>
+
+<?php
+    include_once('../../include/html_foot.html');
+?>

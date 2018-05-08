@@ -1,0 +1,181 @@
+<?php
+    session_start();
+    include_once ('../../admin/lib/common.php');
+    include_once ('../../include/html_head.html');
+
+    //step1
+    $NTC_CLS_CD = addslashes($_POST['NTC_CLS_CD']); // 일반 / 정기
+    $CRG_TYP_CD = addslashes($_POST['CRG_TYP_CD']);  // 화물구분   FCL / LCL / BULK / AIR
+    $NTC_NM = addslashes($_POST['NTC_NM']);  // 공고명    
+    $NTC_PIC_NM = addslashes($_POST['NTC_PIC_NM']); // 공고자명
+    $NTC_CLOSE_YMD = addslashes($_POST['NTC_CLOSE_YMD']); // 입찰마감일시
+    $NTC_CLOSE_TM = addslashes($_POST['NTC_CLOSE_TM']); // 입찰마감일시
+    $NTC_IO_TYP_CD = addslashes($_POST['NTC_IO_TYP_CD']); // 수출입구분  O / I / T / A
+    $PAY_COND_CD = addslashes($_POST['PAY_COND_CD']);  // 운임지불조건
+    $SEA_RQST_YN = addslashes($_POST['SEA_RQST_YN']);  // 해상운송
+    $AIR_RQST_YN = addslashes($_POST['AIR_RQST_YN']);  // 항공운송
+    $DOM_RQST_YN = addslashes($_POST['DOM_RQST_YN']);  // 국내운송
+    $CRG_RQST_YN = addslashes($_POST['CRG_RQST_YN']);  // 적하보험
+    $CSTM_RQST_YN = addslashes($_POST['CSTM_RQST_YN']);  // 통관
+    $PACK_RQST_YN = addslashes($_POST['PACK_RQST_YN']);  // 포장
+
+    //step2
+    $POL_CD = addslashes($_POST['POL_CD']);  // 선적항
+    $DOOR_NM = addslashes($_POST['DOOR_NM']);  // PICK UP지    
+    $DOOR_YMD = addslashes($_POST['DOOR_YMD']); // PICK UP 일자
+
+    if(!$DOOR_YMD) {
+        $DOOR_YMD = date('Y-m-d');
+    }
+    $POD_CD = addslashes($_POST['POD_CD']);  // 양하항
+    $FDS_NM = addslashes($_POST['FDS_NM']);  // 선적항
+    $FDS_YMD = addslashes($_POST['FDS_YMD']); // 도착요구 일자
+
+    if(!$FDS_YMD) {
+        $FDS_YMD = date('Y-m-d');
+    }
+
+    $INCTRMS_CD = addslashes($_POST['INCTRMS_CD']); // 무역거래조건
+    $TRS_ROUTE_CD = addslashes($_POST['TRS_ROUTE_CD']); // 운송노선    
+    if(!$TRS_ROUTE_CD) {
+        $TRS_ROUTE_CD = "DR";
+    }
+
+    $TRS_COND_CD = addslashes($_POST['TRS_COND_CD']); // 운송조건    
+    $LOAD_TYP_CD = addslashes($_POST['LOAD_TYP_CD']); // 적재형태
+    $DECK_TYP_CD = addslashes($_POST['DECK_TYP_CD']); // 적재형태
+    $PORTABLE_YN = addslashes($_POST['PORTABLE_YN']); // 자가구동 화물
+?>
+<div class="container">
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                    <li>Quotation</li>
+                    <li>입찰정보</li>
+                    <li class="active">입찰공고 등록</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <form name="Join" id="Join" method="post" action="">
+        <input type="hidden" id="login_session" value="<?php echo $_SESSION['MBM_NM']?>">
+        <input type="hidden" name="NTC_CLS_CD" value="<?php echo $NTC_CLS_CD?>">
+        <input type="hidden" name="CRG_TYP_CD" value="<?php echo $CRG_TYP_CD?>">
+        <input type="hidden" name="NTC_NM" value="<?php echo $NTC_NM?>">        
+        <input type="hidden" name="NTC_PIC_NM" value="<?php echo $NTC_PIC_NM?>">
+        <input type="hidden" name="NTC_CLOSE_YMD" value="<?php echo $NTC_CLOSE_YMD?>">
+        <input type="hidden" name="NTC_CLOSE_TM" value="<?php echo $NTC_CLOSE_TM?>">
+        <input type="hidden" name="NTC_IO_TYP_CD" value="<?php echo $NTC_IO_TYP_CD?>">
+        <input type="hidden" name="PAY_COND_CD" value="<?php echo $PAY_COND_CD?>">
+        <input type="hidden" name="SEA_RQST_YN" value="<?php echo $SEA_RQST_YN?>">
+        <input type="hidden" name="AIR_RQST_YN" value="<?php echo $AIR_RQST_YN?>">
+        <input type="hidden" name="DOM_RQST_YN" value="<?php echo $DOM_RQST_YN?>">
+        <input type="hidden" name="CRG_RQST_YN" value="<?php echo $CRG_RQST_YN?>">
+        <input type="hidden" name="CSTM_RQST_YN" value="<?php echo $CSTM_RQST_YN?>">
+        <input type="hidden" name="PACK_RQST_YN" value="<?php echo $PACK_RQST_YN?>">
+
+        <input type="hidden" name="TEMP_POL_CD" value="<?php echo $POL_CD?>">
+        <input type="hidden" name="TEMP_POD_CD" value="<?php echo $POD_CD?>">
+        <input type="hidden" name="TEMP_INCTRMS_CD" value="<?php echo $INCTRMS_CD?>">
+        <input type="hidden" name="TEMP_TRS_COND_CD" value="<?php echo $TRS_COND_CD?>">
+        <input type="hidden" name="TEMP_LOAD_TYP_CD" value="<?php echo $LOAD_TYP_CD?>">        
+        <input type="hidden" name="TEMP_DECK_TYP_CD" value="<?php echo $DECK_TYP_CD?>">
+
+        <div class="page-content">
+            <div class="quotation-r-title mb40 clearfix">
+                <div class="row">
+                    <div class="col-6">
+                        <h1 class="text-left">(일반) 입찰 공고 등록</h1>
+                    </div>
+                    <div class="col-6">
+                        <img src="../../img/step2.png" alt="">
+                    </div>
+                </div>
+            </div>
+            <?php 
+                if($CRG_TYP_CD == 'FCL') {
+                    include_once ('../../include/bid_regi_gen2_FCL.html');
+                }
+                else if ($CRG_TYP_CD == 'LCL') {
+                    include_once ('../../include/bid_regi_gen2_LCL.html');
+
+                } else if ($CRG_TYP_CD == 'BLK') {
+                    include_once ('../../include/bid_regi_gen2_BULK.html');
+
+                } else if ($CRG_TYP_CD == 'AIR') {
+                    include_once ('../../include/bid_regi_gen2_AIR.html');
+                }
+            ?>    
+            <div class="row">
+                <div class="col-6"><a href="javascript:BackForm();" class="btn center mt50">이전</a></div>
+                <div class="col-2"> </div>
+                <div class="col-6"><a href="javascript:CheckForm();" class="btn center mt50">다음</a></div>
+            </div>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    var login = $("#login_session").val();
+    if(!login) {
+        window.location.href = "bid_regi.html";        
+    }
+    var f = document.Join;
+    
+    if(f.TEMP_POL_CD.value){        
+        f.POL_CD.value = f.TEMP_POL_CD.value;       
+    }
+    if(f.TEMP_POD_CD.value){        
+        f.POD_CD.value = f.TEMP_POD_CD.value;       
+    }
+    if(f.TEMP_INCTRMS_CD.value){        
+        f.INCTRMS_CD.value = f.TEMP_INCTRMS_CD.value;       
+    }
+    if(f.TEMP_TRS_COND_CD.value){        
+        f.TRS_COND_CD.value = f.TEMP_TRS_COND_CD.value;       
+    }
+    if(f.TEMP_LOAD_TYP_CD.value){        
+        f.LOAD_TYP_CD.value = f.TEMP_LOAD_TYP_CD.value;       
+    }
+    if(f.TEMP_DECK_TYP_CD.value){        
+        f.DECK_TYP_CD.value = f.TEMP_DECK_TYP_CD.value;       
+    }
+</script>
+<script type="text/javascript">
+    function CheckForm(){
+        var f = document.Join;
+
+        if(f.POL_CD.value ==""){            
+            swal("선적항을 선택해주세요","","info");
+            return false;
+        }
+        if(f.POD_CD.value ==""){            
+            swal("양하항을 선택해주세요","","info");
+            return false;
+        }
+        if(f.INCTRMS_CD.value ==""){            
+            swal("무역거래조건을 선택해주세요","","info");
+            return false;
+        }
+        if(f.TRS_COND_CD) {
+            if(f.TRS_COND_CD.value ==""){                
+                swal("운송조건을 선택해주세요","","info");
+                return false;
+            }
+        }        
+
+        f.action="bid_regi_gen3.html";
+        f.submit();
+    }
+    function BackForm(){
+        var f = document.Join;
+        f.action="bid_regi_gen.html";
+        f.submit();        
+    }
+</script>
+
+<?php
+    include_once ('../../include/html_foot.html');
+?>

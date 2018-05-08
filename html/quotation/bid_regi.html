@@ -1,0 +1,85 @@
+<?php
+    session_start();
+    include_once ('../../admin/lib/common.php');
+    include_once ('../../include/html_head.html');
+?>
+
+<div class="container">
+    <input type="hidden" id="login_session" value="<?php echo $_SESSION['MBM_NM']?>">
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><a href="../../index.html"><img src="../../img/icon/icon-home.png" alt="" width="16"></a></li>
+                    <li>Quotation</li>
+                    <li>입찰정보</li>
+                    <li class="active">입찰공고 등록</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="jumbotron">
+            <h1>Request a Quote</h1>
+            <h2>견적요청 등록</h2>
+            <div class="width580">
+                <p>
+                    화주의 견적요청 등록 건에 대해 포워더가 견적을 작성하고, 마감 이후 화주가 응찰 업체의
+                    최저 입찰가와 견적 내용을 확인한 후, 업체 신뢰도를 바탕으로 업체를 선정합니다.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="row mb-20">
+            <div class="col-6">
+                <div class="about-image" style="background: url(../../img/WiaBid_Sub_Quotation_01.png) center no-repeat;"></div>
+            </div>
+            <div class="col-6 about-links border-radius-left">
+                <div class="about-links-cont m-img1">
+                    <h1>일반화물</h1>
+                    <p>비교견적을 통해 해운과 항공 수출입 운송료를 절감하고 가격 경쟁력을 확보할 수 있습니다.</p>
+                    <div class="btn bid-regi-gen">견적요청 등록<span class="ml5"><img src="../../img/icon/icon-arrow-L.png" width="7" alt=">"></span></div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-6 about-links border-radius-right">
+                <div class="about-links-cont m-img2">
+                    <h1>정기화물 입찰</h1>
+                    <p>일정기간 규칙성을 가지고 운송되는 수출입 해상/항공 화물을 등록할 수 있습니다.</p>
+                    <div class="btn bid-regi-fix">입찰대행 요청<span class="ml5"><img src="../../img/icon/icon-arrow-L.png" width="7" alt=">"></span></div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="about-image" style="background: url(../../img/WiaBid_Sub_Quotation_02.png) center no-repeat;"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    $('.bid-regi-gen').click(function () { 
+        var login = $("#login_session").val();
+        if(login) {
+            window.location.href = "bid_regi_gen.html";
+        }
+        else {
+            alert("로그인후 이용해주세요.");
+        }
+    });    
+    $('.bid-regi-fix').click(function () { 
+        var login = $("#login_session").val();
+        if(login) {
+            window.location.href = "bid_regi_fix.html";
+        }
+        else {
+            alert("로그인후 이용해주세요.");
+        }
+    });    
+</script>
+
+<?php
+    include_once ('../../include/html_foot.html');
+?>

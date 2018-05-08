@@ -1,0 +1,411 @@
+<div class="portlet mt20">
+    <div class="portlet-title">
+        <caption>운송구간 및 거래조건</caption>
+    </div>
+<?php if($chk_mine == "ok") { ?>
+    <div class="row">
+        <div class="col-6">
+            <div class="row view">
+                <div class="form-group">
+                    <div class="col-3 l-height4">선적지</div>
+                    <div class="col-3 l-height4">
+                        선적항<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-6 port">
+                        <?php                           
+                            $ROW_POL = sql_fetch("SELECT LOC_NM FROM `tcmn_unloc_code` WHERE LOC_CD = '{$POL_CD}'");
+                            $POL_NM = $ROW_POL[LOC_NM];
+                        ?>
+                        <input type="text" name="POL_CD" class="input searchPort" id="POL_CD" placeholder="선적항" data-type="SEA" data-path="<?php echo RT_PATH; ?>" value="<?php echo $POL_NM?>"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3 l-height4">&nbsp;</div>
+                    <div class="col-3 l-height4">PICK UP지</div>
+                    <div class="col-6 l-height4">
+                        <input type="text" class="input width99" name="DOOR_NM" value="<?php echo $DOOR_NM?>">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3 l-height4">&nbsp;</div>
+                    <div class="col-3 l-height4">픽업일자</div>
+                    <div class="col-6 relative1">
+                        <input type="text" class="input" id="datepicker2" name="DOOR_YMD" value="<?php if($DOOR_YMD) echo substr($DOOR_YMD, 0, 4).'-'.substr($DOOR_YMD, 4, 2).'-'.substr($DOOR_YMD, 6, 2);?>">
+                        <img src="../../img/icon/icon-calendar.png" alt="" class="icon-calendar-0">
+                    </div>
+                </div>
+                <div class="form-group border-none">
+                    <div class="col-3">
+                        거래조건<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-9">
+                        <div class="row">
+                            <div class="col-4 bold">
+                                무역거래조건<span class="text-primary">*</span>
+                            </div>
+                            <div class="width70">                                
+                                <select class="input width99" name="INCTRMS_CD" id="INCTRMS_CD">
+                                    <?php echo list_options(INCTRMS); ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="row view border-left">
+                <div class="form-group">
+                    <div class="col-3 l-height4">도착지</div>
+                    <div class="col-3 l-height4">
+                        양하항<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-6 port">
+                        <?php                           
+                            $ROW_POD = sql_fetch("SELECT LOC_NM FROM `tcmn_unloc_code` WHERE LOC_CD = '{$POD_CD}'");
+                            $POD_NM = $ROW_POD[LOC_NM];
+                        ?>
+                        <input type="text" name="POD_CD" class="input searchPort" id="POD_CD" placeholder="양하항" data-type="SEA" data-path="<?php echo RT_PATH; ?>" value="<?php echo $POD_NM?>"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3 l-height4">&nbsp;</div>
+                    <div class="col-3 l-height4">DELIVERY 장소</div>
+                    <div class="col-6 l-height4">
+                        <input type="text" class="input width99" name="FDS_NM" value="<?php echo $FDS_NM?>">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3 l-height4">&nbsp;</div>
+                    <div class="col-3 l-height4">도착요구일자</div>
+                    <div class="col-6 relative1">
+                        <input type="text" class="input mr-2"  id="datepicker3" name="FDS_YMD" value="<?php if($FDS_YMD) echo substr($FDS_YMD, 0, 4).'-'.substr($FDS_YMD, 4, 2).'-'.substr($FDS_YMD, 6, 2);?>">
+                        <img src="../../img/icon/icon-calendar.png" alt="" class="icon-calendar-0">
+                    </div>
+                </div>
+                <div class="form-group border-none height39 m-hidden"></div>
+            </div>
+        </div>
+    </div>
+<?php } else { ?>
+    <div class="row">
+        <div class="col-6">
+            <div class="row view">
+                <div class="form-group">
+                    <div class="col-3 l-height4">선적지</div>
+                    <div class="col-3 l-height4">
+                        선적항<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-6 l-height4">
+                        <?php                           
+                            $ROW_POL = sql_fetch("SELECT LOC_NM FROM `tcmn_unloc_code` WHERE LOC_CD = '{$POL_CD}'");
+                            $POL_NM = $ROW_POL[LOC_NM];
+                            echo $POL_NM;
+                        ?>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3 l-height4">&nbsp;</div>
+                    <div class="col-3 l-height4">PICK UP지</div>
+                    <div class="col-6 l-height4"><?php echo $DOOR_NM?></div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3 l-height4">&nbsp;</div>
+                    <div class="col-3 l-height4">픽업일자</div>
+                    <div class="col-6 l-height4">
+                        <?php if($DOOR_YMD) echo substr($DOOR_YMD, 0, 4).'-'.substr($DOOR_YMD, 4, 2).'-'.substr($DOOR_YMD, 6, 2);?>
+                    </div>
+                </div>
+                <div class="form-group border-none">
+                    <div class="col-3">
+                        거래조건<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-9">
+                        <div class="row">
+                            <div class="col-4 bold">
+                                무역거래조건<span class="text-primary">*</span>
+                            </div>
+                            <div class="width70">                                                                
+                                <?php
+                                    $sql_inctrms = "SELECT CODE_NM FROM `tcmn_code_dtl` WHERE CLSS_CD = 'INCTRMS' AND CODE_CD='{$INCTRMS_CD}'";
+                                    $row_inctrms = sql_fetch($sql_inctrms);
+                                    echo "(".$INCTRMS_CD.")".$row_inctrms['CODE_NM'];
+                                ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="row view border-left">
+                <div class="form-group">
+                    <div class="col-3 l-height4">도착지</div>
+                    <div class="col-3 l-height4">
+                        양하항<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-6 l-height4">
+                        <?php                           
+                            $ROW_POD = sql_fetch("SELECT LOC_NM FROM `tcmn_unloc_code` WHERE LOC_CD = '{$POD_CD}'");
+                            $POD_NM = $ROW_POD[LOC_NM];
+                            echo $POD_NM;
+                        ?>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3 l-height4">&nbsp;</div>
+                    <div class="col-3 l-height4">DELIVERY 장소</div>
+                    <div class="col-6 l-height4">
+                        <?php echo $FDS_NM?>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3 l-height4">&nbsp;</div>
+                    <div class="col-3 l-height4">도착요구일자</div>
+                    <div class="col-6 l-height4">
+                        <?php if($FDS_YMD) echo substr($FDS_YMD, 0, 4).'-'.substr($FDS_YMD, 4, 2).'-'.substr($FDS_YMD, 6, 2);?>
+                    </div>
+                </div>
+                <div class="form-group border-none height39 m-hidden"></div>
+            </div>
+        </div>
+    </div>
+<?php } ?>
+</div>
+<div class="portlet mt20">
+    <div class="portlet-title">
+        <caption>물동량</caption>
+    </div>
+<?php if($chk_mine == "ok") { ?>
+    <div class="row view">
+        <div class="form-group">
+            <div class="col-3">품목명</div>
+            <div class="col-9">
+                <input type="text" class="input" name="CRG_NM" value="<?php echo $CRG_NM?>" id="CRG_NM">
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-3">
+                물동량<span class="text-primary">*</span>
+            </div>
+            <div class="col-9">
+                <div class="row mb10">
+                    <div class="col-6">
+                        <select class="input width99" name="CNTR1_SZTP" id="CNTR1_SZTP">
+                            <?php echo list_options(CNTR_SZTP); ?>
+                        </select>                        
+                    </div>
+                    <div class="col-3 m-inner-left">
+                        <input type="text" class="input width50" name="CNTR1_CNT" value="<?php echo $CNTR1_CNT?>" id="CNTR1_CNT">
+                        <span class="small-span ml4"> CNTRs</span>
+                    </div>
+                    <div class="col-3 m-inner-left">
+                        <input type="text" class="input width50" name="CNTR1_WGT" value="<?php echo $CNTR1_WGT?>" id="CNTR1_WGT">
+                        <span class="small-span ml4"> KGS</span>
+                    </div>
+                </div>
+                <div class="row mb10">
+                    <div class="col-6">
+                        <select class="input width99" name="CNTR2_SZTP" id="CNTR2_SZTP">
+                            <?php echo list_options(CNTR_SZTP); ?>
+                        </select>
+                    </div>
+                    <div class="col-3 m-inner-left">
+                        <input type="text" class="input width50" name="CNTR2_CNT" value="<?php echo $CNTR2_CNT?>">
+                        <span class="small-span ml4">CNTRs</span>
+                    </div>
+                    <div class="col-3 m-inner-left">
+                        <input type="text" class="input width50" name="CNTR2_WGT" value="<?php echo $CNTR2_WGT?>">
+                        <span class="small-span ml4">KGS</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <select class="input width99" name="CNTR3_SZTP" id="CNTR3_SZTP">
+                            <?php echo list_options(CNTR_SZTP); ?>
+                        </select>
+                    </div>
+                    <div class="col-3 m-inner-left">
+                        <input type="text" class="input width50" name="CNTR3_CNT" value="<?php echo $CNTR3_CNT?>">
+                        <span class="small-span ml4">CNTRs</span>
+                    </div>
+                    <div class="col-3 m-inner-left">
+                        <input type="text" class="input width50" name="CNTR3_WGT" value="<?php echo $CNTR3_WGT?>">
+                        <span class="small-span ml4">KGS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-3">물품가 기준</div>
+            <div class="col-9">
+                <input type="text" class="input" placeholder="BL, CNTR. SHIPMENT 등" name="CRG_UNIT_NM" value="<?php echo $CRG_UNIT_NM?>">
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-3">물품가액(FOB)</div>
+            <div class="col-9">
+                <div class="width33 mr-2">                    
+                    <input type="text" class="input" name="CRG_AMT" id="CRG_AMT" value="<?php echo number_format($CRG_AMT)?>">
+                </div>
+                <div class="width65">                    
+                    <select class="input width50" name="CRG_CURR_CD" id="CRG_CURR_CD">
+                        <?php echo list_options(CURR_CD); ?>                        
+                    </select>
+                </div>
+            </div>
+        </div>        
+        <div class="form-group">
+            <div class="col-3">위험물</div>
+            <div class="col-9">
+                <select class="input" name="IMDG_CD" id="IMDG_CD">
+                    <?php echo list_options(IMDG_CD); ?>                    
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-3">견적적용환율<small>(1USD)</small>
+                <span class="text-primary">*</span>
+            </div>
+            <div class="col-9">
+                <div class="width33">
+                    <input type="text" class="input" name="EX_RATE" value="<?php echo number_format($EX_RATE)?>" id="EX_RATE">
+                </div>
+                <span class="small-span">(KRW)</span>
+            </div>
+        </div>
+        <div class="form-group border-none">
+            <div class="col-3">기타요청사항</div>
+            <div class="col-9">
+                <textarea  name="REMARK" id="REMARK" class="input height166" placeholder="미기재 필요사항 기술"><?php echo nl2br($REMARK)?></textarea>
+            </div>
+        </div>
+    </div>
+<?php } else { ?>
+    <div class="row view">
+        <div class="form-group">
+            <div class="col-3">품목명</div>
+            <div class="col-9">
+                <?php echo $CRG_NM?>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-3">
+                물동량<span class="text-primary">*</span>
+            </div>
+            <div class="col-9">
+                <div class="row mb10">
+                    <div class="col-6">
+                        <?php
+                            $sql_cntr1_szip = "SELECT CODE_NM FROM `tcmn_code_dtl` WHERE CLSS_CD = 'CNTR_SZTP' AND CODE_CD='{$CNTR1_SZTP}'";
+                            $row_cntr1_szip = sql_fetch($sql_cntr1_szip);
+                            if($CNTR1_SZTP) echo "(".$CNTR1_SZTP.")".$row_cntr1_szip['CODE_NM'];
+                        ?>
+                    </div>
+                    <div class="col-3 m-inner-left">
+                        <?php 
+                            if($CNTR1_CNT > 0) {
+                                echo $CNTR1_CNT; ?>
+                                <span class="small-span ml4"> CNTRs</span>
+                        <?php } ?>
+                    </div>
+                    <div class="col-3 m-inner-left">
+                        <?php 
+                            if($CNTR1_WGT > 0) {
+                                echo $CNTR1_WGT; ?>
+                                <span class="small-span ml4"> KGS</span>
+                        <?php } ?>                        
+                    </div>
+                </div>
+                <div class="row mb10">
+                    <div class="col-6">
+                        <?php
+                            $sql_cntr2_szip = "SELECT CODE_NM FROM `tcmn_code_dtl` WHERE CLSS_CD = 'CNTR_SZTP' AND CODE_CD='{$CNTR2_SZTP}'";
+                            $row_cntr2_szip = sql_fetch($sql_cntr2_szip);
+                            if($CNTR2_SZTP) echo "(".$CNTR2_SZTP.")".$row_cntr2_szip['CODE_NM'];
+                        ?>
+                    </div>
+                    <div class="col-3 m-inner-left">
+                        <?php 
+                            if($CNTR2_CNT > 0) {
+                                echo $CNTR2_CNT; ?>
+                                <span class="small-span ml4"> CNTRs</span>
+                        <?php } ?>
+                    </div>
+                    <div class="col-3 m-inner-left">
+                        <?php 
+                            if($CNTR2_WGT > 0) {
+                                echo $CNTR2_WGT; ?>
+                                <span class="small-span ml4"> KGS</span>
+                        <?php } ?>                        
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <?php
+                            $sql_cntr3_szip = "SELECT CODE_NM FROM `tcmn_code_dtl` WHERE CLSS_CD = 'CNTR_SZTP' AND CODE_CD='{$CNTR3_SZTP}'";
+                            $row_cntr3_szip = sql_fetch($sql_cntr3_szip);
+                            if($CNTR3_SZTP) echo "(".$CNTR3_SZTP.")".$row_cntr3_szip['CODE_NM'];
+                        ?>                        
+                    </div>
+                    <div class="col-3 m-inner-left">
+                        <?php 
+                            if($CNTR3_CNT > 0) {
+                                echo $CNTR3_CNT; ?>
+                                <span class="small-span ml4"> CNTRs</span>
+                        <?php } ?>
+                    </div>
+                    <div class="col-3 m-inner-left">
+                        <?php 
+                            if($CNTR3_WGT > 0) {
+                                echo $CNTR3_WGT; ?>
+                                <span class="small-span ml4"> KGS</span>
+                        <?php } ?>                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-3">물품가 기준</div>
+            <div class="col-9">
+                <?php echo $CRG_UNIT_NM?>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-3">물품가액(FOB)</div>
+            <div class="col-9">                
+                <?php echo number_format($CRG_AMT)." ";
+                    $sql_crg_cd = "SELECT CODE_NM FROM `tcmn_code_dtl` WHERE CLSS_CD = 'CURR_CD' AND CODE_CD='{$CRG_CURR_CD}'";
+                    $row_crg = sql_fetch($sql_crg_cd);
+                    if($CRG_CURR_CD) echo "(".$CRG_CURR_CD.")".$row_crg['CODE_NM'];
+                ?>                
+            </div>
+        </div>        
+        <div class="form-group">
+            <div class="col-3">위험물</div>
+            <div class="col-9">
+                <?php
+                    $sql_imdg_cd = "SELECT CODE_NM FROM `tcmn_code_dtl` WHERE CLSS_CD = 'IMDG_CD' AND CODE_CD='{$IMDG_CD}'";
+                    $row_imdg = sql_fetch($sql_imdg_cd);
+                    if($IMDG_CD) echo "(".$IMDG_CD.")".$row_imdg['CODE_NM'];
+                ?>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-3">견적적용환율<small>(1USD)</small>
+                <span class="text-primary">*</span>
+            </div>
+            <div class="col-9">                
+                <?php echo number_format($EX_RATE)?>                
+                <span class="small-span">(KRW)</span>
+            </div>
+        </div>
+        <div class="form-group border-none">
+            <div class="col-3">기타요청사항</div>
+            <div class="col-9">
+                <?php echo nl2br($REMARK)?>
+            </div>
+        </div>
+    </div>
+<?php } ?>
+</div>

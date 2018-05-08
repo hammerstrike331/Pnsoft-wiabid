@@ -1,0 +1,265 @@
+<?php
+    session_start();
+    include_once('../../admin/lib/common.php');
+    include_once('../../include/html_head.html');
+
+    $pid = $_GET['pid'];
+
+    $sql1 ="SELECT * FROM tbid_ntc_mst WHERE NTC_NO = '{$pid}'";
+    $ntc_mst = sql_fetch($sql1);
+
+    $MBM_NO = $_SESSION['MBM_NO'];
+    $MBR_NM = $ntc_mst['NTC_PIC_NM'];
+
+    // 본인 공고물 체크
+    $mineFlag = 0;
+    if($MBM_NO == $ntc_mst['NTC_PIC_NO'])
+        $mineFlag = 1;
+    
+    $BID_NM = "";
+    $ADD_REQUEST = "";
+    if($mineFlag == 0) {
+        $sql2 = "SELECT * FROM tbid_qtn_mst WHERE QTN_PIC_NO = '{$MBM_NO}' AND NTC_NO = '{$pid}' AND QTN_STS_CD = '20'";
+        $my_qtn = sql_fetch($sql2);
+        $QTN_NO = $my_qtn['QTN_NO'];
+        $BID_NM = $my_qtn['QTN_PIC_NM'];
+        $ADD_REQUEST = $my_qtn['ADD_REQUEST'];
+    }
+
+    if($mineFlag == 1) {
+        $sql2 = "SELECT * FROM tbid_qtn_mst WHERE NTC_NO = '{$pid}' AND QTN_STS_CD = '20'";
+        $qtn_bided_companys = sql_query($sql2);
+    }
+?>
+
+<style type="text/css">
+    @media screen and (max-width: 768px) {
+        ul.tabs li:nth-child(2) {
+            position: absolute !important;
+            top: 0;
+            left: 51%;            
+        }
+        ul.tabs li:nth-child(3) {
+            position: absolute !important;
+            top: 43px;
+            left: 0;
+        }
+        ul.tabs li:nth-child(4) {
+            position: absolute !important;
+            top: 43px;
+            left: 51%;            
+        }
+    }
+    .btn-red {
+        background-color: #d24703 !important;
+    }
+    ul.tabs {
+        font-size: 15px !important;
+    }
+</style>
+
+<div class="container">
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                    <li>Quotation</li>
+                    <li>입찰정보</li>
+                    <li class="active">입찰공고</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="row">
+            <div class="col-12">
+                <div id="main-tab">
+                    <ul class="tabs tabs-c clearfix inner-left m-tabs">
+                        <li onclick="location.href='bid_view.html?pid=<?php echo $pid?>'">SHIPMENT</li>
+                        <li onclick="location.href='participation_status.html?pid=<?php echo $pid?>'">QUOTE STATUS</li>
+                        <li class="active" onclick="location.href='contract.html?pid=<?php echo $pid?>'">CONTRACT</li>
+                        <li onclick="location.href='questions_and_answers.html?pid=<?php echo $pid?>'">Q&A</li>
+                    </ul>
+
+                    <div class="tab_container clearfix">
+                        <div class="tab_content">
+                            <form name="Join1" id="Join1" method="post" action="<?php echo RT_PATH."/php/contract_agree_update_ok.php";?>">
+                                <input type="hidden" name="P_NTC_NO" value="<?php echo $pid?>">
+                                <input type="hidden" id="P_QTN_NO" name="P_QTN_NO" value="">
+                                <input type="hidden" id="POST_PERSON_AGREE" name="POST_PERSON_AGREE" value="">
+                                <input type="hidden" id="ADD_REQUEST" name="ADD_REQUEST" value="">
+                            </form>
+                            <form name="Join2" id="Join2" method="post" action="<?php echo RT_PATH."/php/contract_refusal_update_ok.php";?>">
+                                <input type="hidden" name="B_NTC_NO" value="<?php echo $pid?>">
+                                <input type="hidden" id="B_QTN_NO" name="B_QTN_NO" value="">
+                                <input type="hidden" id="BID_PERSON_AGREE" name="BID_PERSON_AGREE" value="">
+                            </form>
+                            <!-- 공고자 화면 -->                    
+                            <?php if($mineFlag == 1) { 
+                                for($i = 0; $rowb = sql_fetch_array($qtn_bided_companys); $i++) { ?>
+                                    <div class="portlet mt20">
+                                        <div class="portlet-title">
+                                            <caption>계약서 확인 및 승인</caption>
+                                        </div>
+                                        <div class="row view">
+                                            <div class="form-group">
+                                                <div class="col-3">
+                                                    계약서
+                                                </div>
+                                                <div class="col-9">
+                                                    <!-- <a href="" class="btn caption m-hidden">계약서 보기</a> -->
+                                                    <button type="button" class="btn caption m-hidden">계약서 보기</button>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="col-3">추가요청사항</div>
+                                                <div class="col-9">
+                                                    <?php if($rowb['ADD_REQUEST']) { 
+                                                        echo $rowb['ADD_REQUEST']; 
+                                                    } else { ?>                                                
+                                                        <textarea id="ADD_REQUEST_<?php echo $i?>" placeholder="요청사항 기술"><?php echo $rowb['ADD_REQUEST']?></textarea>
+                                                    <?php } ?>
+                                                </div>
+                                            </div>
+                                            <div class="contract-agree">
+                                                <p>상기 계약서 및 추가요청사항을 확인하였으며, 계약체결에 동의하시겠습니까?</p>
+                                                <p>
+                                                    공고자 <span><?php echo $MBR_NM?></span>
+                                                    <?php if($rowb['POST_PERSON_AGREE'] == '0') { ?> 
+                                                        <span class="btn-area">
+                                                            <button type="button" class="btn caption" onClick="javascript:Agree1(<?php echo "'".$rowb['QTN_NO']."'"?>, <?php echo $i?>);">승인</button>
+                                                            <button type="button" class="btn caption btn-red" onClick="javascript:Refusal1(<?php echo "'".$rowb['QTN_NO']."'"?>, <?php echo $i?>);">거부</button>
+                                                        </span>
+                                                    <?php } if($rowb['POST_PERSON_AGREE'] == '1') { ?> 
+                                                        <span class="text-success">계약체결에 동의하셨습니다.</span>
+                                                    <?php } if($rowb['POST_PERSON_AGREE'] == '2') { ?> 
+                                                        <span class="text-red">계약체결에 거부하셨습니다.</span>
+                                                    <?php } ?>
+                                                </p>
+                                                <p>
+                                                    입찰자 <span><?php echo $rowb['QTN_PIC_NM']?></span>
+                                                    <?php if($rowb['BID_PERSON_AGREE'] == '0') { ?> 
+                                                        <span class="btn-area">
+                                                            <button type="button" class="btn caption bg-silver" disabled>승인</button>
+                                                            <button type="button" class="btn caption bg-silver" disabled>거부</button>
+                                                        </span>
+                                                    <?php } if($rowb['BID_PERSON_AGREE'] == '1') { ?> 
+                                                        <span class="text-success">계약체결에 동의하셨습니다.</span>
+                                                    <?php } if($rowb['BID_PERSON_AGREE'] == '2') { ?> 
+                                                        <span class="text-red">계약체결에 거부하셨습니다.</span>
+                                                    <?php } ?>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php } ?>
+                            <?php } ?>
+                            <!-- 낙찰자 화면 -->
+                            <?php if($mineFlag == 0) { ?>                                
+                                <div class="portlet mt20">
+                                    <div class="portlet-title">
+                                        <caption>계약서 확인 및 승인</caption>
+                                    </div>
+                                <?php if($BID_NM != "") { ?>
+                                    <div class="row view">
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                계약서
+                                            </div>
+                                            <div class="col-9">
+                                                <!-- <a href="" class="btn caption m-hidden">계약서 보기</a> -->
+                                                <button type="button" class="btn caption m-hidden">계약서 보기</button>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <div class="col-3">추가요청사항</div>
+                                            <div class="col-9">                                            
+                                                <?php echo $ADD_REQUEST?>                                            
+                                            </div>
+                                        </div>
+                                        <div class="contract-agree">
+                                            <p>상기 계약서 및 추가요청사항을 확인하였으며, 계약체결에 동의하시겠습니까?</p>
+                                            <p>
+                                                공고자 <span><?php echo $MBR_NM?></span>
+                                                <?php if($my_qtn['POST_PERSON_AGREE'] == '0') { ?> 
+                                                    <span class="btn-area">
+                                                        <button type="button" class="btn caption bg-silver" disabled>승인</button>
+                                                        <button type="button" class="btn caption bg-silver" disabled>거부</button>
+                                                    </span>
+                                                <?php } if($my_qtn['POST_PERSON_AGREE'] == '1') { ?> 
+                                                    <span class="text-success">계약체결에 동의하셨습니다.</span>
+                                                <?php } if($my_qtn['POST_PERSON_AGREE'] == '2') { ?> 
+                                                    <span class="text-red">계약체결에 거부하셨습니다.</span>
+                                                <?php } ?>
+                                            </p>                                            
+                                            <p>
+                                                입찰자 <span><?php echo $BID_NM?></span>
+                                                <?php if($my_qtn['BID_PERSON_AGREE'] == '0') { ?> 
+                                                    <span class="btn-area">
+                                                        <button type="button" class="btn caption" onClick="javascript:Agree2(<?php echo "'".$QTN_NO."'"?>);">승인</button>
+                                                        <button type="button" class="btn caption btn-red" onClick="javascript:Refusal2(<?php echo "'".$QTN_NO."'"?>);">거부</button>
+                                                    </span>
+                                                <?php } if($my_qtn['BID_PERSON_AGREE'] == '1') { ?> 
+                                                    <span class="text-success">계약체결에 동의하셨습니다.</span>
+                                                <?php } if($my_qtn['BID_PERSON_AGREE'] == '2') { ?> 
+                                                    <span class="text-red">계약체결에 거부하셨습니다.</span>
+                                                <?php } ?>
+                                            </p>                                            
+                                        </div>
+                                    </div>
+                                <?php } ?>
+                                </div>                                
+                            <?php } ?>
+                        </div>                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function Agree1(QTN_NO, index) {
+        $("#P_QTN_NO").val(QTN_NO);
+        $("#POST_PERSON_AGREE").val(1);
+        var addRequest = $("#ADD_REQUEST_"+index).val();
+        $("#ADD_REQUEST").val(addRequest); 
+        if(confirm("선택하시면 변경이 불가합니다.\n계약체결에 동의하시겠습니까?")) {
+            var f =document.Join1;
+            f.submit();
+        }
+    }
+    function Refusal1(QTN_NO, index) {
+        $("#P_QTN_NO").val(QTN_NO);
+        $("#POST_PERSON_AGREE").val(2);
+        var addRequest = $("#ADD_REQUEST_"+index).val();
+        $("#ADD_REQUEST").val(addRequest); 
+        if(confirm("선택하시면 변경이 불가합니다.\n계약체결을 거부하시겠습니까?")) {
+            var f =document.Join1;
+            f.submit();
+        }
+    }
+    function Agree2(QTN_NO) {
+        $("#B_QTN_NO").val(QTN_NO);
+        $("#BID_PERSON_AGREE").val(1);
+        if(confirm("선택하시면 변경이 불가합니다.\n계약체결에 동의하시겠습니까?")) {
+            var f =document.Join2;
+            f.submit();
+        }
+    }
+    function Refusal2(QTN_NO) {
+        $("#B_QTN_NO").val(QTN_NO);
+        $("#BID_PERSON_AGREE").val(2);
+        if(confirm("선택하시면 변경이 불가합니다.\n계약체결을 거부하시겠습니까?")) {
+            var f =document.Join2;
+            f.submit();
+        }
+    }
+</script>
+
+<?php
+    include_once('../../include/html_foot.html');
+?>

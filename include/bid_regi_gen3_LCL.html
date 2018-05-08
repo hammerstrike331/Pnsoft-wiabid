@@ -1,0 +1,146 @@
+<div class="row">
+    <div class="col-12">
+        <div class="portlet view">
+            <div class="form-group">
+                <div class="col-3">
+                    품목명<span class="text-primary">*</span>
+                </div>
+                <div class="col-9">
+                    <input type="text" class="input" name="CRG_NM" id="CRG_NM">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-3">
+                    물동량
+                </div>
+                <div class="col-9">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="row mb10">
+                                <div class="col-10 xs-col-3">
+                                    포장형태
+                                </div>
+                                <div class="col-40 xs-col-7">
+                                    <select class="input" name="PKG_CD" id="PKG_CD">
+                                        <?php echo list_options(PKG_CD); ?>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mb10">
+                                <div class="col-10 xs-col-3">
+                                    수량
+                                </div>
+                                <div class="col-40 xs-col-4">
+                                    <input type="text" class="input" name="CRG_CNT" id="CRG_CNT">
+                                </div>                                
+                            </div>
+                            <div class="row mb10">
+                                <div class="col-10 xs-col-3">
+                                    중량
+                                </div>
+                                <div class="col-40 xs-col-4">
+                                    <input type="text" class="input" name="CRG_WGT" id="CRG_WGT">
+                                </div>
+                                <div class="col-2 xs-col-3">
+                                    <span class="small-span ml4">KGS</span>
+                                </div>
+                            </div>
+                            <div class="row mb10">
+                                <div class="col-10 xs-col-3">
+                                    용적<span class="text-primary">*</span>
+                                </div>
+                                <div class="col-40 xs-col-4">
+                                    <input type="text" class="input" name="CRG_VOL" id="CRG_VOL">
+                                </div>
+                                <div class="col-2 xs-col-3">
+                                    <span class="small-span ml4">CBM</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-3">
+                    Dimension<span class="text-primary">*</span>
+                </div>
+                <div class="col-9">
+                    <div class="row">
+                        <div class="width33 xs-col-3">
+                            <input type="text" min="0" class="input width50" name="DIM_LEN" id="DIM_LEN">
+                            <span class="small-span"> (L)</span>
+                        </div>
+                        <div class="width33 xs-col-3">
+                            <input type="text" min="0" class="input width50" name="DIM_WID" id="DIM_WID">
+                            <span class="small-span"> (W)</span>
+                        </div>
+                        <div class="width33 xs-col-4">
+                            <input type="text" min="0" class="input width50" name="DIM_HGT" id="DIM_HGT">
+                            <span class="small-span"> (H)(cm)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-3">
+                    물품가 기준
+                </div>
+                <div class="col-9">
+                    <input type="text" class="input" placeholder="BL, CNTR. SHIPMENT 등" name="CRG_UNIT_NM">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-3">
+                    물품가액(FOB)
+                </div>
+                <div class="col-9">
+                    <div class="row">
+                        <div class="width29 mr-2">                            
+                            <input type="text" class="input" name="CRG_AMT" id="CRG_AMT" value="1,000">
+                        </div>
+                        <div class="width70">
+                            <select class="input" name="CRG_CURR_CD">
+                                <?php echo list_options(CURR_CD); ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>            
+            <div class="form-group">
+                <div class="col-3">
+                    위험물
+                </div>
+                <div class="col-9 ">
+                    <select class="input" name="IMDG_CD">
+                        <?php echo list_options(IMDG_CD); ?>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-3">
+                    견적적용환율 <span class="small-span">(1USD)</span><span class="text-primary">*</span>
+                </div>
+                <div class="col-9">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="width33 xs-col-5">
+                                <input type="text" class="input" placeholder="" value="1,130" name="EX_RATE" id="EX_RATE">
+                            </div>
+                            <span class="small-span">(KRW)</span>
+                        </div>
+                        <div class="col-6"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-3">
+                    기타요청사항
+                </div>
+                <div class="col-9 l-height0">
+                    <textarea name="REMARK" id="REMARK" class="input height166" placeholder="미기재 필요사항 기술"></textarea>
+                </div>
+            </div>
+            <div class="form-group border-none"></div>
+        </div>
+    </div>
+</div>

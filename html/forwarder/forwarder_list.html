@@ -1,0 +1,249 @@
+<?php
+session_start();
+include_once('../../admin/lib/common.php');
+include_once('../../include/html_head.html');
+?>
+    <div class="container">
+
+        <div class="page-header">
+            <div class="page-bar">
+                <div class="page-breadcrumb">
+                    <ul class="clearfix">
+                        <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                        <li>Forwarder</li>
+                        <li class="active">전문포워더</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="jumbotron">
+                <h1 class="mb20">전문포워더</h1>
+                <p> 전문포워더가 필요하신가요?</p>
+            </div>
+        </div>
+        <?php
+
+        //  일반쿼리
+        $sql_common = " FROM tbid_spc_fdr A ";
+        $sql_search = " WHERE (1) AND DISP_YN='Y' ";
+        $sql_order = " order by IDX desc ";
+
+        // 검색 옵션
+        $SERVICE = clean_xss_tags($_GET['SERVICE']);
+        $AREA_CD = clean_xss_tags($_GET['AREA_CD']);
+        $ITEM_CD = clean_xss_tags($_GET['ITEM_CD']);
+        $FDR_NM = clean_xss_tags($_GET['FDR_NM']);
+
+        $qstr = "ITEM_CD=".$ITEM_CD."&AREA_CD=".$AREA_CD."&SERVICE=".$SERVICE;
+
+        #################################################################################################
+
+        if($SERVICE) {
+            $sql_search .= " and A.SERVICE LIKE '%{$SERVICE}%'";
+        }
+
+        if($ITEM_CD) {
+            $sql_search .= " and A.ITEM_CD LIKE '%{$ITEM_CD}%'";
+        }
+
+        if($AREA_CD) {
+            $sql_search .= " and A.AREA_DTL_NM LIKE '%{$AREA_CD}%'";
+        }
+
+        if($FDR_NM) {
+            $sql_search .= " and A.FDR_NM LIKE '%{$FDR_NM}%'";
+        }
+
+        #################################################################################################
+
+        $sql1 = "select count(IDX) as cnt {$sql_common}";
+        $row1 = sql_fetch($sql1);
+        $total_member = $row1['cnt'];
+
+        $sql = "select count(*) as cnt {$sql_common} {$sql_search} ";
+        $row = sql_fetch($sql);
+        $total_count = $row['cnt'];
+
+        $pageNum = (int)$_GET['pageNum'];
+
+        if(!$pageNum) {
+            $rows = 12;
+        } else {
+            $rows = $pageNum;
+        }
+
+        $page = (int)$_GET['page'];
+
+        $total_page  = ceil($total_count / $rows);  // 전체 페이지 계산
+        if ($page < 1) { $page = 1; } // 페이지가 없으면 첫 페이지 (1 페이지)
+        $from_record = ($page - 1) * $rows; // 시작 열을 구함
+
+        $list_page_rows = 10;
+        //순번
+        $list_num = $total_count - ($page - 1) * $list_page_rows;
+
+        $sql = "SELECT 
+        A.IDX,
+        A.SPC_DPRT_CD, 
+        A.IMG_FILE_NM, 
+        A.FDR_NO, A.FDR_NM, 
+        A.CAREER_YY_CNT, A.CAREER_MM_CNT, 
+        /*CONCAT(A.IMG_PATH_NM,A.IMG_FILE_NM) PHOTO, 
+        CONCAT(IF(A.CAREER_YY_CNT IS NULL, '', CONCAT(A.CAREER_YY_CNT,'년' )), ' ', IF(A.CAREER_MM_CNT IS NULL, '', CONCAT(A.CAREER_MM_CNT,'월'))) CAREER_YY_CNT, */
+        /*FN_GET_CODE_NM('IO_CLS', A.IO_CLS_CD) EXPORT_IMPORT, 
+        FN_GET_CODE_NM('ITEMCD',A.ITEM_CD) ITEM_NM, 
+        FN_GET_CODE_NM('AREA_CD',A.AREA_CD) AREA_NM, */
+        A.SERVICE, A.AREA_CD, A.ITEM_CD,
+        IF(A.CERI_NM IS NULL OR LENGTH(A.CERI_NM) = 0 , '무','유') AS CERI_NM, 
+        A.COMP_NM, A.HP_NO, A.EMAIL_ID, A.ATT_ORG_FILE_NM AS ATT_ORG_FILE_NM, 
+        A.ATT_PATH_NM, A.ATT_FILE_NM,
+        IF(DISP_YN ='Y' AND DATE_FORMAT(NOW(), '%Y%m%d') >= A.DISP_FR_YMD AND DATE_FORMAT(NOW(), '%Y%m%d') <= A.DISP_TO_YMD,'Y','N') AS DISP_YN 
+         
+        {$sql_common} {$sql_search} {$sql_order} limit {$from_record}, {$rows} ";
+
+        $result = sql_query($sql);
+
+        // print_r($sql);exit;
+        //echo $total_count . ' / ' . $total_member;
+        ?>
+        <div class="page-content">
+            <div class="row mb20">
+                <div class="col-12">
+                    <form name="fsearch" id="fsearch" method="get">
+                        <input type="hidden" name="search_mode" value="act">
+                    <div class="row info-title">
+                        <div class="col-6">
+                            <div class="row">
+                                <div class="col-4 xs-col-33">
+                                    <select name="SERVICE" class="input">
+                                        <option value="">서비스 형태</option>
+                                        <option value="해상" <?php if($SERVICE == "해상") echo "selected"; ?>>해상</option>
+                                        <option value="항공" <?php if($SERVICE == "항공") echo "selected"; ?>>항공</option>
+                                        <option value="벌크" <?php if($SERVICE == "벌크") echo "selected"; ?>>벌크</option>
+                                        <option value="프로젝트" <?php if($SERVICE == "프로젝트") echo "selected"; ?>>프로젝트</option>
+                                        <option value="LCL콘솔" <?php if($SERVICE == "LCL콘솔") echo "selected"; ?>>LCL콘솔</option>
+                                        <option value="Sea & Air" <?php if($SERVICE == "Sea & Air") echo "selected"; ?>>Sea & Air</option>
+                                        <option value="위험물" <?php if($SERVICE == "위험물") echo "selected"; ?>>위험물</option>
+                                        <option value="냉동·냉장" <?php if($SERVICE == "냉동·냉장") echo "selected"; ?>>냉동·냉장</option>
+                                        <option value="Perishable" <?php if($SERVICE == "Perishable") echo "selected"; ?>>Perishable</option>
+                                        <option value="까르네(Carnet)" <?php if($SERVICE == "까르네(Carnet)") echo "selected"; ?>>까르네(Carnet)</option>
+                                        <option value="전시화물" <?php if($SERVICE == "전시화물") echo "selected"; ?>>전시화물</option>
+                                        <option value="핸드캐리" <?php if($SERVICE == "핸드캐리") echo "selected"; ?>>핸드캐리</option>
+                                        <option value="해외이주화물" <?php if($SERVICE == "해외이주화물") echo "selected"; ?>>해외이주화물</option>
+                                        <option value="쿠리어(Courrier)" <?php if($SERVICE == "쿠리어(Courrier)") echo "selected"; ?>>쿠리어(Courrier)</option>
+                                        <option value="따이공" <?php if($SERVICE == "따이공") echo "selected"; ?>>따이공</option>
+                                        <option value="기타" <?php if($SERVICE == "기타") echo "selected"; ?>>기타</option>
+                                    </select>
+                                </div>
+                                <div class="col-4 xs-col-33">
+                                    <select class="input" name="AREA_CD">
+                                        <option value="">관심지역</option>
+                                        <option value="일본·동아시아" <?php if($AREA_CD == "일본·동아시아") echo "selected"; ?>>일본·동아시아</option>
+                                        <option value="중국·홍콩" <?php if($AREA_CD == "중국·홍콩") echo "selected"; ?>>중국·홍콩</option>
+                                        <option value="동남아시아" <?php if($AREA_CD == "동남아시아") echo "selected"; ?>>동남아시아</option>
+                                        <option value="서남아시아" <?php if($AREA_CD == "서남아시아") echo "selected"; ?>>서남아시아</option>
+                                        <option value="중앙아시아" <?php if($AREA_CD == "중앙아시아") echo "selected"; ?>>중앙아시아</option>
+                                        <option value="중동" <?php if($AREA_CD == "중동") echo "selected"; ?>>중동</option>
+                                        <option value="오세아니아" <?php if($AREA_CD == "오세아니아") echo "selected"; ?>>오세아니아</option>
+                                        <option value="북아프리카" <?php if($AREA_CD == "북아프리카") echo "selected"; ?>>북아프리카</option>
+                                        <option value="지중해연안" <?php if($AREA_CD == "지중해연안") echo "selected"; ?>>지중해연안</option>
+                                        <option value="북유럽" <?php if($AREA_CD == "북유럽") echo "selected"; ?>>북유럽</option>
+                                        <option value="서유럽" <?php if($AREA_CD == "서유럽") echo "selected"; ?>>서유럽</option>
+                                        <option value="동유럽" <?php if($AREA_CD == "동유럽") echo "selected"; ?>>동유럽</option>
+                                        <option value="아프리카" <?php if($AREA_CD == "아프리카") echo "selected"; ?>>아프리카</option>
+                                        <option value="북미" <?php if($AREA_CD == "북미") echo "selected"; ?>>북미</option>
+                                        <option value="남미" <?php if($AREA_CD == "남미") echo "selected"; ?>>남미</option>
+                                        <option value="러시아" <?php if($AREA_CD == "러시아") echo "selected"; ?>>러시아</option>
+                                    </select>
+                                </div>
+                                <div class="col-4 xs-col-33">
+                                    <select class="input" name="ITEM_CD">
+                                        <option value="">Item선택</option>
+                                        <option value="자동차부품" <?php if($ITEM_CD == "자동차부품") echo "selected"; ?>>자동차부품</option>
+                                        <option value="타이어" <?php if($ITEM_CD == "타이어") echo "selected"; ?>>타이어</option>
+                                        <option value="전자·전기제품/부품" <?php if($ITEM_CD == "전자·전기제품/부품") echo "selected"; ?>>전자·전기제품/부품</option>
+                                        <option value="레진(Resin)" <?php if($ITEM_CD == "레진(Resin)") echo "selected"; ?>>레진(Resin)</option>
+                                        <option value="제지·인쇄물" <?php if($ITEM_CD == "제지·인쇄물") echo "selected"; ?>>제지·인쇄물</option>
+                                        <option value="기계류" <?php if($ITEM_CD == "기계류") echo "selected"; ?>>기계류</option>
+                                        <option value="케미칼(Chemical)" <?php if($ITEM_CD == "케미칼(Chemical)") echo "selected"; ?>>케미칼(Chemical)</option>
+                                        <option value="식품·음료(Food Stuff)" <?php if($ITEM_CD == "식품·음료(Food Stuff)") echo "selected"; ?>>식품·음료(Food Stuff)</option>
+                                        <option value="농수산물" <?php if($ITEM_CD == "농수산물") echo "selected"; ?>>농수산물</option>
+                                        <option value="의류" <?php if($ITEM_CD == "의류") echo "selected"; ?>>의류</option>
+                                        <option value="신발·안경·모자" <?php if($ITEM_CD == "신발·안경·모자") echo "selected"; ?>>신발·안경·모자</option>
+                                        <option value="섬유·직물" <?php if($ITEM_CD == "섬유·직물") echo "selected"; ?>>섬유·직물</option>
+                                        <option value="철강·코일·파이프" <?php if($ITEM_CD == "철강·코일·파이프") echo "selected"; ?>>철강·코일·파이프</option>
+                                        <option value="화장품·향수" <?php if($ITEM_CD == "화장품·향수") echo "selected"; ?>>화장품·향수</option>
+                                        <option value="가재도구(Household)" <?php if($ITEM_CD == "가재도구(Household)") echo "selected"; ?>>가재도구(Household)</option>
+                                        <option value="악기" <?php if($ITEM_CD == "악기") echo "selected"; ?>>악기</option>
+                                        <option value="가죽·털" <?php if($ITEM_CD == "가죽·털") echo "selected"; ?>>가죽·털</option>
+                                        <option value="의료기기" <?php if($ITEM_CD == "의료기기") echo "selected"; ?>>의료기기</option>
+                                        <option value="자전거·오토바이" <?php if($ITEM_CD == "자전거·오토바이") echo "selected"; ?>>자전거·오토바이</option>
+                                        <option value="플라스틱" <?php if($ITEM_CD == "플라스틱") echo "selected"; ?>>플라스틱</option>
+                                        <option value="포장재" <?php if($ITEM_CD == "포장재") echo "selected"; ?>>포장재</option>
+                                        <option value="스포츠용품" <?php if($ITEM_CD == "스포츠용품") echo "selected"; ?>>스포츠용품</option>
+                                        <option value="문구류" <?php if($ITEM_CD == "문구류") echo "selected"; ?>>문구류</option>
+                                        <option value="담배·술" <?php if($ITEM_CD == "담배·술") echo "selected"; ?>>담배·술</option>
+                                        <option value="장난감" <?php if($ITEM_CD == "장난감") echo "selected"; ?>>장난감</option>
+                                        <option value="무기류" <?php if($ITEM_CD == "무기류") echo "selected"; ?>>무기류</option>
+                                        <option value="기타" <?php if($ITEM_CD == "기타") echo "selected"; ?>>기타</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <input type="text" name="FDR_NM" class="input" placeholder="포워더명" value="<?php echo $FDR_NM; ?>">
+                        </div>
+                        <div class="col-2 inner-right text-right xs-col-12 m-mt10">
+                            <a href="<?php echo  $self_path; ?>">
+                                <button class="btn caption xs-col-12">조회</button>
+                            </a>
+                        </div>
+                    </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="row">
+
+                    <?php
+                        for ($i=0; $row=sql_fetch_array($result); $i++) {
+                    ?>
+                        <div class="forwarder-area">
+                            <div class="text-center">
+                                <img src="<?php if($row['IMG_FILE_NM']) echo $row['IMG_FILE_NM']; else echo '../../img/icon/icon-company.png'; ?>" alt="" class="forwarder-img">
+                                <div class="forwarder-info clearfix">
+                                    <span><?php echo  $row['FDR_NM']; ?></span>
+                                </div>
+                            </div>
+                            <div class="forwarder-memo">
+                                <p><text>경력</text> : <text style="padding-left: 18px;"><?php echo $row['CAREER_YY_CNT']; ?>년 <?php echo $row['CAREER_MM_CNT']; ?>개월</text></p>
+                                <p><span>서비스 : <?php $serv = $row['SERVICE'];
+                                    if(strlen($serv) > 57) echo mb_substr($serv,0, 57, 'UTF-8')."..."; else echo $serv; ?></span>
+                                </p>
+                            </div>
+                            <div class="darkness"></div>
+                            <a href="forwarder_info.html?idx=<?php echo  $row['FDR_NO']; ?>">
+                                <div class="btn-plus"><span draggable="false">+</span></div>
+                            </a>
+                        </div>
+                        <?php if ($i % 4 == 3){ ?>
+                    </div>
+                    <div class="row">
+                        <?php }//if?>
+
+                    <?php }//for?>
+                    </div>
+                </div>
+            </div>
+            <div class="row text-center mt20">
+                    <?php echo get_paging3(5, $page, $total_page, $_SERVER['SCRIPT_NAME'].'?'.$qstr.'&amp;page='); ?>
+            </div>
+        </div>
+
+
+    </div>
+<?php
+include_once('../../include/html_foot.html');
+?>

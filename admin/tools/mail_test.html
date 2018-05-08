@@ -1,0 +1,47 @@
+<?php
+session_start();
+include_once('../lib/common.php');
+
+
+
+//$ttt = list_options(PKG_CD);
+echo list_options(PKG_CD);
+
+
+exit;
+//메일 보내기 ##############################
+
+// 보내는 메일 이메일 형식 테스트
+$s_send = "kobic@nate.com";
+$s_send = preg_replace("/\s+/", "", $s_send);
+
+// 받는 메일 체크
+
+$s_recive = preg_replace("/\s+/", "", $m_mail);
+$s_recive = str_replace(",", ";", $s_recive);
+
+$charset = "UTF-8";
+
+$header = "Content-Type: text/html; charset=utf-8\r\n";
+$header .= "MIME-Version: 1.0\r\n";
+$header .= "Return-Path: <" . $s_send . ">\r\n";
+$header .= "From: " . $s_send . " <" . $s_send . ">\r\n";
+$header .= "Reply-To: <" . $s_send . ">\r\n";
+if ($cc) $header .= "Cc: " . $cc . "\r\n";
+if ($bcc) $header .= "Bcc: " . $bcc . "\r\n";
+
+// 제목
+$s_subject = "임시 비밀번호를 보내드립니다.";
+
+// 메일 내용
+$s_content = "";
+
+
+$result_send = mail($s_recive, $s_subject, $s_content, $header, $s_send);
+
+if (!$result_send) {
+    $err = 'ok|비번은 변경했으나.... 메일은 못보냈습니다.';
+} else {
+    $err = 'ok|임시비번을 등록된 이메일로 발송했습니다.';
+}
+

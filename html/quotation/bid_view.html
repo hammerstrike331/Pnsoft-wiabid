@@ -1,0 +1,538 @@
+<?php
+    session_start();
+    include_once ('../../admin/lib/common.php');
+    include_once ('../../include/html_head.html');
+
+    $pid = $_GET['pid'];
+
+    $sql1 ="SELECT * FROM tbid_ntc_mst WHERE NTC_NO = '{$pid}'";
+    $row1 = sql_fetch($sql1);
+
+    $sql2 ="SELECT * FROM tbid_ntc_crgo WHERE NTC_NO = '{$pid}'";
+    $row2 = sql_fetch($sql2);
+
+    $chk_mine = "";
+    $disable = "";
+
+    //본인 공고물 체크
+    if($_SESSION['MBM_NO'] == $row1['NTC_PIC_NO'])
+        $chk_mine = "ok";
+    else
+        $disable = "disabled";
+    
+    //step1
+    $NTC_NO = $row1['NTC_NO'];                   // 공고번호    
+    $CRG_TYP_CD = $row1['CRG_TYP_CD'];           // 화물구분   FCL / LCL / BULK / AIR
+    $NTC_NM = $row1['NTC_NM'];                   // 공고명    
+    $NTC_PIC_NM = $row1['NTC_PIC_NM'];           // 공고자명
+    $NTC_CLOSE_YMD = $row1['NTC_CLOSE_YMD'];     // 입찰마감일시
+    $NTC_CLOSE_TM = $row1['NTC_CLOSE_TM'];       // 입찰마감일시
+    $NTC_IO_TYP_CD = $row1['IO_TYP_CD'];         // 수출입구분  O / I /  A
+    $PAY_COND_CD = $row1['PAY_COND_CD'];         // 운임지불조건
+    $SEA_RQST_YN = $row1['SEA_RQST_YN'];         // 해상운송 / 항공운송    
+    $DOM_RQST_YN = $row1['DOM_RQST_YN'];         // 국내운송
+    $CRG_RQST_YN = $row1['CRG_RQST_YN'];         // 적하보험
+    $CSTM_RQST_YN = $row1['CSTM_RQST_YN'];       // 통관
+    $PACK_RQST_YN = $row1['PACK_RQST_YN'];       // 포장
+    
+    //step2
+    $POL_CD = $row2['POL_CD'];                   // 선적항
+    $DOOR_NM = $row2['DOOR_NM'];                 // PICK UP지    
+    $DOOR_YMD = $row2['DOOR_YMD'];               // PICK UP 일자
+    $POD_CD = $row2['POD_CD'];                   // 양하항
+    $FDS_NM = $row2['FDS_NM'];                   // 선적항
+    $FDS_YMD = $row2['FDS_YMD'];                 // 도착요구 일자
+    $INCTRMS_CD = $row2['INCTRMS_CD'];           // 무역거래조건
+    $TRS_ROUTE_CD = $row2['TRS_ROUTE_CD'];       // 운송노선
+    $TRS_COND_CD = $row2['TRS_COND_CD'];         // 운송조건    
+    $LOAD_TYP_CD = $row2['LOAD_TYP_CD'];         // 적재형태
+    $DECK_TYP_CD = $row2['DECK_TYP_CD'];         // 적재형태
+    $PORTABLE_YN = $row2['PORTABLE_YN'];         // 자가구동 화물
+
+    //step3
+    $CRG_NM = $row2['CRG_NM'];                   // 품목명
+    $CNTR1_SZTP = $row2['CNTR1_SZTP'];           // 물동량
+    $CNTR1_CNT = $row2['CNTR1_CNT'];             // 물동량
+    $CNTR1_WGT = $row2['CNTR1_WGT'];             // 물동량
+    $CNTR2_SZTP = $row2['CNTR2_SZTP'];           // 물동량
+    $CNTR2_CNT = $row2['CNTR2_CNT'];             // 물동량
+    $CNTR2_WGT = $row2['CNTR2_WGT'];             // 물동량
+    $CNTR3_SZTP = $row2['CNTR3_SZTP'];           // 물동량
+    $CNTR3_CNT = $row2['CNTR3_CNT'];             // 물동량
+    $CNTR3_WGT = $row2['CNTR3_WGT'];             // 물동량
+    $CRG_AMT = $row2['CRG_AMT'];                 // 물품가액(FOB)
+    $CRG_CURR_CD = $row2['CRG_CURR_CD'];         // 물품가액(FOB)
+    $CRG_UNIT_NM = $row2['CRG_UNIT_NM'];         // 물품가 기준
+    $IMDG_CD = $row2['IMDG_CD'];                 // 위험물
+    $EX_RATE = $row2['EX_RATE'];                 // 견적적용환율
+    $REMARK = $row1['REMARK'];                   // 기타요청사항
+    $PKG_CD = $row2['PKG_CD'];                   // 포장형태
+    $CRG_CNT = $row2['CRG_CNT'];                 // 수량
+    $CRG_WGT = $row2['CRG_WGT'];                 // 중량
+    $CRG_VOL = $row2['CRG_VOL'];                 // 용적
+    $DIM_LEN = $row2['DIM_LEN'];                 // Dimension
+    $DIM_WID = $row2['DIM_WID'];                 // Dimension
+    $DIM_HGT = $row2['DIM_HGT'];                 // Dimension
+    $CRG_UNT_WGT = $row2['CRG_UNT_WGT'];         // 최대중량
+    $PACK_FILE_NM = $row1['PACK_FILE_NM'];       // Packing File Name
+    $PACK_ORG_FILE_NM = $row1['PACK_ORG_FILE_NM']; // Packing List
+    $PKG_GRP_CD = $row2['PKG_GRP_CD'];           // Packing Group
+
+    $NTC_CLOSE_DATE_TIME = substr($NTC_CLOSE_YMD, 0, 4).'-'.substr($NTC_CLOSE_YMD, 4, 2).'-'.substr($NTC_CLOSE_YMD, 6, 2).' '.substr($NTC_CLOSE_TM, 0,2).':'.substr($NTC_CLOSE_TM, 2, 2).':00';
+
+    $closeDate = new DateTime($NTC_CLOSE_DATE_TIME);
+    $now = new DateTime();
+
+    $ntcCloseFlag = 0;                 // 입찰진행중    
+    if($closeDate < $now)
+        $ntcCloseFlag = 1;             // 입찰완료
+
+    $sql3 ="SELECT * FROM tbid_qtn_mst WHERE NTC_NO = '{$pid}' AND QTN_PIC_NO = '{$_SESSION['MBM_NO']}'";
+    $row3 = sql_fetch($sql3);
+    $final_submit = 0;
+    if($row3['QTN_BID_DT'])
+        $final_submit = 1;    
+?>
+
+<style type="text/css">
+    @media screen and (max-width: 768px) {
+        ul.tabs li:nth-child(2) {
+            position: absolute !important;
+            top: 0;
+            left: 51%;            
+        }
+        ul.tabs li:nth-child(3) {
+            position: absolute !important;
+            top: 43px;
+            left: 0;
+        }
+        ul.tabs li:nth-child(4) {
+            position: absolute !important;
+            top: 43px;
+            left: 51%;            
+        }
+        .btn.caption {
+            margin-top: 20px;
+        }
+        .btn.caption.bg-orange {
+            margin-top: 50px;            
+        }        
+    }    
+    ul.tabs {
+        font-size: 15px !important;
+    }
+</style>
+
+<div class="container">
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                    <li>Quotation</li>
+                    <li>입찰정보</li>
+                    <li class="active">입찰공고</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="row">
+            <div class="col-12">
+                <div id="main-tab">
+                    <ul class="tabs tabs-c clearfix inner-left m-tabs">
+                        <li class="active" onclick="location.href='bid_view.html?pid=<?php echo $pid?>'">SHIPMENT</li>
+                        <li onclick="location.href='participation_status.html?pid=<?php echo $pid?>'">QUOTE STATUS</li>
+                        <li onclick="location.href='contract.html?pid=<?php echo $pid?>'">CONTRACT</li>
+                        <li onclick="location.href='questions_and_answers.html?pid=<?php echo $pid?>'">Q&A</li>
+                    </ul>
+                <?php if($chk_mine != "ok" && $ntcCloseFlag == 0 && $_SESSION['MBM_NM'] && $final_submit == 0){ ?>
+                    <a href="bid_join.html?pid=<?php echo $pid?>" class="btn caption bg-orange inner-right">입찰참여</a>
+                <?php } ?>
+
+                    <div class="tab_container clearfix">                        
+                        <input type="hidden" id="TEMP_INCTRMS_CD" value="<?php echo $INCTRMS_CD?>">
+                        <input type="hidden" id="TEMP_CNTR1_SZTP" value="<?php echo $CNTR1_SZTP?>">
+                        <input type="hidden" id="TEMP_CNTR2_SZTP" value="<?php echo $CNTR2_SZTP?>">
+                        <input type="hidden" id="TEMP_CNTR3_SZTP" value="<?php echo $CNTR3_SZTP?>">
+                        <input type="hidden" id="TEMP_CRG_CURR_CD" value="<?php echo $CRG_CURR_CD?>">
+                        <input type="hidden" id="TEMP_IMDG_CD" value="<?php echo $IMDG_CD?>">
+                        <input type="hidden" id="TEMP_PKG_CD" value="<?php echo $PKG_CD?>">
+                        
+                        <form name="Join" id="Join" method="post" action="<?php echo RT_PATH."/php/bid_update_ok.php";?>" enctype="multipart/form-data">
+                            <input type="hidden" name="NTC_NO" value="<?php echo $NTC_NO?>">
+                            <input type="hidden" name="CRG_TYP_CD" value="<?php echo $CRG_TYP_CD?>">
+                            <input type="hidden" name="NTC_PIC_NM" value="<?php echo $NTC_PIC_NM?>">
+                            
+                            <div class="tab_content">
+                                <!-- FCL -->
+                                <div class="fcl">
+                                    <div class="portlet">
+                                        <div class="portlet-title">
+                                            <caption>SHIPMENT DETAIL
+                                                <?php if($chk_mine == "ok"){ ?>
+                                                    <span class="inner-right mr10"><button type="button" onClick="javascript:updateBid();" class="btn caption">저장</button></span>
+                                                <?php } ?>
+                                            </caption>
+                                        </div>
+                                    <?php if($chk_mine == "ok") { ?>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="row view">
+                                                    <div class="form-group">
+                                                        <div class="col-3">
+                                                            화물구분<span class="text-primary">*</span>
+                                                        </div>
+                                                        <div class="col-9">
+                                                            <?php echo $CRG_TYP_CD?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <div class="col-3">
+                                                            공고명<span class="text-primary">*</span>
+                                                        </div>
+                                                        <div class="col-9">                                                            
+                                                            <input type="text" class="input" name="NTC_NM" id="NTC_NM" value="<?php echo $NTC_NM?>">
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <div class="col-3">
+                                                            공고자<span class="text-primary">*</span>
+                                                        </div>
+                                                        <div class="col-9">
+                                                            <?php echo $NTC_PIC_NM?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <div class="col-3">
+                                                            수/출입 구분<span class="text-primary">*</span>
+                                                        </div>
+                                                        <div class="col-9 l-height4">
+                                                            <label><input type="radio" name="NTC_IO_TYP_CD" value="O" <?php if($NTC_IO_TYP_CD =="O") echo "checked"; ?> />수출</label>
+                                                            <label><input type="radio" name="NTC_IO_TYP_CD" value="I" <?php if($NTC_IO_TYP_CD =="I") echo "checked"; ?> />수입</label>
+                                                            <label><input type="radio" name="NTC_IO_TYP_CD" value="A" <?php if($NTC_IO_TYP_CD =="A") echo "checked"; ?> />삼국간</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <div class="col-3">
+                                                            요청 서비스<span class="text-primary">*</span>
+                                                        </div>
+                                                        <div class="col-9 l-height4">
+                                                            <?php if($CRG_TYP_CD =="AIR"){?>
+                                                                <input type="checkbox" id="AIR_RQST_YN" name="AIR_RQST_YN" <?php if($SEA_RQST_YN =="T") { echo "checked"; }?> >항공운송
+                                                            <?php  } else { ?>
+                                                                <input type="checkbox" id="SEA_RQST_YN" name="SEA_RQST_YN" <?php if($SEA_RQST_YN =="T") { echo "checked"; }?> >해상운송
+
+                                                            <?php  } ?>
+                                                            <input type="checkbox" id="DOM_RQST_YN" name="DOM_RQST_YN" <?php if($DOM_RQST_YN =="T") { echo "checked"; }?> >국내운송
+                                                            <input type="checkbox" id="CRG_RQST_YN" name="CRG_RQST_YN" <?php if($CRG_RQST_YN =="T") { echo "checked"; }?> >적하보험
+                                                            <input type="checkbox" id="CSTM_RQST_YN" name="CSTM_RQST_YN" <?php if($CSTM_RQST_YN =="T") { echo "checked"; }?> >통관
+                                                            <?php if($CRG_TYP_CD =="BLK"){?>
+                                                            <input type="checkbox" id="PACK_RQST_YN" name="PACK_RQST_YN"<?php if($PACK_RQST_YN =="T") { echo "checked"; }?> >포장
+                                                            <?php  } ?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group border-none">
+                                                        <div class="col-3">운임지불조건</div>
+                                                        <div class="col-9 l-height4">
+                                                            <select class="input" name="PAY_COND_CD" >
+                                                                <option value="" <?php if($PAY_COND_CD == "") { echo "selected"; }?>>운임지불조건을 선택하세요</option>
+                                                                <option value="01" <?php if($PAY_COND_CD == "01") echo "selected";?>>(EXW)공장 인도</option>
+                                                                <option value="02" <?php if($PAY_COND_CD == "02") echo "selected";?>>(FCA)운송자 인도</option>
+                                                                <option value="03" <?php if($PAY_COND_CD == "03") echo "selected";?>>(CPT)운송비 지급 인도</option>
+                                                                <option value="04" <?php if($PAY_COND_CD == "04") echo "selected";?>>(CIP)운송비, 보험료 지급 인도</option>
+                                                                <option value="05" <?php if($PAY_COND_CD == "05") echo "selected";?>>(DAT)도착 터미널 인도</option>
+                                                                <option value="06" <?php if($PAY_COND_CD == "06") echo "selected";?>>(DAP)도착 장소 인도</option>
+                                                                <option value="07" <?php if($PAY_COND_CD == "07") echo "selected";?>>(DDP)관세지급 인도</option>
+                                                                <option value="08" <?php if($PAY_COND_CD == "08") echo "selected";?>>(FAS)선측 인도</option>
+                                                                <option value="09" <?php if($PAY_COND_CD == "09") echo "selected";?>>(FOB)본선 인도</option>
+                                                                <option value="10" <?php if($PAY_COND_CD == "10") echo "selected";?>>(CFR)운임포함 인도</option>
+                                                                <option value="11" <?php if($PAY_COND_CD == "11") echo "selected";?>>(CIF)운임, 보험료 포함 인도</option>
+                                                                <option value="12" <?php if($PAY_COND_CD == "12") echo "selected";?>>(DDU)관세 미지급 인도</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="row view border-left">
+                                                    <div class="form-group m-border-top">
+                                                        <div class="col-3">공고번호</div>
+                                                        <div class="col-9 l-height4"><?php echo $NTC_NO?></div>
+                                                    </div>
+                                                    <div class="form-group height40 m-hidden"></div>
+                                                    <div class="form-group">
+                                                        <div class="col-3">입찰마감일시</div>
+                                                        <div class="col-9">
+                                                            <div class="width65 relative1 mr-2">
+                                                                <input type="text" class="input" id="datepicker" name="NTC_CLOSE_YMD" value="<?php  echo substr($NTC_CLOSE_YMD, 0, 4).'-'.substr($NTC_CLOSE_YMD, 4, 2).'-'.substr($NTC_CLOSE_YMD, 6, 2); ?>" >
+                                                                <img src="../../img/icon/icon-calendar.png" alt="" class="icon-calendar-2">
+                                                            </div>
+                                                            <div class="width33">
+                                                                <input type="text" class="input text-center" name="NTC_CLOSE_TM" value="<?php echo substr($NTC_CLOSE_TM, 0,2).':'.substr($NTC_CLOSE_TM, 2, 2); ?>" >
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group height40 m-hidden"></div>
+                                                    <div class="form-group height40 m-hidden"></div>
+                                                    <div class="form-group border-none height40 m-hidden"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php } else { ?>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="row view">
+                                                    <div class="form-group">
+                                                        <div class="col-3">
+                                                            화물구분<span class="text-primary">*</span>
+                                                        </div>
+                                                        <div class="col-9">
+                                                            <?php echo $CRG_TYP_CD?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <div class="col-3">
+                                                            공고명<span class="text-primary">*</span>
+                                                        </div>
+                                                        <div class="col-9">                                                            
+                                                            <?php echo $NTC_NM?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <div class="col-3">
+                                                            공고자<span class="text-primary">*</span>
+                                                        </div>
+                                                        <div class="col-9">
+                                                            <?php echo $NTC_PIC_NM?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <div class="col-3">
+                                                            수/출입 구분<span class="text-primary">*</span>
+                                                        </div>
+                                                        <div class="col-9 l-height4">
+                                                            <label>
+                                                                <?php 
+                                                                    if($NTC_IO_TYP_CD =="O") echo "수출";
+                                                                    if($NTC_IO_TYP_CD =="I") echo "수입";
+                                                                    if($NTC_IO_TYP_CD =="A") echo "삼국간";
+                                                                ?>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <div class="col-3">
+                                                            요청 서비스<span class="text-primary">*</span>
+                                                        </div>
+                                                        <div class="col-9 l-height4">
+                                                            <?php   
+                                                                if($CRG_TYP_CD =="AIR") { 
+                                                                    if($SEA_RQST_YN =="T") echo "항공운송-";
+                                                                } else {
+                                                                    if($SEA_RQST_YN =="T") echo "해상운송-";
+                                                                } 
+
+                                                                if($DOM_RQST_YN =="T") echo "국내운송-";
+                                                                if($CRG_RQST_YN =="T") echo "적하보험-";
+                                                                if($CSTM_RQST_YN =="T") echo "통관-";
+                                                                
+                                                                if($CRG_TYP_CD =="BLK") {
+                                                                    if($PACK_RQST_YN =="T") echo "포장";
+                                                                }
+                                                            ?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group border-none">
+                                                        <div class="col-3">운임지불조건</div>
+                                                        <div class="col-9 l-height4">
+                                                            <?php                                                                 
+                                                                if($PAY_COND_CD == "01") echo "(EXW)공장 인도";
+                                                                if($PAY_COND_CD == "02") echo "(FCA)운송자 인도";
+                                                                if($PAY_COND_CD == "03") echo "(CPT)운송비 지급 인도";
+                                                                if($PAY_COND_CD == "04") echo "(CIP)운송비, 보험료 지급 인도";
+                                                                if($PAY_COND_CD == "05") echo "(DAT)도착 터미널 인도";
+                                                                if($PAY_COND_CD == "06") echo "(DAP)도착 장소 인도";
+                                                                if($PAY_COND_CD == "07") echo "(DDP)관세지급 인도";
+                                                                if($PAY_COND_CD == "08") echo "(FAS)선측 인도";
+                                                                if($PAY_COND_CD == "09") echo "(FOB)본선 인도";
+                                                                if($PAY_COND_CD == "10") echo "(CFR)운임포함 인도";
+                                                                if($PAY_COND_CD == "11") echo "(CIF)운임, 보험료 포함 인도";
+                                                                if($PAY_COND_CD == "12") echo "(DDU)관세 미지급 인도";
+                                                            ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="row view border-left">
+                                                    <div class="form-group m-border-top">
+                                                        <div class="col-3">공고번호</div>
+                                                        <div class="col-9 l-height4"><?php echo $NTC_NO?></div>
+                                                    </div>
+                                                    <div class="form-group height40 m-hidden"></div>
+                                                    <div class="form-group">
+                                                        <div class="col-3">입찰마감일시</div>
+                                                        <div class="col-9">
+                                                            <div class="relative1">
+                                                                <?php 
+                                                                    echo substr($NTC_CLOSE_YMD, 0, 4).'-'.substr($NTC_CLOSE_YMD, 4, 2).'-'.substr($NTC_CLOSE_YMD, 6, 2)." ".substr($NTC_CLOSE_TM, 0,2).':'.substr($NTC_CLOSE_TM, 2, 2); 
+                                                                ?>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group height40 m-hidden"></div>
+                                                    <div class="form-group height40 m-hidden"></div>
+                                                    <div class="form-group border-none height40 m-hidden"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php } ?>
+                                    </div>
+                                    <?php 
+                                        if($CRG_TYP_CD == "FCL") {
+                                            include_once('../../include/bid_view_fcl.html');
+                                        } elseif ($CRG_TYP_CD == "LCL") {
+                                            include_once('../../include/bid_view_lcl.html');
+                                        } elseif ($CRG_TYP_CD == "BLK") {
+                                            include_once('../../include/bid_view_blk.html');
+                                        } elseif ($CRG_TYP_CD == "AIR") {
+                                            include_once('../../include/bid_view_air.html');
+                                        }
+                                    ?>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function numberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function uncomma(str) {
+        str = String(str);
+        return str.replace(/[^\d]+/g, '');
+    }
+
+    function changeNumber(obj) {
+        obj.value = numberWithCommas(uncomma(obj.value));
+    }
+
+    $("#CRG_AMT").blur(function() {
+        var num1 = numberWithCommas($("#CRG_AMT").val());
+        $("#CRG_AMT").val(num1);
+    });
+
+    $("#EX_RATE").blur(function() {
+        var num2 = numberWithCommas($("#EX_RATE").val());
+        $("#EX_RATE").val(num2);
+    });
+        
+    if($("#TEMP_INCTRMS_CD").val()){    
+        $("#INCTRMS_CD").val($("#TEMP_INCTRMS_CD").val());
+    }
+    if($("#TEMP_CNTR1_SZTP").val()){    
+        $("#CNTR1_SZTP").val($("#TEMP_CNTR1_SZTP").val());
+    }
+    if($("#TEMP_CNTR2_SZTP").val()){    
+        $("#CNTR2_SZTP").val($("#TEMP_CNTR2_SZTP").val());
+    }
+    if($("#TEMP_CNTR3_SZTP").val()){    
+        $("#CNTR3_SZTP").val($("#TEMP_CNTR3_SZTP").val());
+    }
+    if($("#TEMP_CRG_CURR_CD").val()){    
+        $("#CRG_CURR_CD").val($("#TEMP_CRG_CURR_CD").val());
+    }    
+    if($("#TEMP_IMDG_CD").val()){    
+        $("#IMDG_CD").val($("#TEMP_IMDG_CD").val());
+    }
+    if($("#TEMP_PKG_CD").val()){    
+        $("#PKG_CD").val($("#TEMP_PKG_CD").val());
+    }    
+</script>
+
+<script type="text/javascript">
+    function updateBid() {
+        //step1
+        if($("#NTC_NM").val() == ""){
+            swal("공고명을 입력해주세요","","info");
+            return false;
+        }        
+        //step2
+        if($("#POL_CD").val() == ""){        
+            swal("선적항을 선택해주세요","","info");
+            return false;
+        }
+        if($("#POD_CD").val() == ""){        
+            swal("양하항을 선택해주세요","","info");
+            return false;
+        }
+        if($("#INCTRMS_CD").val() == ""){        
+            swal("무역거래조건을 선택해주세요","","info");
+            return false;
+        }        
+        if($("#TRS_COND_CD")) {
+            if($("#TRS_COND_CD").val() == ""){           
+                swal("운송조건을 선택해주세요","","info");
+                return false;
+            }
+        }
+        //step3  
+        if($("#CRG_NM").val() ==""){
+            swal("품목명을 입력해주세요","","info");                
+            return false;
+        }
+        if($("#CNTR1_SZTP")) {
+            if($("#CNTR1_SZTP").val() =="" || $("#CNTR1_CNT").val() =="" || $("#CNTR1_WGT").val() ==""){                    
+                swal("물동량을 입력해주세요","","info");
+                return false;
+            }            
+        }            
+        if($("#EX_RATE").val() ==""){                    
+            swal("견적적용환율을 입력해주세요","","info");
+            return false;
+        }
+        if($("#CRG_UNT_WGT")) {            
+            if($("#PKG_CD").val() ==""){
+                swal("포장형태를 선택해주세요","","info");                    
+                return false;
+            }
+            if($("#CRG_WGT").val() ==""){
+                swal("전체중량을 입력해주세요","","info");                    
+                return false;
+            }
+            if($("#CRG_VOL").val() ==""){
+                swal("전체용적을 입력해주세요","","info");                    
+                return false;
+            }
+            if($("#CRG_UNT_WGT").val() ==""){
+                swal("최대중량을 입력해주세요","","info");                    
+                return false;
+            }
+        }
+        if($("#CRG_VOL").val() ==""){                
+            swal("용적을 입력해주세요","","info");
+            return false;
+        }
+        if($("#DIM_LEN")){
+            if($("#DIM_LEN").val() =="" || $("#DIM_WID").val() =="" || $("#DIM_HGT").val() ==""){
+                swal("Dimension을 입력해주세요","","info");                    
+                return false;
+            }
+        }
+        
+        var f =document.Join;
+        f.submit();
+    }
+</script>
+
+<?php
+    include_once ('../../include/html_foot.html');
+?>

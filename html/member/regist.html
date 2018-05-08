@@ -1,0 +1,133 @@
+<?php
+session_start();
+include_once ('../../admin/lib/common.php');
+
+if($_SESSION['MBM_EMAIL']){
+    alertMove("이미 로그인 되어있습니다.",RT_PATH);
+}
+
+include_once ('../../include/html_head.html');
+?>
+
+<div class="container">
+
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="<?php echo RT_PATH; ?>/img/icon/icon-home.png" alt="" width="16"></li>
+                    <li class="active">회원가입</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="jumbotron">
+            <h1 class="mb20">회원가입</h1>
+            <p> WiaBid 회원 가입을 진심으로 환영합니다.</p>
+        </div>
+    </div>
+    <script>
+
+        function CheckForm(Join){
+
+            var chk1=document.Join.U_checkAgreement1.checked;
+            var chk2=document.Join.U_checkAgreement2.checked;
+            var chk3=document.Join.U_checkAgreement3.checked;
+            if(chk1==""){
+                alert('이용약관에동의해 주세요');
+                return false;
+            }
+            if(chk2==""){
+                alert('면책약관에동의해 주세요');
+                return false;
+            }
+//            if(chk3==""){
+//                alert('개인정보 취급방침에 동의해 주세요');
+//                return false;
+//            }
+            document.getElementById('Join').submit();
+            return false;
+        }
+
+
+        $(function(){ //전체선택 체크박스 클릭
+            $("#allCheck").click(function(){ //만약 전체 선택 체크박스가 체크된상태일경우
+                if($("#allCheck").prop("checked")) { //해당화면에 전체 checkbox들을 체크해준다
+                    $("input[type=checkbox]").prop("checked",true); // 전체선택 체크박스가 해제된 경우
+                } else { //해당화면에 모든 checkbox들의 체크를해제시킨다.
+                    $("input[type=checkbox]").prop("checked",false);
+                }
+            })
+        })
+    </script>
+<?php
+
+$sql = "SELECT term1, term2, term3 FROM `tbl_term` WHERE idx ='1'";
+$row = sql_fetch($sql);
+
+?>
+    <form name="Join" id="Join" method="post" action="regist_step2.html"  onSubmit="return CheckForm(this)">
+        <div class="page-content sign-up">
+            <div class="row">
+                <div class="col-12 mb50 m-mb15">
+                    <img src="<?php echo RT_PATH; ?>/img/sign-step1.png" alt="" class="sign-step m-hidden">
+                    <img src="<?php echo RT_PATH; ?>/img/sign-step1-m.png" alt="" class="sign-step lg-hidden">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="portlet all-chk">
+                        <p>이용약관, 면책약관, 개인정보 수집 및 이용에 모두 동의합니다.</p>
+                        <label><input type="checkbox" id="allCheck">전체동의</label>
+                    </div>
+                    <div class="portlet">
+                        <h1>서비스 이용약관</h1>
+                        <div class="notice">
+                            <p>
+                                <?=nl2br($row['term1'])?>
+                            </p>
+                        </div>
+                        <div class="notice-agree">
+                            <label><input type="checkbox" name="U_checkAgreement1" id="U_checkAgreement1">이용약관에 동의합니다.</label>
+                        </div>
+                    </div>
+
+                    <div class="portlet">
+                        <h1>개인정보 수집 및 이용</h1>
+                        <div class="notice">
+                            <p>
+                                <?=nl2br($row['term2'])?>
+                            </p>
+                        </div>
+                        <div class="notice-agree">
+                            <label><input type="checkbox" name="U_checkAgreement3" id="U_checkAgreement3">개인정보 수집 및 이용에 동의합니다.</label>
+                        </div>
+                    </div>
+
+                    <div class="portlet">
+                        <h1>면책 약관</h1>
+                        <div class="notice">
+                            <p>
+                                <?=nl2br($row['term3'])?>
+                            </p>
+                        </div>
+                        <div class="notice-agree">
+                            <label><input type="checkbox" name="U_checkAgreement2" id="U_checkAgreement2">면책약관에 동의합니다.</label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="three-btn center mt20">
+                <a href="/index.html" class="btn bg-silver">취소</a>
+                <a href="javascript:CheckForm();" class="btn">다음</a>
+            </div>
+        </div>
+    </form>
+
+
+</div>
+
+<?php
+include_once ('../../include/html_foot.html');
+?>

@@ -1,0 +1,381 @@
+<?php
+session_start();
+include_once('lib/common.php');
+
+// 관리자 세션 확인
+if(!isset($_SESSION['ADMIN_GRPNAME'])) {
+    alertMove('로그인 후 이용해 주세요', "index.html");
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+<?php
+    include_once ('./include/head.html');
+?>
+
+</head>
+<body class="fixed-left">
+
+<!-- Begin page -->
+<div id="wrapper">
+
+<?php
+    include_once ('./include/menu.html');
+?>
+
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+<?php
+// 검색 옵션
+$st_date = addslashes($_GET['st_date']);
+$ed_date = addslashes($_GET['ed_date']);
+$search_mode = addslashes($_GET['search_mode']);
+
+$st_date = clean_xss_tags($st_date);
+$ed_date = clean_xss_tags($ed_date);
+$search_mode = clean_xss_tags($search_mode);
+
+if(!$st_date)   $st_date = "2015-01-01";
+if(!$ed_date)     $ed_date = date("Y-m-d");
+
+
+if($search_mode == "act") {
+    if(!$st_date)   $st_date = "2015-01-01";
+    if(!$ed_date)     $ed_date = date("Y-m-d");
+}
+?>
+    <div class="content-page">
+        <!-- Start content -->
+        <div class="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card-box p-t-10 p-b-10 m-b-10">
+                            <div class="row">
+                                <form method="get" name="fsearch" id="fsearch" action="<?php echo $_SERVER['PHP_SELF']?>">
+                                <div class="form-group m-b-0">
+                                    <div class="col-sm-5">
+                                        <div class="input-daterange input-group" id="date-range">
+                                            <input type="text" class="form-control" name="st_date"  value="<?php if(!$st_date) { echo "2015-01-01"; } else { echo $st_date; } ?>" />
+                                            <span class="input-group-addon bg-primary b-0 text-white">~</span>
+                                            <input type="text" class="form-control" name="ed_date"   value="<?php if(!$ed_date) { echo date("Y-m-d"); } else { echo $ed_date; } ?>" />
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-7">
+                                        <div class="pull-right">
+                                            <button type="submit" class="btn btn-primary waves-effect w-md">조회하기</button>
+                                            <button type="button" class="btn btn-inverse waves-effect w-md" onclick="location.href='stats.html'">초기화</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+<?php
+$sql_stats ="
+        SELECT
+        (SELECT   COUNT(*)
+           FROM tcmn_mbr_join A 
+           WHERE JOIN_STS_CD='SCDE'
+        AND SECEDE_DT BETWEEN DATE_FORMAT('{$st_date}','%Y-%m-%d') AND DATE_ADD(DATE_FORMAT('{$ed_date}','%Y-%m-%d'),INTERVAL 1 DAY)			 
+           )AS SEC_TOAL,
+         (SELECT   COUNT(*)
+           FROM tcmn_mbr_join A 
+           WHERE JOIN_STS_CD='JOIN'
+        AND ENTER_DT BETWEEN DATE_FORMAT('{$st_date}','%Y-%m-%d') AND DATE_ADD(DATE_FORMAT('{$ed_date}','%Y-%m-%d'),INTERVAL 1 DAY)				 
+          )AS NEW_TOTAL,
+        (SELECT   COUNT(*)
+           FROM tcmn_mbr_join A 
+           WHERE JOIN_STS_CD='SCDE'
+        AND SECEDE_DT = DATE_FORMAT(NOW(),'%Y-%m-%d')
+           )AS TSEC_TOAL,
+         (SELECT   COUNT(*)
+           FROM tcmn_mbr_join A 
+           WHERE JOIN_STS_CD='JOIN'
+        AND ENTER_DT = DATE_FORMAT(NOW(),'%Y-%m-%d')
+       )AS TNEW_TOTAL,
+        (SELECT   COUNT(*)
+           FROM tcmn_mbr_join A 
+           WHERE JOIN_STS_CD='JOIN')AS ANEW_TOTAL,
+        (SELECT   COUNT(*)
+           FROM tcmn_mbr_join A 
+           WHERE JOIN_STS_CD='SCDE')AS ASEC_TOTAL ";
+
+    $row_stats = sql_fetch($sql_stats);
+
+    $SEC_TOAL = $row_stats['SEC_TOAL'];
+    $NEW_TOTAL = $row_stats['NEW_TOTAL'];
+    $TSEC_TOAL = $row_stats['TSEC_TOAL'];
+    $TNEW_TOTAL = $row_stats['TNEW_TOTAL'];
+    $ANEW_TOTAL = $row_stats['ANEW_TOTAL'];
+    $ASEC_TOTAL = $row_stats['ASEC_TOTAL'];
+    $INC_TOTAL = $NEW_TOTAL - $SEC_TOAL;
+    $TINC_TOTAL = $TNEW_TOTAL- $TSEC_TOAL;
+
+//    echo $sql_stats;
+?>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card-box">
+                            <h4 class="header-title m-t-0">회원 현황</h4>
+                            <hr class="m-t-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover text-center">
+                                    <thead>
+                                    <tr class="active">
+                                        <th colspan="3" class="text-center">기간내</th>
+                                        <th colspan="3" class="text-center">당일</th>
+                                        <th colspan="2" class="text-center">누적</th>
+                                    </tr>
+                                    <tr class="active">
+                                        <th class="text-center">가입자 수</th>
+                                        <th class="text-center">탈퇴자 수</th>
+                                        <th class="text-center">순증 가입자 수</th>
+                                        <th class="text-center">가입자 수</th>
+                                        <th class="text-center">탈퇴자 수</th>
+                                        <th class="text-center">순증 가입자 수</th>
+                                        <th class="text-center">가입자 수</th>
+                                        <th class="text-center">탈퇴자 수</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr class="info">
+                                        <td id="NEW_TOTAL"><?php echo $NEW_TOTAL?></td>
+                                        <td id="SEC_TOAL"><?php echo $SEC_TOAL?></td>
+                                        <td id="INC_TOTAL"><?php echo $INC_TOTAL?></td>
+                                        <td id="TNEW_TOTAL"><?php echo $TNEW_TOTAL?></td>
+                                        <td id="TSEC_TOAL"><?php echo $TSEC_TOAL?></td>
+                                        <td id="TINC_TOTAL"><?php echo $TINC_TOTAL?></td>
+                                        <td id="ANEW_TOTAL"><?php echo $ANEW_TOTAL?></td>
+                                        <td id="ASEC_TOTAL"><?php echo $ASEC_TOTAL?></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+
+<?php
+$sql_stats1 = "SELECT 
+			   SUM(IF(REG_YMD >='{$st_date}' AND  REG_YMD <='{$ed_date}', 1, 0)) AS PERIOD_DISP_ALL_CNT, 
+			    SUM(IF(DISP_YMD >='{$st_date}' AND  DISP_YMD <='{$ed_date}' AND DISP_YN ='Y', 1, 0)) AS PERIOD_DISP_YES_CNT ,
+			    SUM(IF(DISP_YMD >='{$st_date}' AND  DISP_YMD <='{$ed_date}' AND DISP_YN ='N', 1, 0)) AS PERIOD_DISP_NO_CNT ,
+			    SUM(IF(REG_YMD = DATE_FORMAT(NOW(), '%Y%m%d'), 1, 0 )) AS TODAY_DISP_ALL_CNT, 
+			    SUM(IF(DISP_YMD = DATE_FORMAT(NOW(), '%Y%m%d') AND DISP_YN ='Y', 1, 0)) AS TODAY_DISP_YES_CNT ,
+			    SUM(IF(DISP_YMD = DATE_FORMAT(NOW(), '%Y%m%d') AND DISP_YN ='N', 1, 0)) AS TODAY_DISP_NO_CNT ,
+			   COUNT(*) AS TOT_DISP_ALL_CNT, 
+			    SUM(IF(DISP_YN ='Y', 1, 0)) AS TOT_DISP_YES_CNT ,
+			    SUM(IF(DISP_YN ='N', 1, 0)) AS TOT_DISP_NO_CNT    
+			FROM  tbid_spc_fdr  
+			";
+$row1 = sql_fetch($sql_stats1);
+
+    $PERIOD_DISP_ALL_CNT = $row1['PERIOD_DISP_ALL_CNT'];  // 등록건수
+    $PERIOD_DISP_YES_CNT = $row1['PERIOD_DISP_YES_CNT'];  // 허용건수
+    $PERIOD_DISP_NO_CNT = $row1['PERIOD_DISP_NO_CNT'];  // 제한건수
+    $TODAY_DISP_ALL_CNT = $row1['TODAY_DISP_ALL_CNT'];  // 등록건수
+    $TODAY_DISP_YES_CNT = $row1['TODAY_DISP_YES_CNT'];  // 허용건수
+    $TODAY_DISP_NO_CNT = $row1['TODAY_DISP_NO_CNT'];  // 제한건수
+    $TOT_DISP_ALL_CNT = $row1['TOT_DISP_ALL_CNT'];  // 등록건수
+    $TOT_DISP_YES_CNT = $row1['TOT_DISP_YES_CNT'];  // 허용건수
+    $TOT_DISP_NO_CNT = $row1['TOT_DISP_NO_CNT'];  // 제한건수
+
+// echo $sql_stats1;
+?>
+                    <div class="col-md-6">
+                        <div class="card-box">
+                            <h4 class="header-title m-t-0">전문포워더 현황</h4>
+                            <hr class="m-t-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover text-center">
+                                    <thead>
+                                    <tr class="active">
+                                        <th colspan="3" class="text-center">기간내</th>
+                                        <th colspan="3" class="text-center">당일</th>
+                                        <th colspan="3" class="text-center">누적</th>
+                                    </tr>
+                                    <tr class="active">
+                                        <th class="text-center">등록건수</th>
+                                        <th class="text-center">허용건수</th>
+                                        <th class="text-center">제한건수</th>
+                                        <th class="text-center">등록건수</th>
+                                        <th class="text-center">허용건수</th>
+                                        <th class="text-center">제한건수</th>
+                                        <th class="text-center">등록건수</th>
+                                        <th class="text-center">허용건수</th>
+                                        <th class="text-center">제한건수</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr class="info">
+                                        <td><?php echo $PERIOD_DISP_ALL_CNT?></td>
+                                        <td><?php echo $PERIOD_DISP_YES_CNT?></td>
+                                        <td><?php echo $PERIOD_DISP_NO_CNT?></td>
+                                        <td><?php echo $TODAY_DISP_ALL_CNT?></td>
+                                        <td><?php echo $TODAY_DISP_YES_CNT?></td>
+                                        <td><?php echo $TODAY_DISP_NO_CNT?></td>
+                                        <td><?php echo $TOT_DISP_ALL_CNT?></td>
+                                        <td><?php echo $TOT_DISP_YES_CNT?></td>
+                                        <td><?php echo $TOT_DISP_NO_CNT?></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                </div>
+                <!-- end row -->
+<?php
+
+$sql_stats2 = "
+SELECT SORT_SEQ,
+      NTC_CLS_CD ,
+      CRG_TYP_CD,
+      SUM(PERIOD_TOT_NTC_CNT) AS PERIOD_TOT_NTC_CNT,
+      SUM(PERIOD_ING_NTC_CNT) AS PERIOD_ING_NTC_CNT,
+      SUM(PERIOD_END_NTC_CNT) AS PERIOD_END_NTC_CNT,
+      SUM(TODAY_TOT_NTC_CNT)  AS TODAY_TOT_NTC_CNT,
+      SUM(TODAY_ING_NTC_CNT)  AS TODAY_ING_NTC_CNT,
+      SUM(TODAY_END_NTC_CNT)  AS TODAY_END_NTC_CNT 
+FROM (
+     SELECT
+       1                                          AS  SORT_SEQ,
+       '전체'                                       AS NTC_CLS_CD,
+       '전체'                                       AS CRG_TYP_CD,
+       COUNT(*)                                   AS PERIOD_TOT_NTC_CNT,
+       SUM(IF(NTC_STS_CD ='30', 1, 0 ))           AS PERIOD_ING_NTC_CNT,
+       SUM(IF(NTC_STS_CD IN ('40','50') , 1, 0 )) AS PERIOD_END_NTC_CNT,
+       0                                          AS TODAY_TOT_NTC_CNT,
+       0                                          AS TODAY_ING_NTC_CNT,
+       0                                          AS TODAY_END_NTC_CNT
+FROM tbid_ntc_mst
+WHERE BID_NTC_YMD BETWEEN '{$st_date}' AND '{$ed_date}'
+GROUP BY  NTC_CLS_CD ,CRG_TYP_CD 
+UNION ALL 
+SELECT 
+       IF(NTC_CLS_CD ='SPOT',
+	  IF(CRG_TYP_CD='FCL', 2,
+	     IF(CRG_TYP_CD='LCL',3, 
+	      IF(CRG_TYP_CD='BLK',4, 5))),
+		IF( CRG_TYP_CD='SEA', 6,
+		   IF(CRG_TYP_CD='AIR',7,9)))     AS  SORT_SEQ,
+       NTC_CLS_CD ,
+       CRG_TYP_CD, 
+       COUNT(*)                                   AS PERIOD_TOT_NTC_CNT,
+       SUM(IF(NTC_STS_CD ='30', 1, 0 ))           AS PERIOD_ING_NTC_CNT,
+       SUM(IF(NTC_STS_CD IN ('40','50') , 1, 0 )) AS PERIOD_END_NTC_CNT,
+       0                                          AS TODAY_TOT_NTC_CNT,
+       0                                          AS TODAY_ING_NTC_CNT,
+       0                                          AS TODAY_END_NTC_CNT 
+  FROM tbid_ntc_mst
+WHERE BID_NTC_YMD BETWEEN  '{$st_date}' AND '{$ed_date}'
+GROUP BY  NTC_CLS_CD ,CRG_TYP_CD 
+UNION ALL
+SELECT 
+
+      IF(NTC_CLS_CD ='SPOT',
+	  IF(CRG_TYP_CD='FCL', 2,
+	     IF(CRG_TYP_CD='LCL',3, 
+	      IF(CRG_TYP_CD='BLK',4, 5))),
+		IF( CRG_TYP_CD='SEA', 6,
+		   IF(CRG_TYP_CD='AIR',7,9)))     AS  SORT_SEQ,
+	NTC_CLS_CD,
+       CRG_TYP_CD,
+ 
+       0                                          AS PERIOD_TOT_NTC_CNT,
+       0                                          AS PERIOD_ING_NTC_CNT,
+       0                                          AS PERIOD_END_NTC_CNT,
+       COUNT(*)                                   AS TODAY_TOT_NTC_CNT,
+       SUM(IF(NTC_STS_CD ='30', 1, 0 ))           AS TODAY_ING_NTC_CNT,
+       SUM(IF(NTC_STS_CD IN ('40','50') , 1, 0 )) AS TODAY_TOT_NTC_CNT
+FROM tbid_ntc_mst
+WHERE BID_NTC_YMD =  DATE_FORMAT(NOW(),'%Y%m%d')  
+GROUP BY  NTC_CLS_CD ,CRG_TYP_CD 
+) A
+GROUP BY SORT_SEQ,    
+      NTC_CLS_CD ,      
+      CRG_TYP_CD
+ORDER BY SORT_SEQ;			
+			";
+$result = sql_query($sql_stats2);
+
+//echo $sql_stats2;
+
+?>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card-box">
+                            <h4 class="header-title m-t-0">기간별 입찰현황</h4>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover text-center middle">
+                                    <thead>
+                                    <tr class="active">
+                                        <th rowspan="2" class="text-center">입찰구분</th>
+                                        <th rowspan="2" class="text-center">화물구분</th>
+                                        <th colspan="3" class="text-center">기간내</th>
+                                        <th colspan="3" class="text-center">당일</th>
+                                    </tr>
+                                    <tr class="active">
+                                        <th class="text-center">공고건수</th>
+                                        <th class="text-center">진행중</th>
+                                        <th class="text-center">낙찰(완료)건수</th>
+                                        <th class="text-center">공고건수</th>
+                                        <th class="text-center">진행중</th>
+                                        <th class="text-center">낙찰(완료)건수</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php
+                                    for ($i=0; $row2=sql_fetch_array($result); $i++) {
+                                    //$num = $list_num - $i;
+
+                                    $NTC_CLS_CD = $row2['NTC_CLS_CD'];  // 입찰구분
+                                    $CRG_TYP_CD = $row2['CRG_TYP_CD'];  // 화물구분
+                                    $PERIOD_TOT_NTC_CNT = $row2['PERIOD_TOT_NTC_CNT'];  // 공고건수
+                                    $PERIOD_ING_NTC_CNT = $row2['PERIOD_ING_NTC_CNT'];  // 진행중
+                                    $PERIOD_END_NTC_CNT = $row2['PERIOD_END_NTC_CNT'];  // 낙찰(완료)건수
+                                    $TODAY_TOT_NTC_CNT = $row2['TODAY_TOT_NTC_CNT'];  // 공고건수
+                                    $TODAY_ING_NTC_CNT = $row2['TODAY_ING_NTC_CNT'];  // 진행중
+                                    $TODAY_END_NTC_CNT = $row2['TODAY_END_NTC_CNT'];  // 낙찰(완료)건수
+
+                                    ?>
+                                    <tr class="info">
+                                        <td><?php echo $NTC_CLS_CD?></td>
+                                        <td><?php echo $CRG_TYP_CD?></td>
+                                        <td><?php echo $PERIOD_TOT_NTC_CNT?></td>
+                                        <td><?php echo $PERIOD_ING_NTC_CNT?></td>
+                                        <td><?php echo $PERIOD_END_NTC_CNT?></td>
+                                        <td><?php echo $TODAY_TOT_NTC_CNT?></td>
+                                        <td><?php echo $TODAY_ING_NTC_CNT?></td>
+                                        <td><?php echo $TODAY_END_NTC_CNT?></td>
+                                    </tr>
+                                    <?php } ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div><!-- end col -->
+                </div>
+                <!-- end row -->
+<script type='text/javascript'>
+
+     $(document).ready(function() {
+         $.fn.datepicker.dates['kr'] = {
+             days: ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"],
+             daysShort: ["일", "월", "화", "수", "목", "금", "토", "일"],
+             daysMin: ["일", "월", "화", "수", "목", "금", "토", "일"],
+             months: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
+             monthsShort: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
+         };
+     });
+
+</script>
+
+<?php
+    include_once ('./include/footer.html');
+?>

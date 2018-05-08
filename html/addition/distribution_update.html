@@ -1,0 +1,239 @@
+<?php
+session_start();
+include_once('../../admin/lib/common.php');
+include_once('../../include/html_head.html');
+
+?>
+    <div class="container">
+
+        <div class="page-header">
+            <div class="page-bar">
+                <div class="page-breadcrumb">
+                    <ul class="clearfix">
+                        <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                        <li>부가정보</li>
+                        <li class="active">물류업체정보</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <?php
+
+            if($_POST["COMP_CD"])     // update
+            {
+                $REG_NM = $_POST['regName'];
+                $COMP_NM = $_POST['compName'];
+                $COMP_CLS_CD = $_POST['chk_info'];
+                $ETC_CLS_CD = $_POST['etcComp'];
+                $PIC_NM = $_POST['picName'];
+                $TEL_NO = $_POST['phone'];
+                $FAX_NO = $_POST['fax'];
+                $HOME_PAGE = $_POST['homepage'];
+                $COMP_DESC = $_POST['detail'];
+                $COMP_CD_POST = $_POST['COMP_CD'];
+                $UPD_USR = $_SESSION['MBM_NM'];
+
+                $sql = "UPDATE tcmn_logis_comp
+                    SET REG_NM = '{$REG_NM}',
+                        COMP_NM = '{$COMP_NM}',
+                        COMP_CLS_CD = '{$COMP_CLS_CD}',
+                        ETC_CLS_CD = '{$ETC_CLS_CD}',
+                        PIC_NM = '{$PIC_NM}',
+                        TEL_NO = '{$TEL_NO}',
+                        FAX_NO = '{$FAX_NO}',
+                        HOME_PAGE = '{$HOME_PAGE}',
+                        COMP_DESC = '{$COMP_DESC}',
+                        UPD_USR = '{$UPD_USR}',
+                        UPD_DT = NOW() 
+                    WHERE COMP_CD='{$COMP_CD_POST}'";
+                // echo $sql; exit;
+                sql_query($sql);
+                move(RT_PATH."/html/addition/distribution_list.html");
+            }
+            
+            $COMP_CD = clean_xss_tags($_GET['COMP_CD']);
+            $sql = " SELECT * from tcmn_logis_comp where COMP_CD = '{$COMP_CD}'";
+
+            $result =sql_query($sql);
+            $row=sql_fetch_array($result);
+
+            if($_SESSION['MBM_NO'] != $row[INP_USR] || $_SESSION['MBM_TYPE'] != 'adm') 
+                if( $_SESSION['MBM_NO'] && ($_SESSION['MBM_NO'] != $row[INP_USR] || $_SESSION['MBM_TYPE'] != 'adm')) {
+                move(NULL); // go to -1;
+            }
+
+            if($_GET['delete']) {
+                $sql = " DELETE from tcmn_logis_comp where COMP_CD = '{$COMP_CD}'";
+
+                sql_query($sql);
+                move(RT_PATH."/html/addition/distribution_list.html");
+            }
+        ?>
+
+        <form name="frmRegisterDist" id="frmRegisterDist" method="post" action="<?php echo RT_PATH; ?>/html/addition/distribution_update.html" onSubmit="return CheckForm(this)">
+            <input type="hidden" name="COMP_CD" value="<?php echo $COMP_CD; ?>" />
+            <div class="page-content">
+                <div class="quotation-title">
+                    <h1>물류업체 등록하기</h1>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="portlet view">
+                            <div class="form-group">
+                                <div class="col-3">
+                                    <label>등록자</label>
+                                </div>
+                                <div class="col-9">
+                                    <input type="text" class="input" name="regName" value="<?php echo $row[REG_NM]; ?>" placeholder="등록자명 입력">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    <label>업체명</label>
+                                </div>
+                                <div class="col-9">
+                                    <input type="text" class="input" name="compName" value="<?php echo $row[COMP_NM]; ?>" placeholder="업체명 입력">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    <label>업체구분</label>
+                                </div>
+                                <div class="col-9">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <label><input type="radio" name="chk_info" <?php if($row[COMP_CLS_CD] == "ALL") echo "checked"; ?> value="ALL">전체</label>
+                                            <label><input type="radio" name="chk_info" <?php if($row[COMP_CLS_CD] == "FWD") echo "checked"; ?> value="FWD">포워더</label>
+                                            <label><input type="radio" name="chk_info" <?php if($row[COMP_CLS_CD] == "SEA") echo "checked"; ?> value="SEA">선사</label>
+                                            <label><input type="radio" name="chk_info" <?php if($row[COMP_CLS_CD] == "AIR") echo "checked"; ?> value="AIR">항공사</label>
+                                            <label><input type="radio" name="chk_info" <?php if($row[COMP_CLS_CD] == "ETC") echo "checked"; ?> value="ETC">기타</label>
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="text" class="input" name="etcComp" value="<?php echo $row[ETC_CLS_CD]; ?>" placeholder="기타 업체구분 입력">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    <label>담당자</label>
+                                </div>
+                                <div class="col-9">
+                                    <input type="text" class="input" name="picName" value="<?php echo $row[PIC_NM]; ?>" placeholder="담당자명 입력">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    <label>전화번호</label>
+                                </div>
+                                <div class="col-9">
+                                    <input type="number" class="input" name="phone" value="<?php echo $row[TEL_NO]; ?>" placeholder="전화번호 입력">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    <label>팩스번호</label>
+                                </div>
+                                <div class="col-9">
+                                    <input type="number" class="input" name="fax" value="<?php echo $row[FAX_NO]; ?>" placeholder="팩스번호 입력">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    <label>홈페이지</label>
+                                </div>
+                                <div class="col-9">
+                                    <input type="text" class="input" name="homepage" value="<?php echo $row[HOME_PAGE]; ?>" placeholder="URL 입력">
+                                </div>
+                            </div>
+                            <div class="form-group border-none">
+                                <div class="col-3">
+                                    <label>상세내역</label>
+                                </div>
+                                <div class="col-9">
+                                    <textarea name="detail" id=""  class="input" placeholder="내용을 입력해 주세요 (1,000자 이하)"><?php echo $row[COMP_DESC]; ?></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="three-btn center mt20">
+                    <a href="javascript:history.go(-1);" class="btn bg-dark-grey">취소</a>
+                    <button type="submit" class="btn" id="submit">업데이트</a>
+                </div>
+            </div>
+        </form>
+
+    </div>
+
+    <script type="text/javascript">
+        
+
+        function CheckForm(dist) {
+            var f = dist;
+
+            var radioCheck = function (qName) {
+                radioArr = document.getElementsByName(qName);
+                for (i = 0; i < radioArr.length; i++) {
+                    if (radioArr[i].checked) {
+                        radioValue = radioArr[i].value;
+                        return radioValue;
+                    }
+                }
+            }
+
+            if (f.regName.value == "") {
+                alert('등록자을 입력해주세요.');
+                f.regName.focus();
+                return false;
+            }
+            if (f.compName.value == "") {
+                alert('업체명을 입력해주세요.');
+                f.compName.focus();
+                return false;
+            }
+            compKnd = radioCheck("chk_info");
+            if (compKnd == undefined) {
+                alert('업체구분을 선택해주세요.');
+                // f.chk_info.focus();
+                return false;
+            }
+            if (f.etcComp.value == "" && compKnd == "ETC") {
+                alert('기타업체구분을 입력해주세요.');
+                f.etcComp.focus();
+                return false;
+            }
+            if (f.picName.value == "") {
+                alert('담당자명을 입력해주세요.');
+                f.picName.focus();
+                return false;
+            }
+            if (f.phone.value == "") {
+                alert('전화번호를 입력해주세요.');
+                f.phone.focus();
+                return false;
+            }
+            if (f.fax.value == "") {
+                alert('팩스번호를 입력해주세요.');
+                f.fax.focus();
+                return false;
+            }
+            if (f.homepage.value == "") {
+                alert('홈페이지를 입력해주세요.');
+                f.homepage.focus();
+                return false;
+            }
+            if (f.detail.value == "") {
+                alert('상세내역을 입력해주세요.');
+                f.detail.focus();
+                return false;
+            }
+
+        }
+
+    </script>
+<?php
+include_once ('../../include/html_foot.html');
+?>

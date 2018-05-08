@@ -1,0 +1,401 @@
+<?php
+session_start();
+include_once("./admin/lib/common.php");
+include_once ('./include/html_head.html');
+
+?>
+
+<div class="container">
+
+    <section class="sec1">
+        <div class="visual">
+            <div class="background">
+                <ul class="slider">
+                    <li>
+                        <img src="img/visual_01.jpg"./>
+                        <div class="inner">
+                            <div class="title-group">
+                                <h1 class="title">Every&nbsp;Shipping Well-served</h1>
+                                <p class="lead">Real Time Bidding</p>
+                                <p class="lead">당신만의 경쟁력을 찾고 계신가요?</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li style="display:none;">
+                        <img src="img/visual_02.jpg" />
+                        <div class="inner">
+                            <div class="title-group">
+                                <h1 class="title">Every&nbsp;Shipping Cost-effectiveShipping</h1>
+                                <p class="lead">Real Time Bidding</p>
+                                <p class="lead">협력과 상생으로 수출입경쟁력을...</p>
+                            </div>
+                        </div>
+                    </li>
+                    <li style="display:none;">
+                        <img src="img/visual_03.jpg" />
+                        <div class="inner">
+                            <div class="title-group">
+                                <h1 class="title">Every&nbsp;Shipping Lowest</h1>
+                                <p class="lead">Real Time Bidding</p>
+                                <p class="lead">전문 포워더가 필요하신가요?</p>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="inner">
+            <ul class="btn_schedule">
+                <!-- <li><img src="img/icon/icon-schedule.png" alt="견적신청현황" width="23"> <a href="./html/quotation/bid_info.html">견적신청현황</a></li> -->
+                <li><img src="img/icon/icon-tracking.png" alt="견적신청" width="23"><a href="./html/quotation/bid_regi.html">견적요청</a></li>
+                <li><img src="img/icon/icon-forwarder.png" alt="전문포워더" width="23"> <a href="./html/forwarder/forwarder_list.html">전문포워더</a></li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="sec2">
+        <div class="inner clearfix">
+            <div class="title-group">
+                <h1 class="title">Quotation</h1>
+                <p class="lead">비교견적을 통해 해운과 항공 수출입 운송료를 절감하고 가격 경쟁력을 확보할 수 있습니다.</p>
+            </div>
+
+            <div class="table-responsive">                
+                <?php
+                    $sql = " select * from tbid_ntc_mst where 1=1  order by NTC_NO desc limit 0,3 ";
+                    $result =sql_query($sql);
+                    for ($i=0; $row=sql_fetch_array($result); $i++){
+
+                        $sub = sql_fetch("select * from tbid_ntc_crgo where NTC_NO = '$row[NTC_NO]' ");
+
+                        $p1_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$sub[POL_CD]' ");
+                        $p2_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$sub[POD_CD]' ");
+
+                        $n1 = sql_fetch("select * from a_nation where code = '$p1_h[NAT_CD]' ");
+                        $n2 = sql_fetch("select * from a_nation where code = '$p2_h[NAT_CD]' ");
+
+                        $total_a  = 0;
+                        $sqla = " select count(*) as cnt from tbid_qtn_mst where NTC_NO = '$row[NTC_NO]' ";
+                        $rowa= sql_fetch($sqla);
+                        $total_a = $rowa['cnt'];
+
+                        $c_type = array('-', 'fcl', 'lcl', 'bulk', 'air');
+                        $type_i = $row['type'];
+                ?>                
+                    
+                <div class="row bg-white mb20">
+                    <div class="width70 border-r clearfix">
+                        <div class="d-cell bg-gray">
+                            <img src="./img/icon/icon-<?php echo $row['SA_CLS_CD']?>.png" alt="" class="icon-d-cell">
+                        </div>
+                        <div class="d-cell ml30 height100 ">
+                            <a href="./html/quotation/bid_view.html?pid=<?php echo $row['NTC_NO']?>"><p><?php echo $row['NTC_NM']?></p></a>
+                            <div class="row">
+                                <div class="width320">
+                                    <img src="./img/icon/<?php echo $n1[code]; ?>.png" width="28" alt="">
+                                    <span> <?php if(strlen($p1_h[LOC_NM]) > 38) echo substr($p1_h[LOC_NM], 0, 38)."..."; else echo $p1_h[LOC_NM];?></span>
+                                </div>
+                                <div class="width320">
+                                    <img src="./img/icon/<?php echo $n2[code]; ?>.png" width="28" alt="">
+                                    <span> <?php if(strlen($p2_h[LOC_NM]) > 40) echo substr($p2_h[LOC_NM], 0, 40)."..."; else echo $p2_h[LOC_NM];?></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="width30 clearfix">
+                        <div class="row l-height100 text-center">
+                            <div class="width33 border-r">
+                                <?php echo substr($row[NTC_CLOSE_YMD],0,4)."-".substr($row[NTC_CLOSE_YMD],4,2)."-".substr($row[NTC_CLOSE_YMD],6,2)?>
+                            </div>
+                            <div class="width33 border-r <?php if($row[NTC_CLOSE_YMD]>date('Ymd')){?> text-primary<?php }?>">
+                                <?php if($row[NTC_CLOSE_YMD]<=date('Ymd')){?>입찰마감<?php }else{ ?>
+                                <?php echo substr($row[NTC_CLOSE_YMD],4,2)?>월 <?php echo substr($row[NTC_CLOSE_YMD],6,2)?>일 마감<?php }?>
+                            </div>
+                            <div class="width33 <?php if($row[NTC_CLOSE_YMD]>date('Ymd')){?> text-primary<?php }?>">
+                                <img src="img/icon/icon-user.png" alt="" class="icon-user"><?php echo number_format($total_a)?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php } ?>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="sec4">
+        <div class="inner">
+            <div class="title-group">
+                <h1 class="title">Freight Rate</h1>
+                <p class="lead">전문포워더의 주요 PORT 운임요율을 확인하세요.</p>
+            </div>
+            <!--해상요율-->
+
+                <h2>해상요율</h2>
+                <div class="btn-more clearfix">
+                    <a href="./html/freight/freight_rate.html?SA_CLS_CD=SEA">Learn More ></a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table-sample-2">
+                        <thead>
+                            <tr>
+                                <th>선적항</th>
+                                <th>양하항</th>
+                                <th>Carrier</th>
+                                <th>20'</th>
+                                <th>40'</th>
+                                <th>40'HC</th>
+                                <th>T/Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+
+                    <ul class="demo2">
+                        <?php
+                            //$sql = " SELECT * from tcmn_fwd_trf where SA_CLS_CD ='SEA' order by INP_YMD desc limit 0,10 ";
+                            $sql = "SELECT A.*, B.COMP_NM FROM tcmn_fwd_trf AS A LEFT OUTER JOIN `tcmn_mbr_join` AS B ON A.INP_NO = B.MBR_NO WHERE SA_CLS_CD ='SEA' ORDER BY INP_YMD DESC LIMIT 0,10";
+                            $result =sql_query($sql);
+                            for ($i=0; $row=sql_fetch_array($result); $i++){
+
+                                $p1_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$row[POL_CD]' ");
+                                $p2_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$row[POD_CD]' ");
+
+                                $n1 = sql_fetch("select * from a_nation where code = '$p1_h[NAT_CD]' ");
+                                $n2 = sql_fetch("select * from a_nation where code = '$p2_h[NAT_CD]' ");
+
+                            $c_type = array('-', 'fcl', 'lcl', 'bulk', 'air');
+                            $type_i = $row['type'];
+                            if($row[CURR_CD]=="USD"){
+                                $echo_cd = "$";
+                            }elseif($row[CURR_CD]=="KRW"){
+                                $echo_cd = "₩";
+                            }elseif($row[CURR_CD]=="EUR"){
+                                $echo_cd = "€";
+                            }elseif($row[CURR_CD]=="CNY"){
+                                $echo_cd = "¥";
+                            }elseif($row[CURR_CD]=="JPY"){
+                                $echo_cd = "¥";
+                            }
+
+                        ?>
+                            <li class="news-item">
+                                <span><img src="./img/icon/<?php echo $n1[code]; ?>.png" width="28" alt=""><?php if(strlen($p1_h[LOC_NM]) > 45) echo substr($p1_h[LOC_NM], 0, 42)."..."; else echo $p1_h[LOC_NM];?></span>
+                                <span><img src="./img/icon/<?php echo $n2[code]; ?>.png" width="28" alt=""><?php if(strlen($p2_h[LOC_NM]) > 45) echo substr($p2_h[LOC_NM], 0, 42)."..."; else echo $p2_h[LOC_NM];?></span>
+                                <span><a href="./html/my/my_info.html?tab=4&mb_id=<?php echo $row[INP_NO]; ?>"><?php echo $row[COMP_NM]; ?></a></span>
+                                <span><?php echo $echo_cd?><?php echo $row[TRF_20]; ?></span>
+                                <span><?php echo $echo_cd?><?php echo $row[TRF_40]; ?></span>
+                                <span><?php echo $echo_cd?><?php echo $row[TRF_4H]; ?></span>
+                                <span><?php echo $row[TRS_DAYS_CNT]; ?></span>
+                            </li>
+                        <?php } ?>
+                    </ul>
+
+                </div>
+
+            <!--//해상요율-->
+            <!--항공요율-->
+            <div class="mt50">
+                <h2>항공요율</h2>
+                <div class="btn-more clearfix">
+                    <a href="./html/freight/freight_rate.html?SA_CLS_CD=AIR">Learn More ></a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table-sample-3">
+                        <thead>
+                            <tr>
+                                <th>출발항</th>
+                                <th>도착항</th>
+                                <th>Carrier</th>
+                                <th>Min</th>
+                                <th>Nor</th>
+                                <th>+45</th>
+                                <th>+100</th>
+                                <th>+300</th>
+                                <th>+500</th>
+                                <th>+1000</th>
+                                <th>FCS</th>
+                                <th>SSC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+
+                    <ul class="demo2 news">
+                        <?php
+                            //$sql = " SELECT * from tcmn_fwd_trf where SA_CLS_CD ='AIR' order by INP_YMD desc limit 0,10 ";
+                            $sql = "SELECT A.*, B.COMP_NM FROM tcmn_fwd_trf AS A LEFT OUTER JOIN `tcmn_mbr_join` AS B ON A.INP_NO = B.MBR_NO  WHERE SA_CLS_CD ='AIR' ORDER BY INP_YMD DESC LIMIT 0,10";
+                            $result =sql_query($sql);
+                            for ($i=0; $row=sql_fetch_array($result); $i++){
+
+                                $p1_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$row[POL_CD]' ");
+                                $p2_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$row[POD_CD]' ");
+
+                                $n1 = sql_fetch("select * from a_nation where code = '$p1_h[NAT_CD]' ");
+                                $n2 = sql_fetch("select * from a_nation where code = '$p2_h[NAT_CD]' ");
+
+                            $c_type = array('-', 'fcl', 'lcl', 'bulk', 'air');
+                            $type_i = $row['type'];
+                            if($row[CURR_CD]=="USD"){
+                                $echo_cd = "$";
+                            }elseif($row[CURR_CD]=="KRW"){
+                                $echo_cd = "₩";
+                            }elseif($row[CURR_CD]=="EUR"){
+                                $echo_cd = "€";
+                            }elseif($row[CURR_CD]=="CNY"){
+                                $echo_cd = "¥";
+                            }elseif($row[CURR_CD]=="JPY"){
+                                $echo_cd = "¥";
+                            }
+                        ?>
+                        <li class="news-item">
+                            <span><img src="./img/icon/<?php echo $n1[code]; ?>.png" width="28" alt=""><?php if(strlen($p1_h[LOC_NM]) > 43) echo substr($p1_h[LOC_NM], 0, 32)."..."; else echo $p1_h[LOC_NM];?></span>
+                            <span><img src="./img/icon/<?php echo $n2[code]; ?>.png" width="28" alt=""><?php if(strlen($p2_h[LOC_NM]) > 43) echo substr($p2_h[LOC_NM], 0, 32)."..."; else echo $p2_h[LOC_NM];?></span>
+                            <span><a href="./html/my/my_info.html?tab=5&mb_id=<?php echo $row[INP_NO]; ?>"><?php echo $row[COMP_NM]; ?></a></span>
+                            <span><?php echo $echo_cd; ?><?php echo $row[TRF_MIN]; ?></span>
+                            <span><?php echo $echo_cd; ?><?php echo $row[TRF_N]; ?></span>
+                            <span><?php echo $echo_cd; ?><?php echo $row[TRF_45]; ?></span>
+                            <span><?php echo $echo_cd; ?><?php echo $row[TRF_100]; ?></span>
+                            <span><?php echo $echo_cd; ?><?php echo $row[TRF_300]; ?></span>
+                            <span><?php echo $echo_cd; ?><?php echo $row[TRF_500]; ?></span>
+                            <span><?php echo $echo_cd; ?><?php echo $row[TRF_100]; ?></span>
+                            <span><?php echo $echo_cd; ?><?php echo $row[TRF_FSC]; ?></span>
+                            <span><?php echo $echo_cd; ?><?php echo $row[TRF_SSC]; ?></span>
+                        </li>
+                        <?php } ?>
+                    </ul>
+
+                </div>
+            </div>
+            <!--//항공요율-->
+
+            <!--WiaBid-->
+            <div class="mt110">
+                <h1 class="title mb40">WiaBid</h1>
+                <ul class="mb20 clearfix">
+                    <li>
+                        <img src="img/WiaBid-01.png" alt="">
+                    </li>
+                    <li class="memo border-radius-left">
+                        <h3>수출입 업무대행</h3>
+                        <p class="lead pb4">
+                            실화주의 명의와 계산으로 운송이 되며, 업무대행업체는 업무량, 업무범위 및
+                            수출입 건수를 바탕으로 일정 수수료(건/월 단위)를 받고, L/C작성, 선적서류 작성,
+                            선복수배, 선사/항공사 Booking, 수출입통관, 보험, 선하증권 Nego등의
+                            무역과 수출입물류관련 부가적인 서비스를 제공합니다.
+                        </p>
+                        <!--<div class="clearfix">-->
+                            <!--<a href="#" class=""><div class="btn">화주 이용 문의</div></a>-->
+                            <!--<a href="#" class=""><div class="btn">서비스 제공 참여</div></a>-->
+                        <!--</div>-->
+
+                        <hr class="hr1">
+                        <p class="recruit">서비스 제공 업체 모집 및 심사중</p>
+
+                        <div class="recruit clearfix">
+                            <p class="recruit-tit">관련 문의<span>ㅣ</span></p>
+                            <p>info@wiabid.com</p>
+                        </div>
+
+                    </li>
+                </ul>
+
+                <ul class="clearfix">
+                    <li class="memo border-radius-right">
+                        <h3>국제물류컨설팅</h3>
+                        <p class="lead pb4">
+                            수출입기업의 높은 국제물류의존도에 따른 물류비 최적화
+                            Strategy&Process Design 제공 및 사내물류/업무조직과 연계된
+                            전반적인 국제 물류 솔루션을 제공합니다.
+                        </p>
+
+                        <hr class="hr1">
+                        <p class="recruit">인재모집 (국제물류 컨설턴트)</p>
+
+                        <div class="recruit clearfix">
+                            <p class="recruit-tit">자격 조건<span>ㅣ</span></p>
+                            <p>석박사 학위소지자/국제물류 업계 경력 5년이상</p>
+                            <p class="ml85 m-m0"><span class="inner-left text-primary">ㅣ</span>IT/물류컨설팅 유경험자</p>
+                        </div>
+                        <div class="recruit clearfix">
+                            <p class="recruit-tit">지원서 접수<span>ㅣ</span></p>
+                            <p>info@wiabid.com</p>
+                        </div>
+
+                    </li>
+                    <li>
+                        <img src="img/WiaBid-02.png" alt="">
+                    </li>
+                </ul>
+            </div>
+            <!--//WiaBid-->
+        </div>
+    </section>
+
+</div>  <!-- //<div class="container"> -->
+
+<style type="text/css">
+
+    table.table-sample-3 { height: 200px; }
+    table.table-sample-3 th { width: 70px; }
+    table.table-sample-3 td { padding: 7px !important; border-bottom: 1px solid #bfbebe;}
+    table.table-sample-3 th:first-child, table.table-sample-3 th:nth-child(2) { width: 22rem; }
+
+    .tab_container .tab_content ul > li img { width: 290px; }
+    .table-responsive { overflow-x: hidden; }
+    .sec4 .inner { padding: 0 0 12rem; }
+    ul.demo2 { width: 100%; }
+    ul.demo2 li { width: 1170px !important; height: auto;}
+    ul.demo2 li:first-child { border-top-left-radius: 5px; border-top-right-radius: 5px; }
+    ul.demo2 li:nth-child(3) { border-top-left-radius: 5px; border-top-right-radius: 5px; }
+    ul.demo2 li span { display: table-cell; padding: 13px 5px; border-bottom: 1px solid #bfbebe; background-color: #fff; text-align: center; font-size: 1.1rem; }
+
+    ul.demo2 li span:first-child, ul.demo2 li span:nth-child(2) { width: 29rem; text-align: left; }
+    ul.demo2 li span:nth-child(3) { width: 12rem; }
+    ul.demo2 li span:nth-child(4) { width: 8rem; }
+    ul.demo2 li span:nth-child(5) { width: 8rem; }
+    ul.demo2 li span:nth-child(6) { width: 12rem; }
+    ul.demo2 li span:nth-child(7) { width: 12rem; }
+    ul.demo2 li span > img {
+        margin-right: 1rem;
+        display: inline-block !important;
+        vertical-align: middle;
+        width: 28px !important;
+    }
+    ul.demo2 li span > a { color: #0174bf; font-size: 1.4rem; }
+
+    ul.demo2.news li span > img { margin-left: 5px; }
+    ul.demo2.news li span:first-child, ul.demo2.news li span:nth-child(2) { width: 22rem; text-align: left;}
+    ul.demo2.news li span:nth-child(3) ,
+    table.table-sample-3 th:nth-child(3) { width: 120px; }
+    ul.demo2.news li span { width: 70px; padding: 13px 0;}
+
+    @media screen and (max-width: 768px) {
+        .table-responsive { overflow-x: scroll; }
+        section.sec2 { margin-top: 50px; }
+    }
+</style>
+<script src="<?php echo RT_PATH; ?>/js/jquery.bootstrap.newsbox.js"></script>
+<script type="text/javascript">
+    $(function () {
+        
+        $(".demo2").bootstrapNews({
+            newsPerPage: 3,
+            autoplay: true,
+            pauseOnHover: true,
+            navigation: false,
+            direction: 'down',
+            newsTickerInterval: 5000,
+            onToDo: function () {
+                //console.log(this);
+            }
+        });
+
+    });
+
+</script>
+<?php
+    include_once ('./include/html_foot.html');
+?>

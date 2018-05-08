@@ -1,0 +1,215 @@
+<?php 
+session_start();
+include_once('../../admin/lib/common.php');
+include_once('../../include/html_head.html');
+?>
+    <div class="container">
+
+        <div class="page-header">
+            <div class="page-bar">
+                <div class="page-breadcrumb">
+                    <ul class="clearfix">
+                        <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                        <li>Forwarder</li>
+                        <li class="active">운임률</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="jumbotron">
+                <h1 class="mb20">Freight Rate</h1>
+                <p> 전문포워더의 주요 PORT 운임요율을 확인하세요</p>
+            </div>
+        </div>
+        <?php 
+
+            $SA_CLS_CD = addslashes($_GET['SA_CLS_CD']);
+
+            if (!$SA_CLS_CD) {
+                $SA_CLS_CD = "SEA";
+            }
+
+            if ($SA_CLS_CD) {
+                $add_sql .= " and SA_CLS_CD= '$SA_CLS_CD' ";//sea,air
+            }
+
+            if ($skey) {
+                $add_sql .= " and (NTC_NM like '%$skey%' or NTC_NO like '%$skey%') ";
+            }
+
+            $orderby = "INP_YMD desc";
+
+            $qstr = "SA_CLS_CD=". $SA_CLS_CD;
+            //리스트 불러오기
+            $sqlx = " select count(*) as cnt from tcmn_fwd_trf where (1=1) $add_sql ";
+            $rowx = sql_fetch($sqlx);
+            $total_count = $rowx['cnt'];
+
+            $rows = 20;
+            $page = (int)$_GET['page'];
+            $total_page = ceil($total_count / $rows);  // 전체 페이지 계산
+            if ($page < 1) {
+                $page = 1;
+            } // 페이지가 없으면 첫 페이지 (1 페이지)
+            $from_record = ($page - 1) * $rows; // 시작 열을 구함
+        ?>
+        <div class="page-content">
+            <div class="row">
+                <div class="col-12">
+                    <div id="main-tab">
+                        <ul class="tabs clearfix">
+                            <li <?php  if ($SA_CLS_CD == "SEA"){ ?>class="active" <?php  } ?>rel="tab1"
+                                onclick="window.location.href='freight_rate.html?SA_CLS_CD=SEA';">해상요율
+                            </li>
+                            <li <?php  if ($SA_CLS_CD == "AIR"){ ?>class="active" <?php  } ?>rel="tab2"
+                                onclick="window.location.href='freight_rate.html?SA_CLS_CD=AIR';">항공요율
+                            </li>
+                        </ul>
+                        <div class="tab_container mt50 clearfix">
+                            <div id="tab1" class="tab_content">
+                                <div class="table-responsive">
+                                    <table class="table-sample-2 hover">
+
+                                        <?php if ($SA_CLS_CD == "SEA") { ?>
+                                            <tr>
+                                                <th>선적항</th>
+                                                <th>양하항</th>
+                                                <th>Carrier</th>
+                                                <th>20'</th>
+                                                <th>40'</th>
+                                                <th>40'HC</th>
+                                                <th>T/Time</th>
+                                            </tr>
+                                            <?php 
+                                            $sql = " SELECT A.*, B.COMP_NM from tcmn_fwd_trf AS A LEFT OUTER JOIN `tcmn_mbr_join` AS B ON A.INP_NO = B.MBR_NO where SA_CLS_CD ='SEA' AND DISP_YN ='Y' $add_sql order by $orderby limit {$from_record}, {$rows} ";
+                                            
+                                            $result = sql_query($sql);
+                                            for ($i = 0; $row = sql_fetch_array($result); $i++) {
+
+                                                $p1_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$row[POL_CD]' ");
+                                                $p2_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$row[POD_CD]' ");
+
+                                                $n1 = sql_fetch("select * from a_nation where code = '$p1_h[NAT_CD]' ");
+                                                $n2 = sql_fetch("select * from a_nation where code = '$p2_h[NAT_CD]' ");
+
+                                                $c_type = array('-', 'fcl', 'lcl', 'bulk', 'air');
+                                                $type_i = $row['type'];
+                                                if ($row[CURR_CD] == "USD") {
+                                                    $echo_cd = "$";
+                                                } elseif ($row[CURR_CD] == "KRW") {
+                                                    $echo_cd = "₩";
+                                                } elseif ($row[CURR_CD] == "EUR") {
+                                                    $echo_cd = "€";
+                                                } elseif ($row[CURR_CD] == "CNY") {
+                                                    $echo_cd = "¥";
+                                                } elseif ($row[CURR_CD] == "JPY") {
+                                                    $echo_cd = "¥";
+                                                }
+                                                ?>
+                                                <tr class="table-blink">
+                                                    <td colspan="6"></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><img src="../../img/icon/<?php echo  $n1[code] ?>.png" width="28" alt="">
+                                                        <?php if(strlen($p1_h[LOC_NM]) > 45) echo substr($p1_h[LOC_NM], 0, 42)."..."; else echo $p1_h[LOC_NM];?>
+                                                    </td>
+                                                    <td><img src="../../img/icon/<?php echo  $n2[code] ?>.png" width="28" alt="">
+                                                        <?php if(strlen($p2_h[LOC_NM]) > 45) echo substr($p2_h[LOC_NM], 0, 42)."..."; else echo $p2_h[LOC_NM];?>
+                                                    </td>
+                                                    <td><a href="<?php echo RT_PATH; ?>/html/my/my_info.html?tab=4&mb_id=<?php echo $row[INP_NO]; ?>"><?php echo $row[COMP_NM] ?></a>
+                                                    </td>
+                                                    <td><?php echo  $echo_cd ?><?php echo  $row[TRF_20] ?></td>
+                                                    <td><?php echo  $echo_cd ?><?php echo  $row[TRF_40] ?></td>
+                                                    <td><?php echo  $echo_cd ?><?php echo  $row[TRF_4H] ?></td>
+                                                    <td><?php echo  $row[TRS_DAYS_CNT] ?></td>
+                                                </tr>
+                                            <?php  }//for?>
+
+                                        <?php  }//if?>
+
+                                        <?php  if ($SA_CLS_CD == "AIR") { ?>
+                                            <tr>
+                                                <th>출발항</th>
+                                                <th>도착항</th>
+                                                <th style="width: 13rem;">Carrier</th>
+                                                <th>Min</th>
+                                                <th>Nor</th>
+                                                <th>+45</th>
+                                                <th>+100</th>
+                                                <th>+300</th>
+                                                <th>+500</th>
+                                                <th>+1000</th>
+                                                <th>FCS</th>
+                                                <th>SSC</th>
+                                            </tr>
+                                            <?php 
+                                            $sql = "SELECT A.*, B.COMP_NM from tcmn_fwd_trf AS A LEFT OUTER JOIN `tcmn_mbr_join` AS B ON A.INP_NO = B.MBR_NO where SA_CLS_CD ='AIR' AND DISP_YN ='Y' $add_sql order by $orderby limit {$from_record}, {$rows} ";
+                                            $result = sql_query($sql);
+                                            for ($i = 0; $row = sql_fetch_array($result); $i++) {
+
+                                                $p1_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$row[POL_CD]' ");
+                                                $p2_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$row[POD_CD]' ");
+
+                                                $n1 = sql_fetch("select * from a_nation where code = '$p1_h[NAT_CD]' ");
+                                                $n2 = sql_fetch("select * from a_nation where code = '$p2_h[NAT_CD]' ");
+
+
+                                                $c_type = array('-', 'fcl', 'lcl', 'bulk', 'air');
+                                                $type_i = $row['type'];
+
+                                                if ($row[CURR_CD] == "USD") {
+                                                    $echo_cd = "$";
+                                                } elseif ($row[CURR_CD] == "KRW") {
+                                                    $echo_cd = "₩";
+                                                } elseif ($row[CURR_CD] == "EUR") {
+                                                    $echo_cd = "€";
+                                                } elseif ($row[CURR_CD] == "CNY") {
+                                                    $echo_cd = "¥";
+                                                } elseif ($row[CURR_CD] == "JPY") {
+                                                    $echo_cd = "¥";
+                                                }
+                                                ?>
+                                                <tr class="table-blink">
+                                                    <td colspan="6"></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><img src="../../img/icon/<?php echo  $n1[code] ?>.png" width="28"
+                                                             alt=""><?php if(strlen($p1_h[LOC_NM]) > 33) echo substr($p1_h[LOC_NM], 0, 32)."..."; else echo $p1_h[LOC_NM];?></td>
+                                                    <td><img src="../../img/icon/<?php echo  $n2[code] ?>.png" width="28"
+                                                             alt=""><?php if(strlen($p2_h[LOC_NM]) > 33) echo substr($p2_h[LOC_NM], 0, 32)."..."; else echo $p2_h[LOC_NM];?></td>
+                                                    <td><a href="<?php echo RT_PATH; ?>/html/my/my_info.html?tab=5&mb_id=<?php echo $row[INP_NO]; ?>"><?php echo $row[COMP_NM] ?></a>
+                                                    </td>
+                                                    <td><?php echo  $echo_cd ?><?php echo  $row[TRF_MIN] ?></td>
+                                                    <td><?php echo  $echo_cd ?><?php echo  $row[TRF_N] ?></td>
+                                                    <td><?php echo  $echo_cd ?><?php echo  $row[TRF_45] ?></td>
+                                                    <td><?php echo  $echo_cd ?><?php echo  $row[TRF_100] ?></td>
+                                                    <td><?php echo  $echo_cd ?><?php echo  $row[TRF_300] ?></td>
+                                                    <td><?php echo  $echo_cd ?><?php echo  $row[TRF_500] ?></td>
+                                                    <td><?php echo  $echo_cd ?><?php echo  $row[TRF_1000] ?></td>
+                                                    <td><?php echo  $echo_cd ?><?php echo  $row[TRF_FSC] ?></td>
+                                                    <td><?php echo  $echo_cd ?><?php echo  $row[TRF_SSC] ?></td>
+                                                </tr>
+                                            <?php  }//for?>
+
+                                        <?php  }//if?>
+                                    </table>
+                                </div>
+                                <div class="row text-center mt20">
+                                    <?php echo get_paging3(5, $page, $total_page, $_SERVER['SCRIPT_NAME'].'?'.$qstr.'&amp;page='); ?>
+                                </div>
+                            </div>
+                            <!-- #tab1 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <style type="text/css">
+
+    </style>
+<?php 
+include_once('../../include/html_foot.html');
+?>

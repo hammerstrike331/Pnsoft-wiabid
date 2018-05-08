@@ -1,0 +1,166 @@
+<?php 
+session_start();
+include_once('../../admin/lib/common.php');
+include_once('../../include/html_head.html');
+
+?>
+<div class="container">
+
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                    <li>부가정보</li>
+                    <li class="active">물류업체정보</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="jumbotron">
+            <h1 class="mb20">물류업체정보</h1>
+            <p> 선사, 항공사, 포워더 등 전문 물류업체 정보를 제공합니다.</p>
+            <a href="<?php  echo RT_PATH; ?>/html/addition/distribution_regi.html" class=""><div class="btn mt50">등록하기 <span class="ml5"><img src="../../img/icon/icon-arrow-Lb.png" alt=""></span></div></a>
+        </div>
+    </div>
+
+    <?php 
+        // 검색 옵션
+        $search_mode = clean_xss_tags($_GET['search_mode']);
+        // $selDetail = clean_xss_tags($_GET['selDetail']);
+        $kind = clean_xss_tags($_GET['kind']);
+        $compName = clean_xss_tags($_GET['compName']);
+
+        $qstr = "search_mode=".$search_mode."&kind=".$kind."&compName=".$compName;
+
+        #################################################################################################
+
+        // if($selDetail) {
+        //     $sql_search .= " and ETC_CLS_CD = '{$selDetail}'";
+        // }
+
+        if($kind) 
+        {
+            if($kind != "ALL")  $sql_search .= " AND COMP_CLS_CD IN ('".$kind."') ";
+        }
+
+        if($compName) 
+        {
+            $sql_search .= " AND COMP_NM LIKE('%".$compName."%')";
+        }
+
+        //리스트 불러오기
+        $sqlx = " select count(*) as cnt from tcmn_logis_comp where (1=1) {$sql_search} ";
+        $rowx = sql_fetch($sqlx);
+        $total_count = $rowx['cnt'];
+
+        $rows = 20;
+        $page = (int)$_GET['page'];
+        $total_page  = ceil($total_count / $rows);  // 전체 페이지 계산
+        if ($page < 1) { $page = 1; } // 페이지가 없으면 첫 페이지 (1 페이지)
+        $from_record = ($page - 1) * $rows; // 시작 열을 구함
+
+        $sql = " select * from tcmn_logis_comp where 1=1 {$sql_search} order by COMP_NM asc limit {$from_record}, {$rows} ";
+        $result =sql_query($sql);
+    ?>
+    <div class="page-content">
+        <div class="row">
+            <div class="col-12">
+                <form id="fsearch" method="get" action="<?php echo $_SERVER['REQUEST_URI'];?>">
+                    <input type="hidden" name="search_mode" value="act">
+                    <div class="row info-title">
+                        <div class="col-40 l-height4">
+                            <label><input type="radio" name="kind" value="ALL" <?php if($kind == "ALL") echo "checked"; ?>>전체</label>
+                            <label><input type="radio" name="kind" value="FWD" <?php if($kind == "FWD") echo "checked"; ?>>포워더</label>
+                            <label><input type="radio" name="kind" value="SEA" <?php if($kind == "SEA") echo "checked"; ?>>선사</label>
+                            <label><input type="radio" name="kind" value="AIR" <?php if($kind == "AIR") echo "checked"; ?>>항공사</label>
+                            <label><input type="radio" name="kind" value="ETC" <?php if($kind == "ETC") echo "checked"; ?>>기타</label>
+                        </div>
+                        <!-- <div class="col-4">
+                            <select class="input" id="selDetail" name="selDetail">
+                                <option value="" <?php if($selDetail == "") echo "selected"; ?>>전체</option>
+                                <option value="01" <?php if($selDetail == "01") echo "selected"; ?>>상세구분1</option>
+                                <option value="02" <?php if($selDetail == "02") echo "selected"; ?>>상세구분2</option>
+                                <option value="03" <?php if($selDetail == "03") echo "selected"; ?>>상세구분3</option>
+                                <option value="04" <?php if($selDetail == "04") echo "selected"; ?>>상세구분4</option>
+                                <option value="05" <?php if($selDetail == "05") echo "selected"; ?>>상세구분5</option>
+                            </select>
+                        </div> -->
+                        <div class="col-4 inner-right">
+                            <input type="text" id="compName" name="compName" class="input" value="<?php echo $compName;?>" placeholder="업체명">
+                            <img src="../../img/icon/search.svg" id="btnSearch" alt="검색" class="icon-search">
+                        </div>
+                    </div>
+                </form>
+
+                <div class="row mt60">
+                    <div class="table-responsive">
+                        <table class="table-sample-2 hover2">
+                            <tr>
+                                <th>업체명</th>
+                                <th>업체구분</th>
+                                <th>상세구분</th>
+                                <th>담당자</th>
+                                <th>홈페이지</th>
+                            </tr>
+                            <?php 
+                            if (count(sql_fetch_array($result)) == 0) { ?>
+                                <tr class="table-blink"><td colspan="6"></td></tr>
+                                <tr><td colspan="6">데이터가 없습니다.</td></tr>
+                            
+                            <?php } else {
+                                for ($i=0; $row=sql_fetch_array($result); $i++){
+
+                                    ?>
+                                    <tr class="table-blink"><td colspan="6"></td></tr>
+                                    <tr>
+                                        <td class="text-center"><a href="<?php echo RT_PATH; ?>/html/addition/distribution_view.html?COMP_CD=<?php echo $row[COMP_CD];?>"><?php echo $row[COMP_NM];?></a></td>
+                                        <td class="text-center"><?php 
+                                            switch ($row[COMP_CLS_CD]) {
+                                                case 'FWD':
+                                                    echo "포워더" ; break;
+                                                case 'AIR':
+                                                    echo "항공사" ; break;
+                                                case 'SEA':
+                                                    echo "선사" ; break;
+                                                case 'ETC':
+                                                    echo "기타" ; break;
+                                            }
+                                        ?>        
+                                        </td>
+                                        <td>기타</td>
+                                        <td><?php echo $row[PIC_NM];?></td>
+                                        <td><a href="http://<?php echo $row[HOME_PAGE];?>" target="_blank" ><?php echo $row[HOME_PAGE];?></a></td>
+                                    </tr>
+                            <?php } } ?>
+
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row text-center mt50">
+                    <?php echo get_paging3(5, $page, $total_page, $_SERVER['SCRIPT_NAME'].'?'.$qstr.'&amp;page='); ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+    
+    <script type="text/javascript">
+
+        $("#inputSearch").keypress(function(event) 
+        {
+            var keycode = (event.keyCode ? event.keyCode : event.which);
+            if(keycode == '13'){
+                $("form#fsearch").submit();
+            }
+        });
+
+        $("#btnSearch").click(function() {
+            $("form#fsearch").submit();
+        })
+    </script>
+<?php 
+include_once ('../../include/html_foot.html');
+?>

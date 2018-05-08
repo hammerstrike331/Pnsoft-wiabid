@@ -1,0 +1,373 @@
+<?php
+session_start();
+include_once('../../admin/lib/common.php');
+
+if ($_SESSION['MBM_EMAIL']) {
+    alertMove("이미 로그인 되어있습니다.", RT_PATH);
+}
+
+include_once('../../include/html_head.html');
+
+$U_check1  = $_POST['U_checkAgreement1'];
+$U_check2  = $_POST['U_checkAgreement2'];
+$U_check3  = $_POST['U_checkAgreement3'];
+
+if($U_check1 != 'on' || $U_check2 != 'on' || $U_check3 != 'on') {
+    alertMove('약관 동의 후 진행해 주시기 바랍니다.','regist.html');
+}
+
+?>
+    <div class="container">
+
+        <div class="page-header">
+            <div class="page-bar">
+                <div class="page-breadcrumb">
+                    <ul class="clearfix">
+                        <li class="icon-home"><img src="<?php echo RT_PATH; ?>/img/icon/icon-home.png" alt="" width="16"></li>
+                        <li class="active">회원가입</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="jumbotron">
+                <h1 class="mb20">회원가입</h1>
+                <p> WiaBid 회원 가입을 진심으로 환영합니다.</p>
+            </div>
+        </div>
+        <form name="Join" id="Join" method="post" action="<?php echo RT_PATH; ?>/html/member/regist_ok.html" onSubmit="return CheckForm(this)">
+            <input type="hidden" name="hpcheck" id="hpcheck" value="">
+            <div class="page-content">
+                <div class="row">
+                    <div class="col-12 mb50 m-mb15">
+                        <img src="<?php echo RT_PATH; ?>/img/sign-step2.png" alt="" class="sign-step m-hidden">
+                        <img src="<?php echo RT_PATH; ?>/img/sign-step2-m.png" alt="" class="sign-step lg-hidden">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="portlet view">
+                            <div class="form-group">
+                                <div class="col-3">
+                                    이메일(ID) <span class="text-primary">*</span>
+                                </div>
+                                <div class="col-9">
+                                    <div class="row">
+                                        <div class="col-6"><input type="text" name="mb_id" id="mb_id" class="input" placeholder="이메일 아이디" value=""></div>
+                                        <div class="col-6 text-primary font14 pd-l">※ 로그인시 아이디와 동일</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    이메일인증 <span class="text-primary">*</span>
+                                </div>
+                                <div class="col-2 mr10">
+                                    <a href="javascript:mail_send();"><img src="<?php echo RT_PATH; ?>/img/btn_send.jpg"></a>
+                                </div>
+                                <div class="col-4 m-mt10 clearfix">
+                                    <input type="text" name="cnum" id="cnum" class="input inner-left width60 mr10"
+                                           placeholder="인증 번호 입력" style="width: 56% !important;"> 
+                                    <a href="javascript:mail_check();"><img src="<?php echo RT_PATH; ?>/img/btn_chk.jpg"></a>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    비밀번호 <span class="text-primary">*</span>
+                                </div>
+                                <div class="col-9">
+                                    <div class="row">
+                                        <div class="col-6"><input type="password" name="mb_password" class="input" placeholder="비밀번호 입력" value=""></div>
+                                        <div class="col-6 text-primary font14 pd-l">※ 영문, 숫자, 특수문자 조합 6자리 이상</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    비밀번호확인 <span class="text-primary">*</span>
+                                </div>
+                                <div class="col-9">
+                                    <div class="row">
+                                        <div class="col-6"><input type="password" name="mb_password_re" class="input" placeholder="비밀번호 다시 입력" value=""></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    이름 <span class="text-primary">*</span>
+                                </div>
+                                <div class="col-9">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="row">
+                                                <div class="col-49 mr-2">
+                                                    <input type="text" name="mb_name1" class="input" placeholder="성(Last Name)">
+                                                </div>
+                                                <div class="col-49">
+                                                    <input type="text" name="mb_name2" class="input" placeholder="이름(First Name)">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    등록구분<span class="text-primary">*</span>
+                                </div>
+                                <div class="col-9">
+                                    <label><input type="radio" name="mb_type" value="P">개인
+                                        <span class="ml20">기업 (
+                                    <label><input type="radio" name="mb_type" value="D">국내</label>
+                                    <label><input type="radio" name="mb_type" value="E">국외</label>
+                                     )</span></label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    사업자번호
+                                </div>
+                                <div class="col-4">
+                                    <input type="text" name="reg_no" class="input" placeholder="사업자번호 입력 입력">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    회사명<span class="text-primary">*</span>
+                                </div>
+                                <div class="col-4">
+                                    <input type="text" name="comp_nm" class="input" placeholder="회사명 입력">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    업체구분<span class="text-primary">*</span>
+                                </div>
+                                <div class="col-9">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <label><input type="radio" name="comp_knd_nm" value="화주">화주</label>
+                                            <label><input type="radio" name="comp_knd_nm" value="포워더">포워더</label>
+                                            <label><input type="radio" name="comp_knd_nm" value="선사">선사</label>
+                                            <label><input type="radio" name="comp_knd_nm" value="항공사">항공사</label>
+                                            <label><input type="radio" name="comp_knd_nm" value="기타">기타</label>
+                                        </div>
+                                        <div class="col-3 etc">
+                                            <input type="text" name="COMP_KND_ETC_NM" class="input searchEtc" placeholder="기타업체" />
+                                            <ul class="popmenu vhidden">
+                                                <li class="selected">관세사</li><li>방역회사</li><li>쇼링회사</li><li>검역회사</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    입찰참가분야<span class="text-primary">*</span>
+                                </div>
+                                <div class="col-9">
+                                    <label><input type="radio" name="LIMIT_KND_CD" value="SEA">해상</label>
+                                    <label><input type="radio" name="LIMIT_KND_CD" value="BLK">BULK</label>
+                                    <label><input type="radio" name="LIMIT_KND_CD" value="AIR">AIR</label>
+                                    <label><input type="radio" name="LIMIT_KND_CD" value="ALL">전체</label>
+                                    <label><input type="radio" name="LIMIT_KND_CD" value="NON">미참여</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    부서명
+                                </div>
+                                <div class="col-4">
+                                    <input type="text" name="dept_nm" class="input" placeholder="부서명 입력">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    휴대전화<span class="text-primary">*</span>
+                                </div>
+                                <div class="col-4">
+                                    <input type="text" name="mb_hp" id="mb_hp" class="input" placeholder="휴대전화 번호 입력">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    전화번호
+                                </div>
+                                <div class="col-4">
+                                    <input type="text" name="mb_tel" class="input" placeholder="전화번호 입력">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    팩스번호
+                                </div>
+                                <div class="col-4">
+                                    <input type="text" name="mb_fax" class="input" placeholder="팩스번호 입력">
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="three-btn center mt20">
+                    <a href="<?php echo RT_PATH; ?>/index.html" class="btn bg-silver">취소</a>
+                    <a href="javascript:CheckForm();" class="btn">가입</a>
+                </div>
+            </div>
+        </form>
+        <script>
+            function CheckForm(Join) {
+                var f = document.Join;
+
+                var radioCheck = function (qName) {
+                    radioArr = document.getElementsByName(qName);
+                    for (i = 0; i < radioArr.length; i++) {
+                        if (radioArr[i].checked) {
+                            radioValue = radioArr[i].value;
+                            return radioValue;
+                        }
+                    }
+                }
+
+                if (f.mb_id.value == "") {
+                    alert('아이디를 입력해주세요.');
+                    f.mb_id.focus();
+                    return false;
+                }
+                if (f.mb_password.value == "") {
+                    alert('비밀번호를 입력해주세요.');
+                    f.mb_password.focus();
+                    return false;
+                }
+                if (f.mb_password_re.value == "") {
+                    alert('비밀번호 확인값을 입력해주세요.');
+                    f.mb_password_re.focus();
+                    return false;
+                }
+                if (f.mb_password.value != f.mb_password_re.value) {
+                    alert('비밀번호 확인값이 틀립니다.');
+                    f.mb_password_re.focus();
+                    return false;
+                }
+                if (f.mb_name1.value == "") {
+                    alert('성을 입력해주세요.');
+                    f.mb_name1.focus();
+                    return false;
+                }
+                if (f.mb_name2.value == "") {
+                    alert('이름을 입력해주세요.');
+                    f.mb_name2.focus();
+                    return false;
+                }
+
+                q_mb_1 = radioCheck("mb_type");
+                if (q_mb_1 == undefined) {
+                    alert('등록구분 값을 선택해주세요.');
+                    f.mb_type.focus();
+                }
+
+                if (f.comp_nm.value == "") {
+                    alert('회사명을 입력해주세요.');
+                    f.comp_nm.focus();
+                    return false;
+                }
+
+                if (f.mb_hp.value == "") {
+                    alert('휴대전화를 입력해주세요.');
+                    f.mb_hp.focus();
+                    return false;
+                }
+
+                q_mb_4 = radioCheck("comp_knd_nm");
+                console.log("q_mb_4", q_mb_4);
+                if (q_mb_4 == undefined) {
+                    alert('업체구분 값을 선택해주세요.');
+                    f.comp_knd_nm.focus();
+                }
+                if (q_mb_4 == "기타") {
+
+                    if (f.COMP_KND_ETC_NM.value == "") {
+                        alert('기타업체구분 값을 입력해주세요.');
+                        f.COMP_KND_ETC_NM.focus();
+                        return false;
+                    }
+                }
+
+                q_mb_6 = radioCheck("LIMIT_KND_CD");
+                if (q_mb_6 == undefined) {
+                    alert('입찰참가분야 값을 선택해주세요.');
+                    f.LIMIT_KND_CD.focus();
+                }
+
+                var hpcheck = document.getElementById('hpcheck').value;
+                if (hpcheck != "1") {
+                    alert("메일 인증절차를 완료해주세요.");
+                    return false;
+                }
+
+                document.getElementById('Join').submit();
+                return false;
+            }
+
+
+            function mail_send() {
+                var hp = "";
+                var hp = document.getElementById('mb_id').value;
+                var params = "hp=" + hp + "&ipadr=" + "<?php echo $_SERVER['REMOTE_ADDR']; ?>";
+                $.ajax({
+                    url: "<?php echo RT_PATH; ?>/php/join_hp_send.php",
+                    type: "POST",
+                    data: params,
+                    success: function (result) {
+                        console.log(result);
+                        if (result == "ok") {
+                            alert("인증번호가 발송되었습니다.");
+                            //유효시간 스크립트 실행
+                            //핸드폰번호 입력칸 readonly
+                            document.getElementById('mb_id').readOnly = true;
+                        } else {
+                            alert("이미 발송된 인증번호를 입력해주세요.");
+                        }
+                    },
+                    error: function () {
+                        alert("에러 발생");
+                    }
+                })
+            }
+
+            function mail_check() {
+
+                var hp = "";
+                var hp = document.getElementById('mb_id').value;
+                var cnum = document.getElementById('cnum').value;
+                var params = "hp=" + hp + "&ipadr=<?php echo $_SERVER['REMOTE_ADDR']; ?>" + "&cnum=" + cnum;
+                $.ajax({
+                    url: "<?php echo RT_PATH; ?>/php/join_hp_check.php",
+                    type: "POST",
+                    data: params,
+                    success: function (result) {
+                        console.log(result);
+                        if (result == "ok") {
+                            alert("인증되었습니다.");
+                            //유효시간 스크립트 실행
+
+                            //인증번호 입력 버튼, 인증번호받기 버튼 비활성화
+                            document.getElementById('cnum').readOnly = true;
+                            document.getElementById('hpcheck').value = "1";
+
+                        } else {
+                            alert("정확한 인증번호를 입력해주세요.");
+                            // alert(result);
+                        }
+                    },
+                    error: function () {
+                        alert("에러 발생--");
+                    }
+                })
+            }
+
+        </script>
+    </div>
+
+<?php
+include_once('../../include/html_foot.html');
+?>

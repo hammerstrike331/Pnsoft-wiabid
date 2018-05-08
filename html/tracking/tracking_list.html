@@ -1,0 +1,250 @@
+<?php
+session_start();
+include_once('../../admin/lib/common.php');
+include_once('../../include/html_head.html');
+?>
+<div class="container">
+
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                    <li>Tracking</li>
+                    <li class="active">화물추적</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="jumbotron">
+            <h1 class="mb20">화물추적</h1>
+            <p> Tracking</p>
+        </div>
+    </div>
+    <form action="" method="post" target="_blank" id="trackingSubmit">
+        <input type="hidden" name="" value="" id="hidden1" />
+        <input type="hidden" name="" value="" id="hidden2" />
+        <input type="hidden" name="" value="" id="hidden3" />
+        <input type="hidden" name="" value="" id="hidden4" />
+        <input type="hidden" name="" value="" id="hidden5" />
+        <input type="hidden" name="" value="" id="hidden6" />
+        <input type="hidden" name="" value="" id="hidden7" />
+        <input type="hidden" name="" value="" id="hidden8" />
+        <input type="hidden" name="" value="" id="hidden9" />
+        <input type="hidden" name="" value="" id="hidden10" />
+        <input type="hidden" name="" value="" id="hidden11" />
+    </form>
+
+    <div class="page-content" style="padding-top: 0;">
+        <div class="row">
+            <div class="col-12">
+                <div class="trackingCont">
+                    <div class="form-box">
+                      <div class="tracking">
+                        <h4>Bill of lading tracking</h4>
+                        <div class="main-auto-complete border-left">
+                          <span class="selIcon"><i class="fa fa-edit"></i></span>
+                          <select data-placeholder='AUTO' class="chosen-select">
+                              <option value="AUTO">
+                                AUTO 
+                              </option><option value="APL">
+                                APL (APL)
+                              </option><option value="ARK">
+                                ARKAS (ARK)
+                              </option><option value="CKL">
+                                CK Line (CKL)
+                              </option><option value="CMA">
+                                CMA (CMA)
+                              </option><option value="COA">
+                                COSCO (COA)
+                              </option><option value="DJS">
+                                DongJin (DJS)
+                              </option><option value="PCS">
+                                DongYoung (PCS)
+                              </option><option value="ESL">
+                                Emirates (ESL)
+                              </option><option value="EMC">
+                                Evergreen (EMC)
+                              </option><option value="GSL">
+                                Gold Star (GSL)
+                              </option><option value="HSD">
+                                Hamburg (HSD)
+                              </option><option value="HLC">
+                                Hapag (HLC)
+                              </option><option value="HAS">
+                                Heung A (HAS)
+                              </option><option value="HMM">
+                                Hyundai (HMM)
+                              </option><option value="KMD">
+                                KMTC (KMD)
+                              </option><option value="KKL">
+                                Kline (KKL)
+                              </option><option value="MAE">
+                                MAERSK (MAE)
+                              </option><option value="MOL">
+                                MOL (MOL)
+                              </option><option value="MSC">
+                                MSC (MSC)
+                              </option><option value="MAT">
+                                Matson (MAT)
+                              </option><option value="NYK">
+                                NYK (NYK)
+                              </option><option value="NSS">
+                                NamSung (NSS)
+                              </option><option value="OOL">
+                                OOCL (OOL)
+                              </option><option value="PIL">
+                                PIL (PIL)
+                              </option><option value="PAN">
+                                Pan Ocean (PAN)
+                              </option><option value="RCL">
+                                RCL (RCL)
+                              </option><option value="SIT">
+                                SITC (SIT)
+                              </option><option value="SKR">
+                                Sinokor (SKR)
+                              </option><option value="SNT">
+                                Sinotrans (SNT)
+                              </option><option value="TSL">
+                                TS Line (TSL)
+                              </option><option value="UAC">
+                                UASC (UAC)
+                              </option><option value="WDF">
+                                WEIDONG (WDF)
+                              </option><option value="WHL">
+                                WanHai (WHL)
+                              </option><option value="YML">
+                                YangMing (YML)
+                              </option><option value="ZIM">
+                                Zim (ZIM)
+                              </option>
+                          </select>
+                          <input class="cargo-search-input ng-untouched ng-pristine ng-valid" placeholder="전체 BL 번호 입력" type="text" id="inputBL">
+                          <button type="button" class="track-btn btn-blue" id="btnBLSearch">검색</button>
+                        </div>
+
+                        <h4>Air cargo tracking</h4>
+                        <div class="main-auto-complete border-left">
+                          <span class="selIcon"><i class="fa fa-plane"></i></span>
+                          <select data-placeholder='AUTO' class="chosen-select">
+                              <option value="AUTO">
+                                AUTO 
+                              </option><option value="ACA">
+                                Air Canada (ACA)
+                              </option><option value="CCA">
+                                Air China (CCA)
+                              </option><option value="AFR">
+                                Air France (AFR)
+                              </option><option value="AIC">
+                                Air India (AIC)
+                              </option><option value="ABW">
+                                AirBridgeCargo Airlines (ABW)
+                              </option><option value="ANA">
+                                All Nippon airways (ANA)
+                              </option><option value="AAL">
+                                American Airlines (AAL)
+                              </option><option value="AAR">
+                                Asiana Airlines (AAR)
+                              </option><option value="BAW">
+                                British Airways (BAW)
+                              </option><option value="CLX">
+                                Cargolux (CLX)
+                              </option><option value="CPA">
+                                Cathay Pacific Airways (CPA)
+                              </option><option value="CAL">
+                                China Airlines (CAL)
+                              </option><option value="CES">
+                                China Eastern Airlines (CES)
+                              </option><option value="CSN">
+                                China Southern Airlines (CSN)
+                              </option><option value="DHK">
+                                DHL Air (DHK)
+                              </option><option value="DAL">
+                                Delta Air Lines (DAL)
+                              </option><option value="EVA">
+                                EVA Air (EVA)
+                              </option><option value="UAE">
+                                Emirates (UAE)
+                              </option><option value="ETD">
+                                Etihad Airlines (ETD)
+                              </option><option value="FDX">
+                                Federal Express (FDX)
+                              </option><option value="GIA">
+                                Garuda Indonesia (GIA)
+                              </option><option value="CHH">
+                                Hainan Airlines (CHH)
+                              </option><option value="CRK">
+                                Hong Kong Airlines (CRK)
+                              </option><option value="JAL">
+                                Japan Airlines (JAL)
+                              </option><option value="JJA">
+                                Jeju Air (JJA)
+                              </option><option value="JAI">
+                                Jet Airways (JAI)
+                              </option><option value="KLM">
+                                KLM (KLM)
+                              </option><option value="KAL">
+                                Korean Air (KAL)
+                              </option><option value="TAM">
+                                LATAM Airlines Brasil (TAM)
+                              </option><option value="LAN">
+                                LATAM Airlines Group (LAN)
+                              </option><option value="GEC">
+                                Lufthansa (GEC)
+                              </option><option value="MAS">
+                                Malaysia Airlines (MAS)
+                              </option><option value="MPH">
+                                Martinair (MPH)
+                              </option><option value="NCA">
+                                Nippon Cargo Airlines (NCA)
+                              </option><option value="PAC">
+                                Polar Air Cargo (PAC)
+                              </option><option value="QFA">
+                                Qantas Airways (QFA)
+                              </option><option value="QTR">
+                                Qatar Airways (QTR)
+                              </option><option value="SWR">
+                                SWISS (SWR)
+                              </option><option value="SVA">
+                                Saudi Arabian Airlines (SVA)
+                              </option><option value="CSZ">
+                                Shenzhen Airlines (CSZ)
+                              </option><option value="SIA">
+                                Singapore Airlines (SIA)
+                              </option><option value="TAY">
+                                TNT Airways (TAY)
+                              </option><option value="THA">
+                                Thai Airways International (THA)
+                              </option><option value="THY">
+                                Turkish Airlines (THY)
+                              </option><option value="UAL">
+                                United Airlines (UAL)
+                              </option><option value="UPS">
+                                United Parcel Service (UPS)
+                              </option><option value="VIR">
+                                Virgin Atlantic Airways (VIR)
+                              </option>
+                          </select>
+                          <input class="cargo-search-input ng-untouched ng-pristine ng-valid" placeholder="Air Waybill 번호 입력 ex) 3+8 자리" type="text" id="inputAirBill" />
+                          <button type="button" class="track-btn btn-blue" id="btnAirSearch">검색</button>
+                        </div>
+                        
+                      </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="<?php echo BASE_URL2; ?>/css/chosen.css">
+
+<script src="<?php echo BASE_URL2; ?>/js/chosen.jquery.js" type="text/javascript"></script>
+<script src="<?php echo BASE_URL2; ?>/js/tracking.js" type="text/javascript" charset="utf-8"></script>
+<style type="text/css">
+    .swal-modal .swal-title { font-size: 20px; }
+</style>
+<?php
+include_once('../../include/html_foot.html');
+?>

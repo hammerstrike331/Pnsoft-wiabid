@@ -1,0 +1,77 @@
+<?php
+session_start();
+include_once('../../admin/lib/common.php');
+include_once('../../include/html_head.html');
+?>
+    <div class="container">
+
+        <div class="page-header">
+            <div class="page-bar">
+                <div class="page-breadcrumb">
+                    <ul class="clearfix">
+                        <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                        <li>부가정보</li>
+                        <li class="active">환율조회</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="jumbotron">
+                <h1 class="mb20">환율조회</h1>
+                <p> 부가정보</p>
+            </div>
+        </div>
+
+        <div class="page-content">
+            <div class="row">
+                <!--- 네이버 환율 참고용 -------------------->
+                <iframe src="http://finance.naver.com/marketindex/?tabSel=worldExchange#tab_section" width="100%" height="1400" id="iframe" onload="iframeLoad()"></iframe>
+            </div>
+        </div>
+
+    </div>
+
+    <style type="text/css">
+        iframe { border-width:2px; border-color:#4D4D4D; border-style:solid; }
+    </style>
+    <script type="text/javascript">
+        // $(document).ready(function () {
+            // var inner = $("iframe").contents().find("html").find("body").find("div#header").find("div.snb_area");
+            // console.log("iframe", inner);
+            // inner.css("display", "none");
+            // $("iframe").contents().find( "body" ).addClass('border');
+          // $("iframe").contents().find( "body" ).css( "background-color", "#111" );
+            // var iframe = document.getElementById("iframe");
+            // // var elmnt = iframe.contentWindow.document.getElementsByTagName("H1")[0];
+            // var elmnt = iframe.contentWindow.document.getElementsByTagName("body");
+            // console.log("body", elmnt);
+            // elmnt.css("display", "none");
+        // });
+        
+        // $(document).ready(function(){
+        //     var iFrameDOM = $("iframe#iframe").contents().find("div#header").find(".snb_area");
+        //     var data = '<style type="text/css">div.snb_area{display: none;}</style>';
+
+        //     iFrameDOM.after("<p>fist</P>");
+        //     console.log("iFrameDOM", iFrameDOM);
+        // });
+        
+        // $('iframe').load(function(){    // iframe이 모두 load된후 제어
+        function iframeLoad() {
+
+            // var iframe = document.getElementById("iframe");
+            // // var elmnt = iframe.contentWindow.document.getElementsByTagName("H1")[0];
+            // // iframeEle = $('iframe');
+            // framebody = iframe.contentWindow.document.body;
+            // console.log("body", framebody);
+            // var elmnt = iframe.contentWindow.document.getElementsByTagName("body");
+            // elmnt.css("display", "none");
+            // var inner = $("iframe").find("html").find("body").find("div#header").find("div.snb_area");
+            // console.log("iframe", inner);
+            // inner.css("display", "none");
+        };
+    
+    </script>
+<?php
+include_once('../../include/html_foot.html');
+?>

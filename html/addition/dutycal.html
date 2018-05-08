@@ -1,0 +1,44 @@
+<?php
+session_start();
+include_once('../../admin/lib/common.php');
+include_once('../../include/html_head.html');
+?>
+    <div class="container">
+
+        <div class="page-header">
+            <div class="page-bar">
+                <div class="page-breadcrumb">
+                    <ul class="clearfix">
+                        <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                        <li>부가정보</li>
+                        <li class="active">Duty Cal.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="jumbotron">
+                <h1 class="mb20">Duty Cal.</h1>
+                <p> 부가정보</p>
+            </div>
+        </div>
+
+        <div class="page-content">
+            <div class="row">
+                <!--- 관세법령정보포털 -------------------->
+                <iframe src="https://unipass.customs.go.kr/clip/index.do" width="110%" height="1100" scrolling="" id="iframe" onload="swal.close();" ></iframe>
+            </div>
+        </div>
+
+    </div>
+    <script type="text/javascript">
+        swal('로딩 중 입니다.', '', 'warning');
+    </script>
+    <style type="text/css">
+        iframe { border-width:2px; border-color:#4D4D4D; border-style:solid; overflow: hidden; margin-left: -50px;}
+        @media (max-width: 767px) {
+            iframe { margin: 0px; width: 100% !important; }
+        }
+    </style>
+<?php
+include_once('../../include/html_foot.html');
+?>

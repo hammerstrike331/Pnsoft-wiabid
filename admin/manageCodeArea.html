@@ -1,0 +1,743 @@
+<?php
+session_start();
+include_once('lib/common.php');
+
+// 관리자 세션 확인
+if(!isset($_SESSION['ADMIN_GRPNAME'])) {
+    alertMove('로그인 후 이용해 주세요', "index.html");
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <?php
+    include_once ('./include/head.html');
+    ?>
+
+</head>
+<body class="fixed-left">
+
+<!-- Begin page -->
+<div id="wrapper">
+
+    <?php
+    include_once ('./include/menu.html');
+    ?>
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+<?php
+//  일반쿼리
+$sql_common = " FROM `tcmn_unloc_code` A ";
+$sql_search = " where (1) ";
+$sql_order = " order by LOC_IDX desc ";
+
+// 검색 옵션
+##############################################################
+
+$SA_CLS_CD = addslashes($_GET['SA_CLS_CD']);
+$AREA_CD = addslashes($_GET['AREA_CD']);
+$NAT_CD = addslashes($_GET['NAT_CD']);
+$LOC_NM = addslashes($_GET['LOC_NM']);
+
+$SA_CLS_CD = clean_xss_tags($SA_CLS_CD);
+$AREA_CD = clean_xss_tags($AREA_CD);
+$NAT_CD = clean_xss_tags($NAT_CD);
+$LOC_NM = clean_xss_tags($LOC_NM);
+
+if($SA_CLS_CD) {
+    $sql_search .= " and A.SA_CLS_CD = '{$SA_CLS_CD}'";
+}
+
+if($AREA_CD) {
+    $sql_search .= " and A.AREA_CD = '{$AREA_CD}'";
+}
+
+if($NAT_CD) {
+    $sql_search .= " and A.NAT_CD = '{$NAT_CD}'";
+}
+
+if($LOC_NM) {
+    $sql_search .= " and A.LOC_NM LIKE '%{$LOC_NM}%'";
+}
+##############################################################
+
+
+$sql1 = "select count(FAQ_NO) as cnt {$sql_common}";
+$row1 = sql_fetch($sql1);
+$total_member = $row1['cnt'];
+
+
+$sql = "select count(*) as cnt {$sql_common} {$sql_search} ";
+$row = sql_fetch($sql);
+$total_count = $row['cnt'];
+
+$pageNum = (int)$_GET['pageNum'];
+
+if(!$pageNum) {
+    $rows = 10;
+} else {
+    $rows = $pageNum;
+}
+
+$qstr = "SA_CLS_CD=".$SA_CLS_CD."&AREA_CD=".$AREA_CD."&NAT_CD=".$NAT_CD."&LOC_NM=".$LOC_NM."&pageNum=".$pageNum."&page=".$page;
+
+$page = (int)$_GET['page'];
+
+$total_page  = ceil($total_count / $rows);  // 전체 페이지 계산
+if ($page < 1) { $page = 1; } // 페이지가 없으면 첫 페이지 (1 페이지)
+$from_record = ($page - 1) * $rows; // 시작 열을 구함
+
+$list_page_rows = 10;
+//순번
+$list_num = $total_count - ($page - 1) * $list_page_rows;
+
+$sql = "SELECT 
+                A.LOC_IDX,
+                A.LOC_CD,
+                A.LOC_NM,
+                A.AREA_CD,
+                (SELECT B.CODE_NM 
+                  FROM tcmn_code_dtl B 
+                 WHERE B.CLSS_CD = 'AREA_CD' 
+                   AND B.CODE_CD = A.AREA_CD) AS AREA_NM,       
+                A.NAT_CD,
+                (SELECT B.CODE_NM 
+                  FROM tcmn_code_dtl B 
+                 WHERE B.CLSS_CD = 'NAT_CD' 
+                   AND B.CODE_CD = A.NAT_CD) AS NAT_NM,
+                A.LATD_CD,
+                A.LOTD_CD,
+                A.INP_DT,
+                A.INP_USR,
+                A.UPD_USR,
+                A.UPD_DT,
+                A.SA_CLS_CD,
+                A.USE_YN,
+                A.LOC_CD AS LOC_CD_OLD,
+                A.SA_CLS_CD AS SA_CLS_CD_OLD 
+{$sql_common} {$sql_search} {$sql_order} limit {$from_record}, {$rows} ";
+
+$result = sql_query($sql);
+
+?>
+    <div class="content-page">
+        <!-- Start content -->
+        <div class="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="card-box p-b-0">
+                            <h5 class="m-b-10"><b>지역코드 검색</b></h5>
+                            <hr class="m-t-0">
+
+                            <div class="row">
+                                <form class="form-horizontal group-border-dashed" action="<?=$_SERVER[PHP_SELF]?>">
+                                    <div class="col-sm-12">
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">구분</label>
+                                                    <div class="col-sm-10">
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="SA_CLS_CD1" value="" name="SA_CLS_CD" <? if($SA_CLS_CD == "") echo "checked"; ?>>
+                                                            <label for="SA_CLS_CD1"> ALL </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="SA_CLS_CD2" value="SEA" name="SA_CLS_CD" <? if($SA_CLS_CD == "SEA") echo "checked"; ?>>
+                                                            <label for="SA_CLS_CD2"> SEA </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="SA_CLS_CD3" value="AIR" name="SA_CLS_CD" <? if($SA_CLS_CD == "AIR") echo "checked"; ?>>
+                                                            <label for="SA_CLS_CD3"> AIR </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">Location</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" name="LOC_NM"/>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">국가</label>
+                                                    <div class="col-sm-10">
+                                                        <select class="form-control" name="NAT_CD">
+                                                            <option value="" <? if($_GET['NAT_CD']=='') echo "selected"; ?>>전체</option>
+                                                             <? include ('./include/NAT_CD.html'); ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">Area</label>
+                                                    <div class="col-sm-10">
+                                                        <select class="form-control" name="AREA_CD">
+                                                            <option value=""  <? if($_GET['AREA_CD']=='') echo "selected"; ?>>전체</option>
+                                                            <option value="AE" <? if($_GET['AREA_CD']=='AE') echo "selected"; ?>>AE</option>
+                                                            <option value="AS" <? if($_GET['AREA_CD']=='AS') echo "selected"; ?>>AS</option>
+                                                            <option value="SA" <? if($_GET['AREA_CD']=='SA') echo "selected"; ?>>SA</option>
+                                                            <option value="EU" <? if($_GET['AREA_CD']=='EU') echo "selected"; ?>>EU</option>
+                                                            <option value="AF" <? if($_GET['AREA_CD']=='AF') echo "selected"; ?>>AF</option>
+                                                            <option value="ME" <? if($_GET['AREA_CD']=='ME') echo "selected"; ?>>ME</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <div class="col-sm-offset-5 col-sm-7 m-t-15">
+                                                        <button type="submit" class="btn btn-primary waves-effect waves-light">검색</button>
+                                                        <button type="reset" class="btn btn-inverse waves-effect m-l-5" onclick="location.href='manageCodeArea.html'">초기화</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <!-- end row -->
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+
+    <? // echo "<p>". $sql."<p>"; ?>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card-box p-b-0">
+                            <div class="row m-b-10">
+                                <div class="col-sm-6">
+                                    <h5><b>지역코드 목록</b><span class="text-muted font-13 m-l-15"> 검색결과 <span class="font-bold text-dark"><?=number_format($total_count)?></span> 건</span></h5>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-inline pull-right">
+                                        <div class="form-group">
+                                            <button type="button" class="btn btn-danger waves-effect" onclick="delete_area();">삭제</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="m-t-0">
+                            <div class="table-responsive">
+                                <form name="fupdate" id="fupdate" method="post" >
+                                <table class="table table-bordered table-hover text-center fold-table middle">
+                                    <thead>
+                                    <tr class="bg-lightdark">
+                                        <th class="text-center">
+                                            <input type="checkbox" name="chkall" value="" id="chkall" onclick="check_all(this.form)">
+                                        </th>
+                                        <th class="text-center">해운/항공</th>
+                                        <th class="text-center">코드</th>
+                                        <th class="text-center">Location명</th>
+                                        <th class="text-center">국가</th>
+                                        <th class="text-center">위도</th>
+                                        <th class="text-center">경도</th>
+                                        <th class="text-center">사용유무</th>
+                                        <th class="text-center">처리</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr class="info">
+                                        <td scope="row"><i class="fa fa-times"></i></td>
+                                        <td>
+                                            <select class="form-control input-sm" name="s_SA_CLS_CD" id="s_SA_CLS_CD">
+                                                <option value="ALL">ALL</option>
+                                                <option value="SEA">SEA</option>
+                                                <option value="AIR">AIR</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control input-sm" required  name="s_LOC_CD" id="s_LOC_CD"/>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control input-sm" required  name="s_LOC_NM" id="s_LOC_NM"/>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control input-sm" required  name="s_NAT_NM" id="s_NAT_NM"/>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control input-sm" required  name="s_LATD_CD" id="s_LATD_CD"/>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control input-sm" required  name="s_LOTD_CD" id="s_LOTD_CD"/>
+                                        </td>
+                                        <td>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="USE_YN1" value="Y" name="s_USE_YN" checked>
+                                                <label for="USE_YN1"> 사용 </label>
+                                            </div>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="USE_YN2" value="N" name="s_USE_YN">
+                                                <label for="USE_YN2"> 사용안함 </label>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary waves-effect waves-light" onclick="insert_area();">추가</button>
+                                        </td>
+                                    </tr>
+                                    <?
+                                    for ($i=0; $row=sql_fetch_array($result); $i++) {
+                                        $num = $list_num - $i;
+
+                                        $LOC_IDX = $row['LOC_IDX']; // 순번
+                                        $SA_CLS_CD = $row['SA_CLS_CD']; // 해운/항공
+                                        $LOC_CD = $row['LOC_CD']; // 코드
+                                        $LOC_NM = $row['LOC_NM'];  //Location명
+                                        $NAT_NM = $row['NAT_NM'];  //국가
+                                        $AREA_NM = $row['AREA_NM'];  //Area
+                                        $LATD_CD = $row['LATD_CD'];  //위도
+                                        $LOTD_CD = $row['LOTD_CD'];  //경도
+                                        $USE_YN = $row['USE_YN'];  // 사용유무
+                                        $NAT_CD = $row['NAT_CD'];  //
+                                        $AREA_CD = $row['AREA_CD'];  //
+
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="chk[]" value="<?=$LOC_IDX?>" id="chk_<?php echo $i ?>">
+                                        </td>
+                                        <td><?=$SA_CLS_CD?></td>
+                                        <td><?=$LOC_CD?></td>
+                                        <td><?=$LOC_NM?></td>
+                                        <td><?=$NAT_NM?></td>
+                                        <td><?=$LATD_CD?></td>
+                                        <td><?=$LOTD_CD?></td>
+                                        <td>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="USE_YN1_<?=$i?>" value="Y" name="USE_YN_<?=$i?>" <? if($USE_YN == "Y") echo "checked"; ?>>
+                                                <label for="USE_YN1_<?=$i?>"> 사용 </label>
+                                            </div>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="USE_YN2_<?=$i?>" value="N" name="USE_YN_<?=$i?>" <? if($USE_YN == "N") echo "checked"; ?>>
+                                                <label for="USE_YN2_<?=$i?>"> 사용안함 </label>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="form-group">
+                                                <button type="button" name="q_update" id="q_update" onclick="update_modal(<?=$LOC_IDX?>);"   class="btn btn-inverse waves-effect waves-light">수정</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?  } ?>
+                                    </tbody>
+                                </table>
+                                </form>
+                            </div>
+
+                            <div class="clearfix">
+                                <div class="pull-right">
+                                    <select class="form-control" size="1" name="pageNum" id="pageNum" onchange="viewCount(this.options[this.selectedIndex].value)">
+                                        <option <? if($pageNum=='10') echo "selected"; ?>>10</option>
+                                        <option <? if($pageNum=='25') echo "selected"; ?>>25</option>
+                                        <option <? if($pageNum=='50') echo "selected"; ?>>50</option>
+                                        <option <? if($pageNum=='100')  echo "selected"; ?>>100</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <?php echo get_paging2(5, $page, $total_page, $_SERVER['SCRIPT_NAME'].'?'.$qstr.'&amp;page='); ?>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+        </div>
+
+    <!--  모달 수정  ----------------------------------------------------------------------->
+    <div class="modal fade modal-wide" id="myModal_update" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title_update" id="myModalLabel_update">Bootstrap Modal Popup</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="container">
+                        <form name="update_query" id="update_query" >
+                            <input type="hidden" name="up_idx" id="up_idx" value="<?=$_GET['target_idx']?>">
+                            <div class="table-responsive">
+                                <?php
+                                if($_GET['target_idx']) {
+                                    $target_idx = $_GET['target_idx'];
+                                    $sql2 = "select * from `tcmn_unloc_code` where `LOC_IDX` = '{$target_idx}' ";
+                                    $row2 = sql_fetch($sql2);
+
+                                    $u_LOC_CD = $row2['LOC_CD'];   // LOCATION CODE
+                                    $u_LOC_NM = $row2['LOC_NM'];   // LOCATION NAME
+                                    $u_NAT_CD = $row2['NAT_CD'];   // 국가 코드
+                                    $u_LATD_CD= $row2['LATD_CD'];   // 위도
+                                    $u_LOTD_CD = $row2['LOTD_CD'];   // 경도
+                                    $u_SA_CLS_CD = $row2['SA_CLS_CD'];  // 항공/해운 구분코드
+                                    $u_USE_YN= $row2['USE_YN'];   // 사용여부
+                                }
+
+                                // echo $sql2;
+                                ?>
+
+                                <table class="table table-bordered" id="dynamic_field">
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>해운항공</strong></div>
+                                                <div class="col-xs-9">
+                                                    <select class="form-control input-sm" name="u_SA_CLS_CD" id="u_SA_CLS_CD">
+                                                        <option value="ALL" <?if($u_SA_CLS_CD =='ALL') echo "selected";?>>전체</option>
+                                                        <option value="AIR" <?if($u_SA_CLS_CD =='AIR') echo "selected";?>>항공</option>
+                                                        <option value="SEA" <?if($u_SA_CLS_CD =='SEA') echo "selected";?>>해상</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>코드</strong></div>
+                                                <div class="col-xs-9">
+                                                    <input type="text" name="u_LOC_CD" id="u_LOC_CD" class="form-control text-right input-sm" value="<?=$u_LOC_CD?>"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>Location명</strong></div>
+                                                <div class="col-xs-9">
+                                                    <input type="text" name="u_LOC_NM" id="u_LOC_NM" class="form-control text-right input-sm" required  value="<?=$u_LOC_NM?>"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>국가</strong></div>
+                                                <div class="col-xs-9">
+                                                    <input type="text" name="u_NAT_CD" id="u_NAT_CD" class="form-control text-right input-sm" required  value="<?=$u_NAT_CD?>"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>위도</strong></div>
+                                                <div class="col-xs-9">
+                                                    <input type="text" name="u_LATD_CD" id="u_LATD_CD" class="form-control text-right input-sm" value="<?=$u_LATD_CD?>"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>경도</strong></div>
+                                                <div class="col-xs-9">
+                                                    <input type="text" name="u_LOTD_CD" id="u_LOTD_CD" class="form-control text-right input-sm" value="<?=$u_LOTD_CD?>"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>사용유무</strong></div>
+                                                <div class="col-xs-9">
+                                                    <select class="form-control input-sm" name="u_USE_YN" id="u_USE_YN" >
+                                                        <option value="Y" <?if($u_USE_YN =='Y') echo "selected";?>>사용</option>
+                                                        <option value="N" <?if($u_USE_YN =='N') echo "selected";?>>사용안함</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" name="submit_update" id="submit_update" class="btn btn-info" onclick="update_area()">수정</button>
+
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!--  모달 수정 end // ----------------------------------------------------------------------->
+
+<script type="text/javascript">
+
+    // 지역코드 삭제 ==========================
+    function delete_area(loc_idx) {
+        var fupdate = document.fupdate;
+
+        if (!is_checked("chk[]")) {
+            swal("삭제 하실 항목을 하나 이상 선택하세요.");
+            return false;
+        }
+
+        $.ajaxSettings.traditional = true;
+
+        var checkboxValues = [];
+        $("input[name='chk[]']:checked").each(function(i) {
+            checkboxValues.push($(this).val());
+        });
+
+        // object를 string형태로 변환
+        objData = JSON.stringify(checkboxValues);
+
+        swal({
+            title: "지역코드 삭제",
+            text: "지역코드를 삭제 하시겠습니까?",
+            icon: "warning",
+            buttons: ["취소", "삭제"],
+            dangerMode: true,
+        }) .then(function(result) {
+            if (result) {
+
+                $.ajax({
+                    type: 'POST',
+                    url: './php/ajax_delete_area.php',
+                    data: {
+                        "chk": objData
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        var str_data = data.split('|');
+                        var rslt = str_data[0];
+                        var msg = str_data[1];
+
+                        if (rslt == 'ok') {
+                            swal({
+                                title: "삭제 완료",
+                                text: msg,
+                                //text: data,
+                                icon: "success",
+                            })
+                                .then(function () {
+                                    setTimeout(function() {
+                                        window.location.href = "manageCodeArea.html";
+                                    }, 1500);
+                                });
+                        } else {
+                            swal({
+                                title: "삭제 실패",
+                                text: data,
+                                icon: "warning",
+                            })
+                                .then(function () {
+                                    window.location.href = "manageCodeArea.html";
+                                });
+                        }
+
+                    },  //success
+                    error: function (request,status,error) {
+                        alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                    } //error
+
+                });    //end ajax
+
+            } else {
+                swal({
+                    title: "취소 처리",
+                    text: "취소 되었습니다.",
+                    icon: "info",
+                });
+            }
+        });
+    }
+
+    // 지역코드 추가 ==========================
+    function insert_area() {
+
+        var s_LOC_CD = $('#s_LOC_CD').val();
+        var s_LOC_NM = $('#s_LOC_NM').val();
+        var s_NAT_NM = $('#s_NAT_NM').val();
+        var s_LATD_CD = $('#s_LATD_CD').val();
+        var s_LOTD_CD = $('#s_LOTD_CD').val();
+        var s_SA_CLS_CD = $("#s_SA_CLS_CD option:selected").val(); //select option
+        var s_USE_YN = $('input[name=s_USE_YN]:checked').val(); //radio value
+
+
+        if( s_LOC_CD == '' || s_LOC_CD == null ){
+            swal( '1. 입력이 필요합니다.' );
+            setTimeout(function() {
+                s_LOC_CD.focus();
+            }, 1500);
+
+            return false;
+        }
+        if( s_LOC_NM == '' || s_LOC_NM == null ){
+            swal( '2. 입력이 필요합니다.' );
+            setTimeout(function() {
+                s_LOC_NM.focus();
+            }, 1500);
+            return false;
+        }
+        if( s_NAT_NM == '' || s_NAT_NM == null ){
+            swal( '3. 입력이 필요합니다.' );
+            setTimeout(function() {
+                s_NAT_NM.focus();
+            }, 1500);
+            return false;
+        }
+
+        if( s_SA_CLS_CD == '' || s_SA_CLS_CD == null ){
+            swal( '6. 입력이 필요합니다.' );
+            setTimeout(function() {
+                s_SA_CLS_CD.focus();
+            }, 1500);
+            return false;
+        }
+        if( s_USE_YN == '' || s_USE_YN == null ){
+            swal( '7. 입력이 필요합니다.' );
+            setTimeout(function() {
+                s_USE_YN.focus();
+            }, 1500);
+            return false;
+        }
+
+        $.ajax({
+            url:"./php/ajax_insert_area.php",
+            method:"POST",
+            data:{
+                s_LOC_CD : s_LOC_CD,
+                s_LOC_NM : s_LOC_NM,
+                s_NAT_NM : s_NAT_NM,
+                s_LATD_CD : s_LATD_CD,
+                s_LOTD_CD : s_LOTD_CD,
+                s_SA_CLS_CD : s_SA_CLS_CD,
+                s_USE_YN : s_USE_YN
+            },
+            success:function(data)
+            {
+                swal('추가 완료',data,'info');
+                setTimeout(function() {
+                    window.location.href = "manageCodeArea.html";
+                }, 1500);
+            }
+            ,  //success
+            error: function (request,status,error) {
+                alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+            } //error
+        });
+    }
+
+    // 지역코드 수정 ==========================
+    function update_area() {
+        var up_idx = $('#up_idx').val();
+        var u_LOC_CD = $('#u_LOC_CD').val();
+        var u_LOC_NM = $('#u_LOC_NM').val();
+        var u_NAT_CD = $('#u_NAT_CD').val();
+        var u_LATD_CD = $('#u_LATD_CD').val();
+        var u_LOTD_CD = $('#u_LOTD_CD').val();
+        var u_SA_CLS_CD = $("#u_SA_CLS_CD option:selected").val(); //select option
+        var u_USE_YN = $("#u_USE_YN option:selected").val(); //radio value
+
+
+        if( u_LOC_CD == '' || u_LOC_CD == null ){
+            swal( '1. 입력이 필요합니다.' );
+            setTimeout(function() {
+                u_LOC_CD.focus();
+            }, 1500);
+
+            return false;
+        }
+        if( u_LOC_NM == '' || u_LOC_NM == null ){
+            swal( '2. 입력이 필요합니다.' );
+            setTimeout(function() {
+                u_LOC_NM.focus();
+            }, 1500);
+            return false;
+        }
+        if( u_NAT_CD == '' || u_NAT_CD == null ){
+            swal( '3. 입력이 필요합니다.' );
+            setTimeout(function() {
+                u_NAT_CD.focus();
+            }, 1500);
+            return false;
+        }
+
+        if( u_SA_CLS_CD == '' || u_SA_CLS_CD == null ){
+            swal( '6. 입력이 필요합니다.' );
+            setTimeout(function() {
+                u_SA_CLS_CD.focus();
+            }, 1500);
+            return false;
+        }
+        if( u_USE_YN == '' || u_USE_YN == null ){
+            swal( '7. 입력이 필요합니다.' );
+            setTimeout(function() {
+                u_USE_YN.focus();
+            }, 1500);
+            return false;
+        }
+
+        $.ajax({
+            url:"./php/ajax_update_area.php",
+            method:"POST",
+            data:{
+                  up_idx : up_idx,
+                u_LOC_CD : u_LOC_CD,
+                u_LOC_NM : u_LOC_NM,
+                u_NAT_CD : u_NAT_CD,
+                u_LATD_CD : u_LATD_CD,
+                u_LOTD_CD : u_LOTD_CD,
+                u_SA_CLS_CD : u_SA_CLS_CD,
+                u_USE_YN : u_USE_YN
+            },
+            success:function(data)
+            {
+                swal('추가 완료',data,'info');
+                setTimeout(function() {
+                    window.location.href = "manageCodeArea.html";
+                }, 1500);
+            }
+            ,  //success
+            error: function (request,status,error) {
+                alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+            } //error
+        });
+    }
+
+
+    //질문 업데이트 모달 띄우기...  ###################################
+    function update_modal(q_idx) {
+        window.location.href = "manageCodeArea.html?x_idx=<?=$x_idx?>&target_idx="+q_idx;
+    }
+
+    function viewCount(val) {
+    self.location = "<?=$_SERVER[PHP_SELF]?>?<?= $qstr ?>&pageNum=" + val;
+    }
+</script>
+
+<? if($target_idx) { ?>
+    <script type="text/javascript">
+        $(window).on('load',function(){
+            $('#myModal_update').modal('show');
+            $('.modal-title_update').html('지역코드 수정');
+        });
+    </script>
+<? } ?>
+
+
+<?php
+    include_once ('./include/footer.html');
+?>

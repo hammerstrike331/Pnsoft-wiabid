@@ -1,0 +1,385 @@
+<?php
+session_start();
+include_once('lib/common.php');
+
+// 관리자 세션 확인
+if(!isset($_SESSION['ADMIN_GRPNAME'])) {
+    alertMove('로그인 후 이용해 주세요', "index.html");
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <?php
+    include_once ('./include/head.html');
+    ?>
+
+</head>
+<body class="fixed-left">
+
+<!-- Begin page -->
+<div id="wrapper">
+
+    <?php
+    include_once ('./include/menu.html');
+    ?>
+
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+<?php
+//  일반쿼리
+$sql_common = " FROM `tbid_spc_fdr` A ";
+$sql_search = " where (1) ";
+$sql_order = " order by IDX desc ";
+
+###################################################################
+// 검색 옵션
+$FDR_NM = addslashes($_GET['FDR_NM']);
+$SERVICE = addslashes($_GET['SERVICE']);
+$ITEM_CD = addslashes($_GET['ITEM_CD']);
+$AREA_CD = addslashes($_GET['AREA_CD']);
+$CAREER_YY_FR = addslashes($_GET['CAREER_YY_FR']);
+$CAREER_YY_TO = addslashes($_GET['CAREER_YY_TO']);
+
+$FDR_NM = clean_xss_tags($FDR_NM);
+$SERVICE = clean_xss_tags($SERVICE);
+$ITEM_CD = clean_xss_tags($ITEM_CD);
+$AREA_CD = clean_xss_tags($AREA_CD);
+$CAREER_YY_FR = clean_xss_tags($CAREER_YY_FR);
+$CAREER_YY_TO = clean_xss_tags($CAREER_YY_TO);
+
+if($FDR_NM) {
+    $sql_search .= " and `FDR_NM` LIKE '%{$FDR_NM}%'";
+}
+
+if($SERVICE) {
+    $sql_search .= " and SERVICE LIKE '%{$SERVICE}%'";
+}
+
+if($ITEM_CD) {
+    $sql_search .= " and ITEM_CD LIKE '%{$ITEM_CD}%'";
+}
+
+if($AREA_CD) {
+    $sql_search .= " and AREA_CD LIKE '%{$AREA_CD}%'";
+}
+
+if($CAREER_YY_FR) {
+    $sql_search .= " and `CAREER_YY_CNT` >= '{$CAREER_YY_FR}'";
+}
+
+if($CAREER_YY_TO) {
+    $sql_search .= " and `CAREER_YY_CNT` <= '{$CAREER_YY_TO}'";
+}
+
+###################################################################
+
+$sql1 = "select count(*) as cnt {$sql_common}";
+$row1 = sql_fetch($sql1);
+$total_member = $row1['cnt'];
+
+$sql = "select count(*) as cnt {$sql_common} {$sql_search} ";
+$row = sql_fetch($sql);
+$total_count = $row['cnt'];
+
+$pageNum = (int)$_GET['pageNum'];
+
+if(!$pageNum) {
+    $rows = 10;
+} else {
+    $rows = $pageNum;
+}
+
+$qstr = "faq_typ_cd=".$faq_typ_cd."&FDR_NM=".$FDR_NM."&SERVICE=".$SERVICE."&ITEM_CD=".$ITEM_CD."&use_yn=".$use_yn."&pageNum=".$pageNum."&CAREER_YY_FR=".$CAREER_YY_FR."&CAREER_YY_TO=".$CAREER_YY_TO."&page=".$page;
+
+$page = (int)$_GET['page'];
+
+$total_page  = ceil($total_count / $rows);  // 전체 페이지 계산
+if ($page < 1) { $page = 1; } // 페이지가 없으면 첫 페이지 (1 페이지)
+$from_record = ($page - 1) * $rows; // 시작 열을 구함
+
+$list_page_rows = $rows;
+//순번
+$list_num = $total_count - ($page - 1) * $list_page_rows;
+
+$sql = " SELECT A.IMG_FILE_NM, A.IDX
+                , A.FDR_NO
+                , A.FDR_NM 
+                , DATE_FORMAT(A.INS_DT,'%Y-%m-%d') INS_DT
+                , A.FEE_CD
+                ,(SELECT CODE_NM
+                   FROM tcmn_code_dtl
+                  WHERE CLSS_CD = 'FEE_CD'
+                   AND CODE_CD = A.FEE_CD)AS FEE_NM
+                , A.DISP_YN
+                , DATE_FORMAT(A.DISP_FR_YMD,'%Y-%m-%d') DISP_FR_YMD
+                , DATE_FORMAT(A.DISP_TO_YMD,'%Y-%m-%d') DISP_TO_YMD
+                , A.EMAIL_ID
+                , A.UPD_ID
+                , A.FDR_NO
+{$sql_common} {$sql_search} {$sql_order} limit {$from_record}, {$rows} ";
+$result = sql_query($sql);
+
+?>
+    <div class="content-page">
+        <!-- Start content -->
+        <div class="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card-box p-b-0">
+                            <h5 class="m-b-10"><b>포워더 검색</b></h5>
+                            <hr class="m-t-0">
+                            <div class="row">
+                                <form class="form-horizontal group-border-dashed">
+                                    <div class="col-sm-12">
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">성명</label>
+                                                    <div class="col-sm-5">
+                                                        <input type="text" class="form-control" name="FDR_NM" value="<?php echo $FDR_NM?>"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">서비스</label>
+                                                    <div class="col-sm-5">
+                                                        <select class="form-control" name="SERVICE">
+                                                            <option value="">전체</option>
+                                                            <option value="해상" <?php if($SERVICE=="해상") echo "selected"?>>해상</option>
+                                                            <option value="항공" <?php if($SERVICE=="항공") echo "selected"?>>항공</option>
+                                                            <option value="벌크" <?php if($SERVICE=="벌크") echo "selected"?>>벌크</option>
+                                                            <option value="프로젝트" <?php if($SERVICE=="프로젝트") echo "selected"?>>프로젝트</option>
+                                                            <option value="LCL콘솔" <?php if($SERVICE=="LCL콘솔") echo "selected"?>>LCL콘솔</option>
+                                                            <option value="Sea & Air" <?php if($SERVICE=="Sea & Air") echo "selected"?>>Sea & Air</option>
+                                                            <option value="위험물" <?php if($SERVICE=="위험물") echo "selected"?>>위험물</option>
+                                                            <option value="냉동·냉장" <?php if($SERVICE=="냉동·냉장") echo "selected"?>>냉동·냉장</option>
+                                                            <option value="Perishable" <?php if($SERVICE=="Perishable") echo "selected"?>>Perishable</option>
+                                                            <option value="까르네(Carnet)" <?php if($SERVICE=="까르네(Carnet)") echo "selected"?>>까르네(Carnet)</option>
+                                                            <option value="전시화물" <?php if($SERVICE=="전시화물") echo "selected"?>>전시화물</option>
+                                                            <option value="핸드캐리" <?php if($SERVICE=="핸드캐리") echo "selected"?>>핸드캐리</option>
+                                                            <option value="해외이주화물" <?php if($SERVICE=="해외이주화물") echo "selected"?>>해외이주화물</option>
+                                                            <option value="쿠리어(Courrier)" <?php if($SERVICE=="쿠리어(Courrier)") echo "selected"?>>쿠리어(Courrier)</option>
+                                                            <option value="따이공" <?php if($SERVICE=="따이공") echo "selected"?>>따이공</option>
+                                                            <option value="기타" <?php if($SERVICE=="기타") echo "selected"?>>기타</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">관심지역</label>
+                                                    <div class="col-sm-5">
+                                                        <select class="form-control" name="AREA_CD">
+                                                            <option value="">전체</option>
+                                                            <option value="일본·동아시아" <?php if($AREA_CD=="일본·동아시아") echo "selected"?>>일본·동아시아</option>
+                                                            <option value="중국·홍콩" <?php if($AREA_CD=="중국·홍콩") echo "selected"?>>중국·홍콩</option>
+                                                            <option value="동남아시아" <?php if($AREA_CD=="동남아시아") echo "selected"?>>동남아시아</option>
+                                                            <option value="서남아시아" <?php if($AREA_CD=="서남아시아") echo "selected"?>>서남아시아</option>
+                                                            <option value="중앙아시아" <?php if($AREA_CD=="중앙아시아") echo "selected"?>>중앙아시아</option>
+                                                            <option value="중동" <?php if($AREA_CD=="중동") echo "selected"?>>중동</option>
+                                                            <option value="오세아니아" <?php if($AREA_CD=="오세아니아") echo "selected"?>>오세아니아</option>
+                                                            <option value="북아프리카" <?php if($AREA_CD=="북아프리카") echo "selected"?>>북아프리카</option>
+                                                            <option value="지중해연안" <?php if($AREA_CD=="지중해연안") echo "selected"?>>지중해연안</option>
+                                                            <option value="북유럽" <?php if($AREA_CD=="북유럽") echo "selected"?>>북유럽</option>
+                                                            <option value="서유럽" <?php if($AREA_CD=="서유럽") echo "selected"?>>서유럽</option>
+                                                            <option value="동유럽" <?php if($AREA_CD=="동유럽") echo "selected"?>>동유럽</option>
+                                                            <option value="아프리카" <?php if($AREA_CD=="아프리카") echo "selected"?>>아프리카</option>
+                                                            <option value="북미" <?php if($AREA_CD=="북미") echo "selected"?>>북미</option>
+                                                            <option value="남미" <?php if($AREA_CD=="남미") echo "selected"?>>남미</option>
+                                                            <option value="러시아" <?php if($AREA_CD=="러시아") echo "selected"?>>러시아</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">ITEM</label>
+                                                    <div class="col-sm-5">
+                                                        <select class="form-control" name="ITEM_CD">
+                                                            <option value="">전체</option>
+                                                            <option value="자동차부품" <?php if($ITEM_CD=="자동차부품") echo "selected"?>>자동차부품</option>
+                                                            <option value="타이어" <?php if($ITEM_CD=="타이어") echo "selected"?>>타이어</option>
+                                                            <option value="전자·전기제품/부품" <?php if($ITEM_CD=="전자·전기제품/부품") echo "selected"?>>전자·전기제품/부품</option>
+                                                            <option value="레진(Resin)" <?php if($ITEM_CD=="레진(Resin)") echo "selected"?>>레진(Resin)</option>
+                                                            <option value="제지·인쇄물" <?php if($ITEM_CD=="제지·인쇄물") echo "selected"?>>제지·인쇄물</option>
+                                                            <option value="기계류" <?php if($ITEM_CD=="기계류") echo "selected"?>>기계류</option>
+                                                            <option value="케미칼(Chemical)" <?php if($ITEM_CD=="케미칼(Chemical)") echo "selected"?>>케미칼(Chemical)</option>
+                                                            <option value="식품·음료(Food Stuff)" <?php if($ITEM_CD=="식품·음료(Food Stuff)") echo "selected"?>>식품·음료(Food Stuff)</option>
+                                                            <option value="농수산물" <?php if($ITEM_CD=="농수산물") echo "selected"?>>농수산물</option>
+                                                            <option value="의류" <?php if($ITEM_CD=="의류") echo "selected"?>>의류</option>
+                                                            <option value="신발·안경·모자" <?php if($ITEM_CD=="신발·안경·모자") echo "selected"?>>신발·안경·모자</option>
+                                                            <option value="섬유·직물" <?php if($ITEM_CD=="섬유·직물") echo "selected"?>>섬유·직물</option>
+                                                            <option value="철강·코일·파이프" <?php if($ITEM_CD=="철강·코일·파이프") echo "selected"?>>철강·코일·파이프</option>
+                                                            <option value="화장품·향수" <?php if($ITEM_CD=="화장품·향수") echo "selected"?>>화장품·향수</option>
+                                                            <option value="가재도구(Household)" <?php if($ITEM_CD=="가재도구(Household)") echo "selected"?>>가재도구(Household)</option>
+                                                            <option value="가죽·털" <?php if($ITEM_CD=="가죽·털") echo "selected"?>>가죽·털</option>
+                                                            <option value="의료기기" <?php if($ITEM_CD=="의료기기") echo "selected"?>>의료기기</option>
+                                                            <option value="자전거·오토바이" <?php if($ITEM_CD=="자전거·오토바이") echo "selected"?>>자전거·오토바이</option>
+                                                            <option value="플라스틱" <?php if($ITEM_CD=="플라스틱") echo "selected"?>>플라스틱</option>
+                                                            <option value="포장재" <?php if($ITEM_CD=="포장재") echo "selected"?>>포장재</option>
+                                                            <option value="스포츠용품" <?php if($ITEM_CD=="스포츠용품") echo "selected"?>>스포츠용품</option>
+                                                            <option value="문구류" <?php if($ITEM_CD=="문구류") echo "selected"?>>문구류</option>
+                                                            <option value="담배·술" <?php if($ITEM_CD=="담배·술") echo "selected"?>>담배·술</option>
+                                                            <option value="장난감" <?php if($ITEM_CD=="장난감") echo "selected"?>>장난감</option>
+                                                            <option value="무기류" <?php if($ITEM_CD=="무기류") echo "selected"?>>무기류</option>
+                                                            <option value="기타" <?php if($ITEM_CD=="기타") echo "selected"?>>기타</option>  
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">경력</label>
+                                                    <div class="col-sm-5">
+                                                        <div class="input-daterange input-group">
+                                                            <input type="text" class="form-control" name="CAREER_YY_FR" value="<?php echo $CAREER_YY_FR?>" />
+                                                            <span class="input-group-addon bg-primary b-0 text-white">~</span>
+                                                            <input type="text" class="form-control" name="CAREER_YY_TO" value="<?php echo $CAREER_YY_TO?>" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="form-group">
+                                                    <div class="col-sm-offset-5 col-sm-7 m-t-15">
+                                                        <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                                            검색
+                                                        </button>
+                                                        <button type="reset" class="btn btn-inverse waves-effect m-l-5" onclick="location.href='exposeForwarder.html'">
+                                                            초기화
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+    <?php    //echo "<p>". $sql ."<p>";  ?>
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card-box p-b-0">
+                            <h5><b>회원 목록</b><span class="text-muted font-13 m-l-15"> 검색결과 <span class="font-bold text-dark"><?php echo number_format($total_count)?></span> 명</span></h5>
+                            <hr class="m-t-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover text-center middle">
+                                    <thead>
+                                    <tr class="bg-lightdark">
+                                        <th class="text-center">NO</th>
+                                        <th class="text-center">사진</th>
+                                        <th class="text-center">코드</th>
+                                        <th class="text-center">이름</th>
+                                        <th class="text-center">등록일자</th>
+                                        <th class="text-center">수수료구분</th>
+                                        <!-- <th class="text-center">허용일시</th>
+                                        <th class="text-center">종료일시</th> -->
+                                        <th class="text-center">노출여부</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php 
+                                    for ($i=0; $row=sql_fetch_array($result); $i++) {
+                                        $num = $list_num - $i;
+
+                                        $IDX = $row['IDX'];  // 순번
+                                        $PHOTO = $row['PHOTO'];  // 사진
+                                        $FDR_NO = $row['FDR_NO'];  // 코드
+                                        $FDR_NM = $row['FDR_NM'];  // 이름
+                                        $CAREER_YY_CNT = $row['CAREER_YY_CNT'];  // 경력(년수)
+                                        $ITEM_NM = $row['ITEM_NM'];  // Item
+                                        $AREA_NM = $row['AREA_NM'];  // 지역
+                                        $COMP_NM = $row['COMP_NM'];  // 소속사
+                                        $HP_NO = $row['HP_NO'];  // Contact
+                                        $EMAIL_ID = $row['EMAIL_ID'];  // e-Mail
+                                        $DISP_YN = $row['DISP_YN'];  // 허용여부
+                                        $FEE_NM = $row['FEE_NM'];  // 수수료
+                                        $INS_DT = $row['INS_DT'];  // 등록일자
+                                        $DISP_FR_YMD = $row['DISP_FR_YMD'];  // 허용일자
+                                        $DISP_TO_YMD = $row['DISP_TO_YMD'];  // 종료일자
+
+                                    ?>
+                                    <tr>
+                                        <td scope="row"><?php echo $num?></td>
+                                        <td><img src="<?php if($row['IMG_FILE_NM']) echo $row['IMG_FILE_NM']; else echo '<?php echo RT_PATH;?>/admin/assets/images/user.png'; ?>" alt="" width="45" class="img-rounded img-responsive center-block" style="border-radius: 50%;"></td>
+                                        <td><?php echo $FDR_NO?></td>
+                                        <td><a href="<?php echo RT_PATH;?>/html/my/my_info.html?tab=1&mb_id=<?php echo $FDR_NO?>" target="_blank"><?php echo $FDR_NM?></a></td>
+                                        <td><?php echo $INS_DT?></td>
+                                        <td><?php //echo $FEE_NM?>무료</td>
+                                        <!-- <td><?php echo $DISP_FR_YMD?></td>
+                                        <td><?php echo $DISP_TO_YMD?></td> -->
+                                        <td>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="DISP_YN<?php echo $IDX?>" value="Y" name="<?php echo $IDX?>" <?php  if($DISP_YN == 'Y') echo "checked"; ?>>
+                                                <label for="DISP_YN<?php echo $IDX?>"> 허용</label>
+                                            </div>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="DISP_YN_<?php echo $IDX?>" value="N" name="<?php echo $IDX?>" <?php  if($DISP_YN == 'N') echo "checked"; ?>>
+                                                <label for="DISP_YN_<?php echo $IDX?>"> 허용안함 </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php  } ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="clearfix">
+                                <div class="pull-right">
+                                    <select class="form-control" size="1" name="pageNum" id="pageNum" onchange="viewCount(this.options[this.selectedIndex].value)">
+                                        <option <?php  if($pageNum=='10') echo "selected"; ?>>10</option>
+                                        <option <?php  if($pageNum=='25') echo "selected"; ?>>25</option>
+                                        <option <?php  if($pageNum=='50') echo "selected"; ?>>50</option>
+                                        <option <?php  if($pageNum=='100')  echo "selected"; ?>>100</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <?php echo get_paging2(5, $page, $total_page, $_SERVER['SCRIPT_NAME'].'?'.$qstr.'&amp;page='); ?>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+
+    </div>
+    <script type="text/javascript">
+        function viewCount(val) {
+            self.location = "<?php echo $_SERVER[PHP_SELF]?>?<?php echo  $qstr ?>&pageNum=" + val;
+        }
+
+        $(document).ready(function() {
+            $("input[type=radio]").change(function() {
+                var IDX = $(this).attr('name');
+                var value = $(this).val();
+
+                var params = "IDX=" + IDX + "&value=" + value +  "&type=forwarder";
+                $.ajax({
+                    url: "<?php echo RT_PATH; ?>/admin/php/ajax_update_fwd.php",
+                    type: "POST",
+                    data: params,
+                    success: function (result) {
+                        console.log(result);
+                    }
+                });
+            });
+        });
+    </script>
+<?php
+include_once ('./include/footer.html');
+?>

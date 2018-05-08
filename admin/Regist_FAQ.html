@@ -1,0 +1,164 @@
+<?php
+session_start();
+include_once('lib/common.php');
+
+// 관리자 세션 확인
+if (!isset($_SESSION['ADMIN_GRPNAME'])) {
+    alertMove('로그인 후 이용해 주세요', "index.html");
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <?php
+    include_once('./include/head.html');
+    ?>
+
+</head>
+<body class="fixed-left">
+
+<!-- Begin page -->
+<div id="wrapper">
+
+    <?php
+    include_once('./include/menu.html');
+    ?>
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+
+    <div class="content-page">
+        <!-- Start content -->
+        <div class="content">
+            <div class="container">
+
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="card-box p-b-0">
+
+                            <form class="form-horizontal" role="form" method="post" name="finsert">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="table-responsive m-b-0">
+                                            <table class="table table-bordered text-left">
+                                                <tbody>
+                                                <tr>
+                                                    <th class="info middle-align">질문</th>
+                                                    <td>
+                                                        <input type="text" name="subject" class="form-control input-sm" placeholder="">
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th class="info middle-align">질문유형</th>
+                                                    <td>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" name="faq_type" id="faq_type1" value="01" checked>
+                                                            <label for="faq_type1">일반질문</label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" name="faq_type" id="faq_type2" value="02" >
+                                                            <label for="faq_type2">입찰공고</label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" name="faq_type" id="faq_type3" value="03" >
+                                                            <label for="faq_type3">견적작성</label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" name="faq_type" id="faq_type4" value="04" >
+                                                            <label for="faq_type4">전문포워더</label>
+                                                        </div>
+
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <th class="info middle-align">사용여부</th>
+                                                    <td>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" name="use_yn" id="use_yn1" value="Y" checked>
+                                                            <label for="use_yn1"> 사용 </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" name="use_yn" id="use_yn2" value="N">
+                                                            <label for="use_yn2"> 사용안함 </label>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <textarea class="form-control" rows="10" name="contents" placeholder="답변을 입력하세요"></textarea>
+                                    </div>
+                                </div>
+                                <div class="row m-t-10">
+                                    <div class="col-lg-12">
+                                        <div class="form-group">
+                                            <div class="text-center">
+                                                <button type="button"
+                                                        class="btn btn-primary waves-effect m-l-5 waves-light"  onclick="faq_insert();">
+                                                    저장
+                                                </button>
+                                                <button type="reset" class="btn btn-default waves-effect m-l-5">
+                                                    취소
+                                                </button>
+                                                <button type="button" class="btn btn-info waves-effect m-l-5" onclick="location.href='manageFAQ.html';">
+                                                    닫기
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+
+            </div> <!-- container -->
+        </div> <!-- content -->
+
+        <script type="text/javascript">
+            function faq_insert(f) {
+                var f = document.finsert;
+
+
+                if (f.subject.value == "")
+                {
+                    swal("질문을 입력해야 합니다!");
+                    f.subject.focus();
+                    return false;
+                }
+
+                if (f.faq_type.value == "")
+                {
+                    swal("질문유형을 입력해야 합니다!");
+                    f.faq_type.focus();
+                    return false;
+                }
+
+
+                if (f.use_yn.value == "")
+                {
+                    swal("사용여부를 선택해야 합니다!");
+                    f.use_yn.focus();
+                    return false;
+                }
+
+                if (f.contents.value == "")
+                {
+                    swal("답변을  입력해야 합니다!");
+                    f.contents.focus();
+                    return false;
+                }
+
+                f.action = "<?php echo RT_PATH; ?>/admin/php/ajax_insert_faq.php";
+                f.submit();
+            }
+        </script>
+        <?php
+        include_once('./include/footer.html');
+        ?>

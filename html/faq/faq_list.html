@@ -1,0 +1,166 @@
+<?php 
+session_start();
+include_once('../../admin/lib/common.php');
+include_once('../../include/html_head.html');
+
+?>
+
+<div class="container">
+
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                    <li>FAQ</li>
+                    <li class="active">FAQ</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="jumbotron">
+            <h1 class="mb20">FAQ</h1>
+            <p> 고객님의 궁금한 사항을 친절히 안내해 드리도록 늘 노력하겠습니다.</p>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="row">
+            <div class="col-12">
+                <div id="main-tab">
+                    <ul class="tabs tabs-faq clearfix inner-left m-tabs">
+                        <li class="active" rel="tab1">입찰절차</li>
+                        <li rel="tab2">일반</li>
+                        <li rel="tab3">입찰공고</li>
+                        <li rel="tab4">견적작성</li>
+                        <li rel="tab5">전문포워더</li>
+                    </ul>
+
+                    <div class="tab_container clearfix">
+                        <div id="tab1" class="tab_content">
+                            <ul class="faq01 m-pd0 clearfix">
+                                <li><img src="../../img/faq01.png" alt=""></li>
+                                <li><img src="../../img/icon-faq.png" alt="" class="icon-faq"></li>
+                                <li><img src="../../img/faq02.png" alt=""></li>
+                                <li><img src="../../img/icon-faq.png" alt="" class="icon-faq"></li>
+                                <li><img src="../../img/faq03.png" alt=""></li>
+                                <li><img src="../../img/icon-faq.png" alt="" class="icon-faq"></li>
+                                <li><img src="../../img/faq04.png" alt=""></li>
+                                <li><img src="../../img/icon-faq.png" alt="" class="icon-faq"></li>
+                                <li><img src="../../img/faq05.png" alt=""></li>
+                                <li><img src="../../img/icon-faq.png" alt="" class="icon-faq"></li>
+                                <li><img src="../../img/faq06.png" alt=""></li>
+                            </ul>
+                        </div>
+                        <!-- #tab1 -->
+                        <div id="tab2" class="tab_content">
+                            <div class="faq02">
+
+                                <?php 
+                                $sql = " SELECT * FROM tcmn_faq_code WHERE FAQ_TYP_CD='01' AND USE_YN='Y' ORDER BY FAQ_NO ASC ";
+                                $result = sql_query($sql);
+                                for ($i = 0; $row = sql_fetch_array($result); $i++) {
+                                    ?>
+                                    <div class="accordion">
+                                        <div class="accordion-tit clearfix">
+                                            <p><?php echo  $row[QST_DESC] ?></p>
+                                            <div class="icon-arrow"></div>
+                                        </div>
+                                        <div class="panel">
+                                            <p>
+                                                <?php echo  nl2br($row[ASK_DESC]) ?>
+                                            </p>
+                                        </div>
+                                    </div>
+                                <?php  } ?>
+                            </div>
+                        </div>
+                    <!-- #tab2 -->
+                    <div id="tab3" class="tab_content">
+                        <div class="faq02">
+                            <?php 
+                            $sql = " SELECT * FROM tcmn_faq_code WHERE FAQ_TYP_CD='02' AND USE_YN='Y' ORDER BY FAQ_NO ASC ";
+                            $result = sql_query($sql);
+                            for ($i = 0; $row = sql_fetch_array($result); $i++) {
+                                ?>
+                                <div class="accordion">
+                                    <div class="accordion-tit clearfix">
+                                        <p><?php echo  $row[QST_DESC] ?></p>
+                                        <div class="icon-arrow"></div>
+                                    </div>
+                                    <div class="panel">
+                                        <p>
+                                            <?php echo  nl2br($row[ASK_DESC]) ?>
+                                        </p>
+                                    </div>
+                                </div>
+                            <?php  } ?>
+                        </div>
+                    </div>
+                    <!-- #tab3 -->
+                    <div id="tab4" class="tab_content">
+                        <div class="faq02">
+                            <?php 
+                            $sql = " SELECT * FROM tcmn_faq_code WHERE FAQ_TYP_CD='03' AND USE_YN='Y' ORDER BY FAQ_NO ASC ";
+                            $result = sql_query($sql);
+                            for ($i = 0; $row = sql_fetch_array($result); $i++) {
+                                ?>
+
+                                <div class="accordion">
+                                    <div class="accordion-tit clearfix">
+                                        <p><?php echo  $row[QST_DESC] ?></p>
+                                        <div class="icon-arrow"></div>
+                                    </div>
+                                    <div class="panel">
+                                        <p>
+                                            <?php echo  nl2br($row[ASK_DESC]) ?>
+                                        </p>
+                                    </div>
+                                </div>
+                            <?php  } ?>
+                        </div>
+                    </div>
+                    <!-- #tab4 -->
+                    <div id="tab5" class="tab_content">
+                        <div class="faq02">
+                            <?php 
+                            $sql = " SELECT * FROM tcmn_faq_code WHERE FAQ_TYP_CD='04' AND USE_YN='Y' ORDER BY FAQ_NO ASC ";
+                            $result = sql_query($sql);
+                            for ($i = 0; $row = sql_fetch_array($result); $i++) {
+                                ?>
+                                <div class="accordion">
+                                    <div class="accordion-tit clearfix">
+                                        <p><?php echo  $row[QST_DESC] ?></p>
+                                        <div class="icon-arrow"></div>
+                                    </div>
+                                    <div class="panel">
+                                        <p>
+                                            <?php echo  nl2br($row[ASK_DESC]) ?>
+                                        </p>
+                                    </div>
+                                </div>
+                            <?php  } ?>
+                        </div>
+                    </div>
+                    <!-- #tab5 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script>
+    var acc = document.getElementsByClassName("accordion");
+    var i;
+    for (i = 0; i < acc.length; i++) {
+        acc[i].addEventListener("click", function () {
+            this.classList.toggle("active");
+            this.nextElementSibling.classList.toggle("slideActive");
+        });
+    }
+</script>
+
+<?php 
+include_once('../../include/html_foot.html');
+?>
+

@@ -1,0 +1,661 @@
+<?php 
+session_start();
+include_once('lib/common.php');
+
+// 관리자 세션 확인
+if(!isset($_SESSION['ADMIN_GRPNAME'])) {
+    alertMove('로그인 후 이용해 주세요', "index.html");
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <?php 
+    include_once ('./include/head.html');
+    ?>
+</head>
+
+<body class="fixed-left">
+
+<!-- Begin page -->
+<div id="wrapper">
+
+    <?php 
+    include_once ('./include/menu.html');
+    ?>
+
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+    <?php 
+    //  일반쿼리
+    //$sql_common = " from `tcmn_mbr_join` ";
+    $sql_common = " FROM `tcmn_mbr_join` A LEFT OUTER JOIN `tcmn_mbr_comp` B ON B.REG_NO = A.REG_NO ";
+    $sql_search = " where (1) ";
+    //$sql_order = " order by MBR_NO desc ";
+    $sql_order = " order by A.MBR_NO desc ";
+
+    // 검색 옵션
+    $member_stats = addslashes($_GET['member_stats']);  // 가입탈퇴구분
+    $reg_type = addslashes($_GET['reg_type']);  //  가입구분
+    $bid_type = addslashes($_GET['bid_type']);  // 입찰분야
+    $member_type = addslashes($_GET['member_type']);    // 회원구분
+
+    $st_date = addslashes($_GET['st_date']);    //시작일자
+    $ed_date = addslashes($_GET['ed_date']);    //종료일자
+
+    $s_comp_nm = addslashes($_GET['s_comp_nm']);    //개인/기업명
+
+    $qstr = "member_stats=".$member_stats."&reg_type=".$reg_type."&bid_type=".$bid_type."&member_type=".$member_type."&st_date=".$st_date."&ed_date=".$ed_date."&s_comp_nm=".$s_comp_nm."&pageNum=".$pageNum."&page=".$page;
+#################################################################################################
+    //가입탈퇴구분
+    if($member_stats) {
+        if($member_stats == 'JOIN') $sql_search .= "and `JOIN_STS_CD` = 'JOIN' ";
+        if($member_stats == 'WAIT') $sql_search .= "and `JOIN_STS_CD` = 'WAIT' ";
+        if($member_stats == 'SCDE') $sql_search .= "and `JOIN_STS_CD` = 'SCDE' ";
+    }
+
+    //입찰분야
+    if($reg_type) {
+        if($reg_type == 'P') $sql_search .= "and B.REG_TYP_CD = 'P' ";
+        if($reg_type == 'B') $sql_search .= "and B.REG_TYP_CD = 'B' ";
+    }
+
+    //기업명
+    if($s_comp_nm) {
+        $sql_search .= " and (B.COMP_NM LIKE '%$s_comp_nm%' OR A.MBR_NM LIKE '%$s_comp_nm%') ";
+    }
+
+    //입찰분야
+    if($bid_type) {
+        if($bid_type == 'sea') $sql_search .= "and B.LIMIT_KND_CD = 'sea' ";
+        if($bid_type == 'air') $sql_search .= "and B.LIMIT_KND_CD = 'air' ";
+        if($bid_type == 'bulk') $sql_search .= "and B.LIMIT_KND_CD = 'bulk' ";
+        if($bid_type == 'nobid') $sql_search .= "and B.LIMIT_KND_CD = 'nobid' ";
+    }
+
+    //회원구분
+    if($member_type) {
+        if($member_type == 'gen') $sql_search .= "and `MNGR_YN` = 'N' ";
+        if($member_type == 'adm') $sql_search .= "and `MNGR_YN` = 'Y' ";
+        if($member_type == 'sale') $sql_search .= "and `SALE_PIC_YN` = 'Y' ";
+
+    }
+
+    if(!$st_date)  $st_date = "2015-01-01";
+    if(!$ed_date)  $ed_date = date("Y-m-d");
+
+    $sql_search .= " AND ENTER_DT BETWEEN DATE_FORMAT('{$st_date}','%Y-%m-%d') AND DATE_FORMAT('{$ed_date}','%Y-%m-%d') ";
+
+#################################################################################################
+
+    //전체회원
+    $sql1 = "select count(MBR_NO) as cnt {$sql_common}";
+    $row1 = sql_fetch($sql1);
+    $total_member = $row1['cnt'];
+
+    //검색
+    $sql = "select count(*) as cnt {$sql_common} {$sql_search} ";
+    $row = sql_fetch($sql);
+    $total_count = $row['cnt'];
+
+    $pageNum = (int)$_GET['pageNum'];
+
+    if(!$pageNum) {
+        $rows = 10;
+    } else {
+        $rows = $pageNum;
+    }
+
+    $page = (int)$_GET['page'];
+
+    $total_page  = ceil($total_count / $rows);  // 전체 페이지 계산
+    if ($page < 1) { $page = 1; } // 페이지가 없으면 첫 페이지 (1 페이지)
+    $from_record = ($page - 1) * $rows; // 시작 열을 구함
+
+    $list_page_rows = 10;
+    //순번
+    $list_num = $total_count - ($page - 1) * $list_page_rows;
+
+    $sql = " select A.*, B.PREMIUM_YM, B.LIMIT_KND_CD, B.PB_TYPE {$sql_common} {$sql_search} {$sql_order} limit {$from_record}, {$rows} ";
+    //$sql = " select * {$sql_common} {$sql_search} {$sql_order} limit {$from_record}, {$rows} ";
+    $result = sql_query($sql);
+// echo $sql;exit;
+    $sql_stats ="
+        SELECT
+        (SELECT   COUNT(*)
+           FROM tcmn_mbr_join A 
+           WHERE JOIN_STS_CD='SCDE'
+        AND SECEDE_DT BETWEEN DATE_FORMAT('{$st_date}','%Y-%m-%d') AND DATE_ADD(DATE_FORMAT('{$ed_date}','%Y-%m-%d'),INTERVAL 1 DAY)			 
+           )AS SEC_TOAL,
+         (SELECT   COUNT(*)
+           FROM tcmn_mbr_join A 
+           WHERE JOIN_STS_CD='JOIN'
+        AND ENTER_DT BETWEEN DATE_FORMAT('{$st_date}','%Y-%m-%d') AND DATE_ADD(DATE_FORMAT('{$ed_date}','%Y-%m-%d'),INTERVAL 1 DAY)				 
+          )AS NEW_TOTAL,
+        (SELECT   COUNT(*)
+           FROM tcmn_mbr_join A 
+           WHERE JOIN_STS_CD='SCDE'
+        AND SECEDE_DT = DATE_FORMAT(NOW(),'%Y-%m-%d')
+           )AS TSEC_TOAL,
+         (SELECT   COUNT(*)
+           FROM tcmn_mbr_join A 
+           WHERE JOIN_STS_CD='JOIN'
+        AND ENTER_DT = DATE_FORMAT(NOW(),'%Y-%m-%d')
+       )AS TNEW_TOTAL,
+        (SELECT   COUNT(*)
+           FROM tcmn_mbr_join A 
+           WHERE JOIN_STS_CD='JOIN')AS ANEW_TOTAL,
+        (SELECT   COUNT(*)
+           FROM tcmn_mbr_join A 
+           WHERE JOIN_STS_CD='SCDE')AS ASEC_TOTAL ";
+
+    $row_stats = sql_fetch($sql_stats);
+
+    $SEC_TOAL = $row_stats['SEC_TOAL'];
+    $NEW_TOTAL = $row_stats['NEW_TOTAL'];
+    $TSEC_TOAL = $row_stats['TSEC_TOAL'];
+    $TNEW_TOTAL = $row_stats['TNEW_TOTAL'];
+    $ANEW_TOTAL = $row_stats['ANEW_TOTAL'];
+    $ASEC_TOTAL = $row_stats['ASEC_TOTAL'];
+    $INC_TOTAL = $NEW_TOTAL - $SEC_TOAL;
+    $TINC_TOTAL = $TNEW_TOTAL- $TSEC_TOAL;
+
+    // echo $sql_stats;
+    ?>
+    <div class="content-page">
+        <!-- Start content -->
+        <div class="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6 col-xs-12">
+                        <div class="card-box p-b-0">
+                            <h5 class="m-b-10"><b>회원 검색</b></h5>
+                            <hr class="m-t-0">
+
+                            <div class="row">
+                                <form class="form-horizontal group-border-dashed clearfix" name="fsearch" id="fsearch" method="get">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label">가입/탈퇴구분</label>
+                                            <div class="col-sm-9">
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="member_stats1" value="" name="member_stats" <?php  if($member_stats == '') echo 'checked'; ?>>
+                                                    <label for="member_stats1"> 전체 </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="member_stats2" value="JOIN" name="member_stats" <?php  if($member_stats == 'JOIN') echo 'checked'; ?>>
+                                                    <label for="member_stats2"> 가입 </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="member_stats3" value="SCDE" name="member_stats" <?php  if($member_stats == 'SCDE') echo 'checked'; ?>>
+                                                    <label for="member_stats3"> 탈퇴 </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="member_stats4" value="WAIT" name="member_stats" <?php  if($member_stats == 'WAIT') echo 'checked'; ?>>
+                                                    <label for="member_stats4"> 대기 </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label">개인/기업구분</label>
+                                            <div class="col-sm-9">
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="reg_type1" value="" name="reg_type" <?php  if($reg_type == '') echo 'checked'; ?>>
+                                                    <label for="reg_type1"> 전체 </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="reg_type2" value="P" name="reg_type" <?php  if($reg_type == 'P') echo 'checked'; ?>>
+                                                    <label for="reg_type2"> 개인 </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="reg_type3" value="B" name="reg_type" <?php  if($reg_type == 'B') echo 'checked'; ?>>
+                                                    <label for="reg_type3"> 기업 </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label">입찰참여분야</label>
+                                            <div class="col-sm-9">
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="bid_type1" value="" name="bid_type" <?php  if($bid_type == '') echo 'checked'; ?>>
+                                                    <label for="bid_type1"> 전체 </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="bid_type2" value="sea" name="bid_type" <?php  if($bid_type == 'sea') echo 'checked'; ?>>
+                                                    <label for="bid_type2"> 해상 </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="bid_type3" value="bulk" name="bid_type" <?php  if($bid_type == 'bulk') echo 'checked'; ?>>
+                                                    <label for="bid_type3"> Bulk </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="bid_type4" value="air" name="bid_type" <?php  if($bid_type == 'air') echo 'checked'; ?>>
+                                                    <label for="bid_type4"> Air </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="bid_type5" value="nobid" name="bid_type" <?php  if($bid_type == 'nobid') echo 'checked'; ?>>
+                                                    <label for="bid_type5"> 미참여 </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label">가입일자</label>
+                                            <div class="col-sm-6">
+                                                <div class="input-daterange input-group" id="date-range">
+                                                    <input type="text" class="form-control" name="st_date" value="<?php echo $st_date?>" />
+                                                    <span class="input-group-addon bg-primary b-0 text-white">~</span>
+                                                    <input type="text" class="form-control" name="ed_date" value="<?php echo $ed_date?>" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label">개인/기업명</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" name="s_comp_nm" id="s_comp_nm" class="form-control" value="<?php echo $s_comp_nm?>" />
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label">구분</label>
+                                            <div class="col-sm-9">
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="member_type1" value="" name="member_type" <?php  if($member_type == '') echo 'checked'; ?>>
+                                                    <label for="member_type1"> 전체 </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="member_type2" value="gen" name="member_type" <?php  if($member_type == 'gen') echo 'checked'; ?>>
+                                                    <label for="member_type2"> 일반회원 </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="member_type3" value="adm" name="member_type" <?php  if($member_type == 'adm') echo 'checked'; ?>>
+                                                    <label for="member_type3"> 관리자 </label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="member_type4" value="sale" name="member_type" <?php  if($member_type == 'sale') echo 'checked'; ?>>
+                                                    <label for="member_type4"> 영업지원 </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group text-center">
+                                            <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                                검색
+                                            </button>
+                                            <button type="button" class="btn btn-inverse waves-effect m-l-5" onclick="location.href='memberList.html'">
+                                                초기화
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-xs-12">
+                        <div class="card-box p-b-0">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <h5 class="m-b-10"><b>회원 현황</b></h5>
+                                    <hr class="m-t-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover text-center">
+                                            <thead class="bg-lightdark">
+                                            <tr>
+                                                <th colspan="3" class="text-center">기간내</th>
+                                                <th colspan="3" class="text-center">당일</th>
+                                                <th colspan="2" class="text-center">누적</th>
+                                            </tr>
+                                            <tr>
+                                                <th class="text-center">가입자 수</th>
+                                                <th class="text-center">탈퇴자 수</th>
+                                                <th class="text-center">순증 가입자 수</th>
+                                                <th class="text-center">가입자 수</th>
+                                                <th class="text-center">탈퇴자 수</th>
+                                                <th class="text-center">순증 가입자 수</th>
+                                                <th class="text-center">가입자 수</th>
+                                                <th class="text-center">탈퇴자 수</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr>
+                                                <td id="NEW_TOTAL"><?php echo $NEW_TOTAL?></td>
+                                                <td id="SEC_TOAL"><?php echo $SEC_TOAL?></td>
+                                                <td id="INC_TOTAL"><?php echo $INC_TOTAL?></td>
+                                                <td id="TNEW_TOTAL"><?php echo $TNEW_TOTAL?></td>
+                                                <td id="TSEC_TOAL"><?php echo $TSEC_TOAL?></td>
+                                                <td id="TINC_TOTAL"><?php echo $TINC_TOTAL?></td>
+                                                <td id="ANEW_TOTAL"><?php echo $ANEW_TOTAL?></td>
+                                                <td id="ASEC_TOTAL"><?php echo $ASEC_TOTAL?></td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div><!-- end col -->
+                            </div><!-- end row -->
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+
+                <?php   //echo '<p>'. $sql . '<p>'; ?>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card-box p-b-0">
+                            <div class="row m-b-10">
+                                <div class="col-sm-6">
+                                    <h5><b>회원 목록</b><span class="text-muted font-13 m-l-15"> 검색결과 <span class="font-bold text-dark"><?php echo number_format($total_count)?></span> 명</span></h5>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-inline pull-right">
+                                        <div class="form-group">
+                                            <!-- <button type="button" class="btn btn-inverse waves-effect waves-light" data-toggle="modal" data-target="#panel-modal">메일전송</button> -->
+                                            <button type="button" class="btn btn-inverse waves-effect waves-light" onclick="member_send_mail();">메일전송</button>
+                                            <button type="button" class="btn btn-danger waves-effect waves-light" onclick="member_stop_submit();">강제탈퇴</button>
+                                            <button type="button" class="btn btn-primary waves-effect"  onclick="member_all_save();">저장</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="m-t-0">
+                            <div class="table-responsive tableSclroll">
+                                <!--<form name="fupdate" id="fupdate"  method="post" onsubmit="return member_list_submit(this);">-->
+                                <form name="fupdate" id="fupdate" method="post">
+                                <table class="table table-bordered table-hover text-center">
+                                    <thead>
+                                    <tr class="bg-lightdark">
+                                        <th class="text-center" width="40"><input type="checkbox" name="chkall" value="1" id="chkall" onclick="check_all(this.form)"></th>
+                                        <th class="text-center" width="50">상태</th>
+                                        <th class="text-center" width="120">가입(탈퇴)일자</th>
+                                        <th class="text-center" width="110">개인/기업구분</th>
+                                        <th class="text-center" width="90">가입자번호</th>
+                                        <th class="text-center">가입자명</th>
+                                        <th class="text-center">사업자명</th>
+                                        <th class="text-center" width="90">사업자번호</th>
+                                        <th class="text-center" width="80">참가분야</th>
+                                        <th class="text-center">영업사원</th>
+                                        <th class="text-center">관리자</th>
+                                        <th class="text-center" width="110">핸드폰번호</th>
+                                        <th class="text-center" width="110">전화번호</th>
+                                        <th class="text-center" width="110">팩스번호</th>
+                                        <th class="text-center">E-MAIL</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php 
+                                    for ($i=0; $row=sql_fetch_array($result); $i++) {
+                                        $num = $list_num - $i;
+
+                                        $call_mb_1 = "";
+                                        if($row[REG_TYP_CD] == "P") { $call_mb_1 = "개인"; }
+                                        else {
+                                            if($row[PB_TYPE] == "D") { $call_mb_1 = "국내"; }
+                                            else if($row[PB_TYPE] == "E") { $call_mb_1 = "국외"; }
+                                        }
+
+                                        $call_mb_c = "";
+                                        if($row[LIMIT_KND_CD]=="SEA") { $call_mb_c .= "해상"; }
+                                        if($row[LIMIT_KND_CD]=="BLK") { $call_mb_c .= "벌크"; }
+                                        if($row[LIMIT_KND_CD]=="AIR") { $call_mb_c .= "Air"; }
+                                        if($row[LIMIT_KND_CD]=="ALL") { $call_mb_c .= "전체참여"; }
+                                        if($row[LIMIT_KND_CD]=="NON") { $call_mb_c .= "미참여"; }
+
+                                        $JOIN_STS_CD = $row['JOIN_STS_CD'];
+                                        if($JOIN_STS_CD == "JOIN") { $JOIN_STS_CD = "가입"; }
+                                        if($JOIN_STS_CD == "SCDE") { $JOIN_STS_CD = "탈퇴"; }
+                                        if($JOIN_STS_CD == "WAIT") { $JOIN_STS_CD = "대기"; }
+
+                                        ?>
+                                        <tr>
+                                            <td scope="row">
+                                               <input type="checkbox" name="chk[]" value="<?php echo $row['MBR_NO']?>" id="chk_<?php echo $row['MBR_NO']?>">
+                                                <input type="hidden" name="REG_NO<?php echo $row['MBR_NO']?>" id="REG_NO<?php echo $row['MBR_NO']?>" value="<?php echo $row['REG_NO']?>">
+                                            </td>
+                                            <td><?php echo $JOIN_STS_CD?> </td>
+                                            <td><?php echo substr($row['ENTER_DT'],0,10)?></td>
+                                            <td><?php echo $call_mb_1?></td>
+                                            <td><?php echo $row['MBR_NO']?></td>
+                                            <td>
+                                                <input type="hidden" name="NAME<?php echo $row['MBR_NO']?>" id="NAME<?php echo $row['MBR_NO']?>" value="<?php echo $row['MBR_NM']?>">
+                                                <?php echo $row['MBR_NM']?></td>
+                                            <!--<td><?php /*=$row[MBR_NO]*/?></td>-->
+                                            <td><?php echo $row['COMP_NM']?></td>
+                                            <td><?php echo $row['REG_NO']?></td>
+                                            <td><?php echo $call_mb_c; ?></td>
+                                            <td><input type="checkbox" name="s_SALES<?php echo $row['MBR_NO']?>" id="s_SALES<?php echo $row['MBR_NO']?>" <?php if($row['SALE_PIC_YN'] == 'Y') echo 'checked'; ?>></td>
+                                            <td><input type="checkbox" name="s_MANAGER<?php echo $row['MBR_NO']?>" id="s_MANAGER<?php echo $row['MBR_NO']?>" <?php if($row['MNGR_YN'] == 'Y') echo 'checked'; ?>></td>
+                                            <td><?php echo $row['HP_NO']?></td>
+                                            <td><?php echo $row['TEL_NO']?></td>
+                                            <td><?php echo $row['FAX_NO']?></td>
+                                            <td>
+                                                <input type="hidden" name="EMAIL<?php echo $row['MBR_NO']?>" id="EMAIL<?php echo $row['MBR_NO']?>" value="<?php echo $row['MBM_EMAIL_ID']?>">
+                                                <?php echo $row['MBM_EMAIL_ID']?>
+
+                                            </td>
+                                        </tr>
+                                    <?php  } ?>
+                                    </tbody>
+                                </table>
+                                </form>
+                            </div>
+                            <div class="clearfix">
+                                <div class="pull-right">
+                                    <select class="form-control" name="pageNum" id="pageNum" onchange="viewCount(this.options[this.selectedIndex].value)">
+                                        <option value="10" <?php  if($pageNum == '10') echo "selected"; ?>>10개 보기</option>
+                                        <option value="25" <?php  if($pageNum == '25') echo "selected"; ?>>25개 보기</option>
+                                        <option value="50" <?php  if($pageNum == '50') echo "selected"; ?>>50개 보기</option>
+                                        <option value="100" <?php  if($pageNum == '100') echo "selected"; ?>>100개 보기</option>
+                                        <option value="<?php echo $total_member?>" <?php  if($pageNum == $total_member) echo "selected"; ?>>전체보기</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <?php  echo get_paging2(5, $page, $total_page, $_SERVER['SCRIPT_NAME'].'?'.$qstr.'&amp;page='); ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+
+                <!--안내메일전송 -->
+                <div id="panel-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+                    <div class="modal-dialog">
+                        <div class="modal-content p-0 b-0">
+                            <form method="post" name="fsend" id="fsend" action="<?php echo RT_PATH;?>/admin/php/ajax_send_mail.php">
+                            <div class="panel panel-color panel-inverse">
+                                <div class="panel-heading">
+                                    <button type="button" class="close m-t-5" data-dismiss="modal" aria-hidden="true">×</button>
+                                    <h3 class="panel-title">메일전송</h3>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <form class="form-horizontal" role="form">
+                                                <div class="form-group">
+                                                    <label class="col-md-2 control-label">수신자</label>
+                                                    <div class="col-md-10">
+                                                        <textarea class="form-control" rows="1"  name="sendMails" id="sendMails" style="display:none;" required></textarea>
+                                                        <textarea class="form-control" rows="3"  name="sendNames" id="sendNames" required></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-md-2 control-label">제목</label>
+                                                    <div class="col-md-10">
+                                                        <input type="text" name="sendSubject" id="sendSubject" class="inp full10" placeholder="제목" value="" required style="width: 100%;">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-md-2 control-label">내용</label>
+                                                    <div class="col-md-10">
+                                                        <textarea class="form-control" rows="8" name="sendContents" id="sendContents" required></textarea>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div><!-- end col -->
+
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="text-center">
+                                            <button type="button" class="btn btn-inverse waves-effect waves-light m-t-10" data-dismiss="modal" aria-hidden="true">취소</button>
+                                            <button type="submit" class="btn btn-primary waves-effect waves-light m-t-10">전송</button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            </form>
+                        </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                </div><!-- /.modal -->
+
+<style>
+    .tableSclroll{
+        width: 100%
+        overflow: auto;
+    }
+    .tableSclroll table{
+        width: 1560px;
+    }
+</style>
+
+<!-- END wrapper -->
+<script type='text/javascript'>
+
+
+    function member_send_mail() {
+        var f = document.fupdate;
+
+        if (!is_checked("chk[]")) {
+            swal("메일 보낼 항목을 하나 이상 선택하세요.");
+            return false;
+        }
+
+        var DATA = '';
+        var strVal;
+        var names= '';
+        var emails= '';
+        $("input[name='chk[]']:checked").each(function() {
+            if($(this).is(':checked'))
+                strVal = ($(this).val());
+                names += $('#NAME'+ strVal).val() + ';';
+                emails += $('#EMAIL'+ strVal).val() + ';';
+        });
+
+        $('#sendNames').val(names);
+        $('#sendMails').val(emails);
+
+        $("#panel-modal").modal();
+    }
+
+
+    function member_all_save() {
+        var f = document.fupdate;
+
+        if (!is_checked("chk[]")) {
+            swal("저장 하실 항목을 하나 이상 선택하세요.");
+            return false;
+        }
+
+        f.action = "<?php echo RT_PATH;?>/admin/php/ajax_update_member.php";
+        f.submit();
+    }
+
+    function member_stop_submit()
+    {
+        var f = document.fupdate;
+
+        if (!is_checked("chk[]")) {
+            swal("사용중지 하실 항목을 하나 이상 선택하세요.");
+            return false;
+        }
+
+        $.ajaxSettings.traditional = true;
+
+        var checkboxValues = [];
+        $("input[name='chk[]']:checked").each(function(i) {
+            checkboxValues.push($(this).val());
+        });
+
+        // object를 string형태로 변환
+        objData = JSON.stringify(checkboxValues);
+
+        swal({
+            title: "사용중지",
+            text: "회원 사용중지를 진행 하시겠습니까?",
+            icon: "warning",
+            buttons: ["취소", "중지"],
+            dangerMode: true,
+        }) .then(function(result) {
+            if (result) {
+
+                $.ajax({
+                    type: 'POST',
+                    url: '<?php echo RT_PATH;?>/admin/php/ajax_stop_member.php',
+                    data: {
+                        "chk": objData
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        var str_data = data.split('|');
+                        var rslt = str_data[0];
+                        var msg = str_data[1];
+
+                        if (rslt == 'ok') {
+                            swal({
+                                title: "사용중지 완료",
+                                text: msg,
+                                //text: data,
+                                icon: "success",
+                            })
+                                .then(function () {
+                                    window.location.href = "memberList.html";
+                                });
+                        } else {
+                            swal({
+                                title: "사용중지 실패",
+                                text: data,
+                                icon: "warning",
+                            })
+                             .then(function () {
+                                    window.location.href = "memberList.html";
+                                });
+                        }
+
+                    },  //success
+                    error: function (request,status,error) {
+                        alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                    } //error
+
+                });    //end ajax
+
+            } else {
+                swal({
+                    title: "취소 처리",
+                    text: "취소 되었습니다.",
+                    icon: "info",
+                });
+            }
+        });
+
+    }  // member_stop_submit
+
+
+    $(document).ready(function() {
+         $.fn.datepicker.dates['kr'] = {
+         days: ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"],
+         daysShort: ["일", "월", "화", "수", "목", "금", "토", "일"],
+         daysMin: ["일", "월", "화", "수", "목", "금", "토", "일"],
+         months: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
+         monthsShort: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
+         };
+    });
+
+
+    function viewCount(val)
+    {
+        self.location = "<?php echo $_SERVER[PHP_SELF]?>?<?php echo  $qstr ?>&pageNum=" + val;
+    }
+</script>
+<?php 
+    include_once ('./include/footer.html');
+?>

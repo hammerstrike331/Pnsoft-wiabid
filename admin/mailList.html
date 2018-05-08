@@ -1,0 +1,528 @@
+<?php
+    session_start();
+    include_once('lib/common.php');
+
+    // 관리자 세션 확인
+    if(!isset($_SESSION['ADMIN_GRPNAME'])) {
+        alertMove('로그인 후 이용해 주세요', "index.html");
+    }
+
+    ###################################################################
+    // 검색 옵션
+    $search_mode = addslashes($_GET['search_mode']);    // act
+    $SEND_KND_CD = addslashes($_GET['SEND_KND_CD']);    // 진행상태 -> A:전체, Y:전송, N:미전송
+    $S_DATE_TYPE = addslashes($_GET['S_DATE_TYPE']);    // 입찰기간 -> BID_NTC_YMD:입찰공고일, QTN_YMD:견적일자, NTC_CLOSE_YMD:입찰마감일
+    $S_DATE_FROM = addslashes($_GET['S_DATE_FROM']);    // 입찰기간(시작)
+    $S_DATE_TO = addslashes($_GET['S_DATE_TO']);        // 입찰기간(마감)
+    $S_COMP_TYPE = addslashes($_GET['S_COMP_TYPE']);    // 업체구분 -> ALL:전체, NTC_COMP:입찰공고업체, QTN_COMP:견적참여업체
+
+    $search_mode = clean_xss_tags($search_mode);
+    $SEND_KND_CD = clean_xss_tags($SEND_KND_CD);
+    $S_DATE_TYPE = clean_xss_tags($S_DATE_TYPE);
+    $S_DATE_FROM = clean_xss_tags($S_DATE_FROM);
+    $S_DATE_TO = clean_xss_tags($S_DATE_TO);    
+    $S_COMP_TYPE = clean_xss_tags($S_COMP_TYPE);
+
+    $S_DATE_FROM = str_replace('-', '', $S_DATE_FROM);
+    $S_DATE_TO   = str_replace('-', '', $S_DATE_TO);
+
+    if(!$SEND_KND_CD)
+        $SEND_KND_CD = "A";
+    if(!$S_DATE_TYPE)
+        $S_DATE_TYPE = "BID_NTC_YMD";
+    if(!$S_DATE_FROM)  
+        $S_DATE_FROM = "20160101";
+    if(!$S_DATE_TO)  
+        $S_DATE_TO = date("Ymd");
+    if(!$S_COMP_TYPE)
+        $S_COMP_TYPE = "ALL";
+    
+    $query_1 ="";
+    $query_2 ="";
+    $query_3 ="";
+    $query_4 ="";
+    $query_5 ="";
+
+    /*  입찰업체 정보 */
+    if($S_COMP_TYPE != "QTN_COMP") {
+
+        $query_1 = "
+            A.COMP_CD AS NTC_COMP_CD
+            ,A.COMP_NM AS NTC_COMP_NM
+            ,A.NTC_PIC_NO
+            ,A.NTC_PIC_NM
+            ,C.MBM_EMAIL_ID AS NTC_PIC_EMAIL
+            ,C.HP_NO AS NTC_PIC_TELNO
+            ,IF(E.LOG_NO IS NULL, 'N', 'Y') AS NTC_SEND_YN
+            ,DATE_FORMAT(E.SEND_DT, '%Y-%m-%d') AS NTC_SEND_DT
+            ";
+    }
+
+    if($S_COMP_TYPE == "QTN_COMP") {
+        $query_1 = "
+            '' AS NTC_COMP_CD
+            ,'' AS NTC_COMP_NM
+            ,'' AS NTC_PIC_NO
+            ,'' AS NTC_PIC_NM
+            ,'' AS NTC_PIC_EMAIL
+            ,'' AS NTC_PIC_TELNO
+            ,'N' AS NTC_SEND_YN
+            ,'' AS NTC_SEND_DT
+    ";
+    }
+
+    /* 낙찰업체 정보 */
+    if($S_COMP_TYPE != "NTC_COMP") {
+        $query_2 = "
+            ,B.QTN_NO
+            ,B.COMP_CD AS QTN_COMP_CD
+            ,B.COMP_NM AS QTN_COMP_NM
+            ,B.QTN_PIC_NO
+            ,B.QTN_PIC_NM
+            ,D.MBM_EMAIL_ID AS QTN_PIC_EMAIL
+            ,D.HP_NO AS QTN_PIC_TELNO
+            ,IF(F.LOG_NO IS NULL, 'N', 'Y') AS QTN_SEND_YN
+            ,DATE_FORMAT(F.SEND_DT, '%Y-%m-%d') AS QTN_SEND_DT
+    ";
+
+        $query_3 = "
+            LEFT OUTER JOIN tbid_qtn_mst B ON B.NTC_NO = A.NTC_NO
+            LEFT OUTER JOIN tcmn_mbr_join D ON D.MBR_NO = B.QTN_PIC_NO
+            LEFT OUTER JOIN tbid_mail_log F ON F.REF_NO = B.QTN_NO AND F.REF_KND_CD = 'QTN'        
+    ";
+    }
+
+    if($S_COMP_TYPE == "NTC_COMP") {
+        $query_2 = "
+            ,'' AS QTN_NO
+            ,'' AS QTN_COMP_CD
+            ,'' AS QTN_COMP_NM
+            ,'' AS QTN_PIC_NO
+            ,'' AS QTN_PIC_NM
+            ,'' AS QTN_PIC_EMAIL
+            ,'' AS QTN_PIC_TELNO
+            ,'N' AS QTN_SEND_YN
+            ,'' AS QTN_SEND_DT
+    ";
+    }
+
+
+    if($S_DATE_TYPE == "BID_NTC_YMD") {
+        $query_4 =  " AND A.BID_NTC_YMD BETWEEN '{$S_DATE_FROM}' AND '{$S_DATE_TO}' ";
+    }
+    if($S_DATE_TYPE == "NTC_CLOSE_YMD") {
+        $query_4 =  " AND A.NTC_CLOSE_YMD BETWEEN '{$S_DATE_FROM}' AND '{$S_DATE_TO}' ";
+
+        if($S_DATE_TYPE != "NTC_COMP") {
+            $query_4 .= " AND B.QTN_YMD BETWEEN '{$S_DATE_FROM}' AND '{$S_DATE_TO}'  ";
+        }
+    }
+
+    if($SEND_KND_CD == "Y") {
+        $query_5 = " AND (A.NTC_SEND_YN = 'Y' OR A.QTN_SEND_YN = 'Y') ";
+    } else if ($SEND_KND_CD == "N") {
+        $query_5 = " AND (A.NTC_SEND_YN = 'N' OR A.QTN_SEND_YN = 'N') ";
+    }    
+    ###################################################################
+    $sql_count = "SELECT COUNT(*) AS cnt FROM ( 
+            SELECT A.NTC_NO, A.NTC_NM, DATE_FORMAT(A.NTC_BID_DT, '%Y-%m-%d') AS NTC_BID_DT, {$query_1} {$query_2}
+            FROM tbid_ntc_mst A LEFT OUTER JOIN tcmn_mbr_join C ON C.MBR_NO = A.NTC_PIC_NO 
+            LEFT OUTER JOIN tbid_mail_log E ON E.REF_NO = A.NTC_NO AND E.REF_KND_CD = 'NTC' {$query_3} WHERE 1=1 
+            {$query_4}) A, 
+            (SELECT @ROW_NUM:=0) B WHERE 1=1 {$query_5} ORDER BY A.NTC_NO, A.QTN_NO
+    ";
+    
+    $row = sql_fetch($sql_count);
+    $total_count = $row['cnt'];
+    
+    $pageNum = (int)$_GET['pageNum'];
+
+    if (!$pageNum) {
+        $rows = 10;
+    } else {
+        $rows = $pageNum;
+    }
+
+    $qstr = "search_mode=".$search_mode."&SEND_KND_CD=".$SEND_KND_CD."&S_DATE_TYPE=".$S_DATE_TYPE."&S_DATE_FROM=".$S_DATE_FROM."&S_DATE_TO=".$S_DATE_TO."&S_COMP_TYPE=".$S_COMP_TYPE."&pageNum=".$pageNum.$page;
+
+    $page = (int)$_GET['page'];
+
+    $total_page = ceil($total_count / $rows);  // 전체 페이지 계산
+    if ($page < 1) {
+        $page = 1;
+    } // 페이지가 없으면 첫 페이지 (1 페이지)
+    $from_record = ($page - 1) * $rows; // 시작 열을 구함
+
+    $sql = "
+        SELECT A.* FROM ( 
+            SELECT A.NTC_NO, A.NTC_NM, DATE_FORMAT(A.NTC_BID_DT, '%Y-%m-%d') AS NTC_BID_DT, {$query_1} {$query_2}
+            FROM tbid_ntc_mst A LEFT OUTER JOIN tcmn_mbr_join C ON C.MBR_NO = A.NTC_PIC_NO 
+            LEFT OUTER JOIN tbid_mail_log E ON E.REF_NO = A.NTC_NO AND E.REF_KND_CD = 'NTC' {$query_3} WHERE 1=1 
+            {$query_4}) A, 
+            (SELECT @ROW_NUM:=0) B WHERE 1=1  {$query_5} ORDER BY A.NTC_NO, A.QTN_NO LIMIT {$from_record}, {$rows}
+    ";
+    $result = sql_query($sql);
+?>
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <?php include_once ('./include/head.html'); ?>
+    </head>
+    <body class="fixed-left">
+        <!-- Begin page -->
+        <div id="wrapper">
+            <?php include_once ('./include/menu.html'); ?>
+            <div class="content-page">
+                <!-- Start content -->
+                <div class="content">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="card-box p-b-0">
+                                    <h5 class="m-b-10"><b>회원 검색</b></h5>
+                                    <hr class="m-t-0">
+                                    <div class="row">
+                                        <form class="form-horizontal group-border-dashed" method="get">
+                                            <INPUT type="hidden" name="search_mode" value="act">
+                                            <div class="col-sm-12">
+                                                <div class="row">
+                                                    <div class="col-sm-6">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-3 control-label">진행상태</label>
+                                                            <div class="col-sm-9">
+                                                                <div class="radio radio-inline">
+                                                                    <input type="radio" name="SEND_KND_CD" id="SEND_KND_CD1" value="A" <?php if($SEND_KND_CD == "A") echo "checked"; ?>>
+                                                                    <label for="SEND_KND_CD1"> 전체 </label>
+                                                                </div>
+                                                                <div class="radio radio-inline">
+                                                                    <input type="radio" name="SEND_KND_CD" id="SEND_KND_CD2" value="Y" <?php if($SEND_KND_CD == "Y") echo "checked"; ?>>
+                                                                    <label for="SEND_KND_CD2"> 전송 </label>
+                                                                </div>
+                                                                <div class="radio radio-inline">
+                                                                    <input type="radio" name="SEND_KND_CD" id="SEND_KND_CD3" value="N" <?php if($SEND_KND_CD == "N") echo "checked"; ?>>
+                                                                    <label for="SEND_KND_CD3"> 미전송 </label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-6">
+                                                        <div class="form-group">
+                                                            <label class="col-sm-2 control-label">업체구분</label>
+                                                            <div class="col-sm-10">
+                                                                <select class="form-control" name="S_COMP_TYPE" id="S_COMP_TYPE" >
+                                                                    <option value="ALL" <?php if($S_COMP_TYPE == "ALL") echo "selected"; ?>>전체</option>
+                                                                    <option value="NTC_COMP" <?php if($S_COMP_TYPE == "NTC_COMP") echo "selected"; ?>>입찰공고업체</option>
+                                                                    <option value="QTN_COMP" <?php if($S_COMP_TYPE == "QTN_COMP") echo "selected"; ?>>견적참여업체</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-sm-6">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-2 control-label">입찰기간</label>
+                                                        <div class="col-sm-10">
+                                                            <div class="form-inline">
+                                                                <select class="form-control" name="S_DATE_TYPE" id="S_DATE_TYPE" >
+                                                                    <option value="BID_NTC_YMD"  <?php if($S_DATE_TYPE == "BID_NTC_YMD") echo "selected"; ?>>입찰공고일</option>
+                                                                    <option value="QTN_YMD"  <?php if($S_DATE_TYPE == "QTN_YMD") echo "selected"; ?>>견적일자</option>
+                                                                    <option value="NTC_CLOSE_YMD"  <?php if($S_DATE_TYPE == "NTC_CLOSE_YMD") echo "selected"; ?>>입찰마감일</option>
+
+                                                                </select>
+                                                                <div class="input-daterange input-group" id="date-range">
+                                                                    <input type="text" class="form-control" name="S_DATE_FROM" id="S_DATE_FROM" value="<?php echo substr($S_DATE_FROM, 0, 4).'-'.substr($S_DATE_FROM, 4, 2).'-'.substr($S_DATE_FROM, 6, 2)?>" />
+                                                                    <span class="input-group-addon bg-primary b-0 text-white">~</span>
+                                                                    <input type="text" class="form-control" name="S_DATE_TO"  id="S_DATE_TO" value="<?php echo substr($S_DATE_TO, 0, 4).'-'.substr($S_DATE_TO, 4, 2).'-'.substr($S_DATE_TO, 6, 2)?>"/>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-sm-12">
+                                                    <div class="form-group">
+                                                        <div class="col-sm-offset-5 col-sm-7 m-t-15">
+                                                            <button type="submit" class="btn btn-primary waves-effect waves-light">검색</button>
+                                                            <button type="button" class="btn btn-inverse waves-effect m-l-5" onclick="location.href='mailList.html'">초기화</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end row -->
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="card-box p-b-0">
+                                    <div class="row m-b-10">
+                                            <h5 class="pull-left"><b>업체 목록</b><span class="text-muted font-13 m-l-15"> 검색결과 <span class="font-bold text-dark"><?php echo number_format($total_count)?></span> 건</span></h5>
+
+                                            <div class="form-group pull-right m-b-0">
+                                                <button type="button" onClick="javascript:sendMailModal();" class="btn btn-primary waves-effect">메일전송</button>
+                                            </div>
+                                    </div>
+                                    <hr class="m-t-0">
+                                    <div class="table-responsive tableSclroll">
+                                        <form name="fupdate" id="fupdate">
+                                            <table class="table table-bordered table-hover text-center">
+                                                <thead>
+                                                    <tr class="bg-lightdark">
+                                                        <th rowspan="2" class="text-center middle-align" width="50">순번</th>
+                                                        <th rowspan="2" class="text-center middle-align" width="100">업체선정일</th>
+                                                        <th rowspan="2" class="text-center middle-align">입찰공고번호</th>
+                                                        <th rowspan="2" class="text-center middle-align">입찰공고명</th>
+                                                        <th colspan="6" class="text-center">낙찰업체</th>
+                                                        <th colspan="6" class="text-center">입찰공고업체</th>
+                                                    </tr>
+                                                    <tr class="bg-lightdark">
+                                                        <th class="text-center" width="50">선택</th>
+                                                        <th class="text-center">업체명</th>
+                                                        <th class="text-center" width="110">담당자</th>
+                                                        <th class="text-center">Email</th>
+                                                        <th class="text-center" z="110">전화번호</th>
+                                                        <th class="text-center" width="110">메일전송일</th>
+                                                        <th class="text-center" width="50">선택</th>
+                                                        <th class="text-center">업체명</th>
+                                                        <th class="text-center" width="110">담당자</th>
+                                                        <th class="text-center">Email</th>
+                                                        <th class="text-center" width="110">전화번호</th>
+                                                        <th class="text-center" width="100">메일전송일</th>
+                                                    </tr>
+                                                </thead>
+                                            <?php for ($i=0; $row=sql_fetch_array($result); $i++) {
+                                                $num = ($page-1) * $rows + $i + 1;                                                
+                                                $NTC_BID_DT = $row['NTC_BID_DT'];  // 업체선정일
+                                                $NTC_NO = $row['NTC_NO'];  // 입찰공고번호
+                                                $NTC_NM = $row['NTC_NM'];  // 입찰공고명                                                
+                                                $QTN_COMP_NM = $row['QTN_COMP_NM'];  // 업체명
+                                                $QTN_PIC_NM = $row['QTN_PIC_NM'];  // 담당자
+                                                $QTN_PIC_EMAIL = $row['QTN_PIC_EMAIL'];  // email
+                                                $QTN_PIC_TELNO = $row['QTN_PIC_TELNO'];  // 전화번호
+                                                $QTN_SEND_DT = $row['QTN_SEND_DT'];  // 메일전송일
+                                                $NTC_COMP_NM = $row['NTC_COMP_NM'];  // 업체명
+                                                $NTC_PIC_NM = $row['NTC_PIC_NM'];  // 담당자
+                                                $NTC_PIC_EMAIL = $row['NTC_PIC_EMAIL'];  // email
+                                                $NTC_PIC_TELNO = $row['NTC_PIC_TELNO'];  // 전화번호
+                                                $NTC_SEND_DT = $row['NTC_SEND_DT'];  // 메일전송일
+                                                $QTN_NO = $row['QTN_NO'];  // 견적번호
+                                            ?>
+                                                <tbody>
+                                                    <tr>
+                                                        <td scope="row"><?php echo $num?></td>
+                                                        <td><?php echo $NTC_BID_DT?></td>
+                                                        <td><?php echo $NTC_NO?></td>
+                                                        <td><?php echo $NTC_NM?></td>
+                                                        <td><input type="checkbox" name="chk[]" value="<?php echo $QTN_NO?>" /></td>
+                                                        <td><?php echo $QTN_COMP_NM?></td>
+                                                        <td><?php echo $QTN_PIC_NM?></td>
+                                                        <td><?php echo $QTN_PIC_EMAIL?></td>
+                                                        <td><?php echo $QTN_PIC_TELNO?></td>
+                                                        <td><?php echo $QTN_SEND_DT?></td>
+                                                        <td><input type="checkbox" name="chk[]" value="<?php echo $NTC_NO?>" /></td>
+                                                        <td><?php echo $NTC_COMP_NM?></td>
+                                                        <td><?php echo $NTC_PIC_NM?></td>
+                                                        <td><?php echo $NTC_PIC_EMAIL?></td>
+                                                        <td><?php echo $NTC_PIC_TELNO?></td>
+                                                        <td><?php echo $NTC_SEND_DT?></td>
+                                                    </tr>
+                                            <?php } ?>
+                                                </tbody>
+                                            </table>
+                                        </form>
+                                    </div>
+                                    <div class="clearfix">
+                                        <div class="pull-right">
+                                            <select class="form-control" name="pageNum" id="pageNum" onchange="viewCount(this.options[this.selectedIndex].value)">
+                                                <option value="10" <?php if($pageNum == '10') echo "selected"; ?>>10개 보기</option>
+                                                <option value="25" <?php if($pageNum == '25') echo "selected"; ?>>25개 보기</option>
+                                                <option value="50" <?php if($pageNum == '50') echo "selected"; ?>>50개 보기</option>
+                                                <option value="100" <?php if($pageNum == '100') echo "selected"; ?>>100개 보기</option>
+                                                <option value="<?php echo $total_member?>" <?php if($pageNum == $total_member) echo "selected"; ?>>전체보기</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <?php echo get_paging2(5, $page, $total_page, $_SERVER['SCRIPT_NAME'].'?'.$qstr.'&amp;page='); ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end row -->
+
+                        <!--안내메일전송 -->
+                        <div id="panel-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+                            <div class="modal-dialog">
+                                <div class="modal-content p-0 b-0">                                    
+                                    <div class="panel panel-color panel-inverse">
+                                        <div class="panel-heading">
+                                            <button type="button" class="close m-t-5" data-dismiss="modal" aria-hidden="true">×</button>
+                                            <h3 class="panel-title">안내메일전송</h3>
+                                        </div>
+                                        <div class="panel-body">
+                                            <div class="row">
+                                                <div class="col-sm-12">
+                                                    <form class="form-horizontal" role="form">
+                                                        <input type="hidden" id="sendMails" value="">
+                                                        <input type="hidden" id="NtcQtnNoList" value="">
+                                                        <div class="form-group">
+                                                            <label class="col-md-2 control-label">수신자</label>
+                                                            <div class="col-md-10">
+                                                                <textarea class="form-control" rows="3" id="sendNames" placeholder="업체명1, 업체명2, 업체명3, 업체명4," disabled></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label class="col-md-2 control-label">내용</label>
+                                                            <div class="col-md-10">
+                                                                <textarea class="form-control" rows="8" id="mail_content"></textarea>
+                                                            </div>
+                                                        </div>
+                                                    </form>
+                                                </div><!-- end col -->
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="text-center">
+                                                    <button type="button" class="btn btn-inverse waves-effect waves-light m-t-10" data-dismiss="modal" aria-hidden="true">
+                                                        취소
+                                                    </button>
+                                                    <button type="button" onClick="javascript:sendMail();" class="btn btn-primary waves-effect waves-light m-t-10">
+                                                        전송
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>                                    
+                                </div><!-- /.modal-content -->
+                            </div><!-- /.modal-dialog -->
+                        </div><!-- /.modal -->
+
+<style>
+    .tableSclroll{
+        width: 100%
+        overflow: auto;
+    }
+    .tableSclroll table{
+        width: 1960px;        
+    }
+</style>
+<script type='text/javascript'>
+    $(document).ready(function() {
+        $.fn.datepicker.dates['kr'] = {
+             days: ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"],
+             daysShort: ["일", "월", "화", "수", "목", "금", "토", "일"],
+             daysMin: ["일", "월", "화", "수", "목", "금", "토", "일"],
+             months: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
+             monthsShort: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
+        };
+    });
+    
+    function viewCount(val) {
+        self.location = "<?php echo $_SERVER[PHP_SELF]?>?<?php 
+        $pageNumIndex = strpos($qstr, "&pageNum=");
+        echo substr($qstr, 0, $pageNumIndex);?>&pageNum=" + val;
+    }
+
+    function validateEmail(email) {
+        var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return re.test(email);
+    }
+
+    function sendMailModal() {
+        if (!is_checked("chk[]")) {
+            swal("메일 보낼 항목을 하나 이상 선택하세요.");
+            return false;
+        }
+                
+        var NTC_QTN_NO_LIST = [];
+        var MAIL_LIST = [];
+        var SEND_NAME_LIST = [];
+        
+        $("input[name='chk[]']:checked").each(function(i) {
+            var company_name_tag = $(this).parent().next();
+            var ntc_qtn_no = $(this).val();            
+            var email_tag = $(this).parent().next().next().next();
+
+            if(validateEmail(email_tag.text())) {
+                SEND_NAME_LIST.push(company_name_tag.text());
+                NTC_QTN_NO_LIST.push(ntc_qtn_no);                
+                MAIL_LIST.push(email_tag.text());                
+            }
+        }); 
+
+        if(MAIL_LIST.length < 1) {
+           swal("메일 보낼 항목을 하나 이상 선택하세요.");
+            return false; 
+        }
+
+        $("#NtcQtnNoList").val(JSON.stringify(NTC_QTN_NO_LIST));
+        $("#sendMails").val(MAIL_LIST.join(','));
+        $("#sendNames").text(SEND_NAME_LIST.join(','));
+
+        $("#panel-modal").modal();
+    }
+
+    function sendMail() {        
+        $.ajaxSettings.traditional = true;
+
+        var mail_content = $("#mail_content").val();
+        if(!mail_content) {
+            swal("내용을 입력해주세요","","info");
+            return false;
+        }
+
+        $("#panel-modal").css("display", "none");
+
+        var sendMails = $("#sendMails").val();
+        var NtcQtnNoList = $("#NtcQtnNoList").val();
+        var sendContents = mail_content;
+        
+        $.ajax({
+            type: 'POST',
+            url: '<?php echo RT_PATH?>/admin/php/ajax_send_mail.php',
+            data: {
+                "sendMails": sendMails,
+                "sendContents": sendContents,
+                "NtcQtnNoList": NtcQtnNoList,
+                "type" : "ajax"
+            },
+            dataType: 'json',
+            success: function (data) {
+                var str_data = data.split('|');
+                var rslt = str_data[0];
+                var msg = str_data[1];
+
+                if (rslt == 'ok') {
+                    swal({
+                        title: "메일전송 완료",
+                        text: msg,                        
+                        icon: "success",
+                    }).then(function () {
+                            window.location.href = "mailList.html";
+                        });
+                } else {
+                    swal({
+                        title: "메일전송 실패",
+                        text: msg,
+                        icon: "warning",
+                    }).then(function () {
+                            window.location.href = "mailList.html";
+                        });
+                }
+
+            },  //success
+            error: function (request,status,error) {
+                alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+            } //error
+        });//end ajax        
+    }
+</script>
+
+<?php
+    include_once('./include/footer.html');
+?>

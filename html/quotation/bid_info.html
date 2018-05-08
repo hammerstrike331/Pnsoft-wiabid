@@ -1,0 +1,274 @@
+<?php
+    session_start();
+    include_once ('../../admin/lib/common.php');
+    include_once ('../../include/html_head.html');
+
+    //자기 URI
+    $self_path = $_SERVER['REQUEST_URI'];
+
+    // 검색 옵션
+    $CRG_TYP_CD = addslashes($_GET['CRG_TYP_CD']);  // ALL, FCL, LCL, BULK, AIR
+    $NTC_STS_CD = addslashes($_GET['NTC_STS_CD']);  //  마감, 진행, 미마감, 완료, 낙찰
+    $NTC_CLS_CD = addslashes($_GET['NTC_CLS_CD']);  //  일반, 정기
+    $SA_CLS_CD  = addslashes($_GET['SA_CLS_CD']);
+    $sKEY = addslashes($_GET['sKEY']);              // Search kEY
+    $searchMODE = addslashes($_GET['searchMODE']);  // Search MODE
+    $orderSORT = addslashes($_GET['SORT']);         // 정렬
+    
+    if(!$NTC_CLS_CD) {
+        $NTC_CLS_CD = "SPOT";
+    }
+
+    //  일반쿼리    
+    $sql_common = "FROM `tbid_ntc_mst` A LEFT JOIN `tbid_ntc_crgo` B ON A.NTC_NO = B.NTC_NO ";
+    $sql_search = " WHERE  A.NTC_CLS_CD = '{$NTC_CLS_CD}'";
+
+    $SORT = "&SORT=";
+    if(!$orderSORT) {
+        $sql_order = " ORDER BY INS_DT DESC, NTC_NO DESC ";
+        $order = "1";        
+    } else if($orderSORT == 'BID') {
+        $sql_order = " ORDER BY BID_NTC_YMD DESC, NTC_NO DESC ";
+        $order = "2";
+        $SORT = "&SORT=BID";
+    } else if($orderSORT == 'CNT') {
+        $sql_order = " ORDER BY ROUTE_CNT DESC, NTC_NO DESC ";
+        $order = "3";
+        $SORT = "&SORT=CNT";
+    }
+
+
+    $qstr = "searchMODE=".$searchMODE."&NTC_CLS_CD=".$NTC_CLS_CD."&CRG_TYP_CD=".$CRG_TYP_CD."&NTC_STS_CD=".$NTC_STS_CD.$page;
+
+    #################################################################################################
+    if($searchMODE == "act") {
+
+        if($CRG_TYP_CD) {
+            $sql_search .= " AND A.CRG_TYP_CD = '{$CRG_TYP_CD}' ";
+        }
+
+        if($NTC_STS_CD) {
+            $sql_search .= " AND A.NTC_STS_CD = '{$NTC_STS_CD}' ";
+        }
+
+        if($sKEY) {
+            //$sql_search .= " AND  ( NTC_NM || QTN_NM || NTC_NO || QTN_NO ) like '%{$sKEY}%'";
+            $sql_search .= " AND  A.NTC_NO like '%{$sKEY}%'";
+        }
+    }
+    #################################################################################################
+
+    //검색
+    $sql = "SELECT COUNT(*) AS cnt {$sql_common} {$sql_search} ";
+    $row = sql_fetch($sql);
+    $total_count = $row['cnt'];
+
+    /****************page num*********************/
+    $pageNum = (int)$_GET['pageNum'];
+
+    if(!$pageNum) {
+        $rows = 10;
+    } else {
+        $rows = $pageNum;
+    }
+
+    $page = (int)$_GET['page'];
+
+    $total_page  = ceil($total_count / $rows);  // 전체 페이지 계산
+    if ($page < 1) { $page = 1; } // 페이지가 없으면 첫 페이지 (1 페이지)
+    $from_record = ($page - 1) * $rows; // 시작 열을 구함
+
+    $list_page_rows = 10;
+    //순번
+    $list_num = $total_count - ($page - 1) * $list_page_rows;
+    #################################################################################################
+
+    $sql_bid ="SELECT
+        A.NTC_NO, 
+        A.NTC_NM,
+        A.NTC_CLS_CD,
+        A.COMP_CD,
+        A.COMP_NM,
+        B.POL_CD,
+        B.POD_CD,
+        SUBSTRING(B.POL_CD,1,2) AS POL_FLAG,
+        SUBSTRING(B.POD_CD,1,2) AS POD_FLAG,    
+        (SELECT LOC_NM FROM tcmn_unloc_code WHERE LOC_CD = B.POL_CD AND SA_CLS_CD = A.SA_CLS_CD) AS POL_NM,
+        (SELECT LOC_NM FROM tcmn_unloc_code WHERE LOC_CD = B.POD_CD AND SA_CLS_CD = A.SA_CLS_CD) AS POD_NM,
+        (SELECT COUNT(*) AS cnt FROM `tbid_qtn_mst` WHERE NTC_NO = A.NTC_NO) AS ROUTE_CNT,
+        A.*
+    ";
+
+    $sql_bid .= " {$sql_common} {$sql_search} {$sql_order} limit {$from_record}, {$rows} ";
+
+    $result = sql_query($sql_bid);
+
+    // echo $sql_bid;
+?>
+<div class="container">
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><a href="/index.html"><img src="../../img/icon/icon-home.png" alt="" width="16"></a></li>
+                    <li>Quotation</li>
+                    <li class="active">입찰정보</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="jumbotron">
+            <h1 class="mb20">입찰정보</h1>
+            <p> 비교견적을 통해 해운과 항공 수출입 운송료를 절감하고 가격 경쟁력을 확보할 수 있습니다.</p>
+            <a href="bid_regi.html" class=""><div class="btn mt50">견적요청 <span class="ml5"><img src="../../img/icon/icon-arrow-Lb.png" alt=""></span></div></a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="page-content">
+            <div class="row">
+                <div class="col-12">
+                    <div id="main-tab">
+                        <ul class="tabs clearfix">
+                            <li <?php if($NTC_CLS_CD=="SPOT"){ ?> class="active" <?php }?> rel="tab1" onclick="window.location.href='<?php echo RT_PATH;?>/html/quotation/bid_info.html?NTC_CLS_CD=SPOT';">일반화물</li>
+                            <li <?php if($NTC_CLS_CD=="RGLR"){ ?> class="active" <?php }?> rel="tab2" onclick="window.location.href='<?php echo RT_PATH;?>/html/quotation/bid_info.html?NTC_CLS_CD=RGLR';">정기화물</li>
+                        </ul>
+
+                        <div class="tab_container mt20 clearfix">
+                            <form name="search" id="search" method="get" action="<?php echo $self_path?>">
+                                <input type="hidden" name="searchMODE" value="act">
+                                <input type="hidden" name="order" value="<?php echo $order?>">
+                                <input type="hidden" name="NTC_CLS_CD" value="<?php echo $NTC_CLS_CD?>">
+                                <input type="hidden" name="SA_CLS_CD" value="<?php echo $SA_CLS_CD?>">
+                                <div id="tab1" class="tab_content">
+
+                                    <?php if($NTC_CLS_CD == "SPOT") { ?>
+                                    <div class="row info-title">
+                                        <div class="col-4">
+                                            <label><input type="radio" name="CRG_TYP_CD" value=""<?php if($CRG_TYP_CD==""){?>checked<?php }?>>ALL</label>
+                                            <label><input type="radio" name="CRG_TYP_CD" value="FCL" <?php if($CRG_TYP_CD=="FCL"){?>checked<?php }?>>FCL</label>
+                                            <label><input type="radio" name="CRG_TYP_CD" value="LCL"<?php if($CRG_TYP_CD=="LCL"){?>checked<?php }?>>LCL</label>
+                                            <label><input type="radio" name="CRG_TYP_CD" value="BLK"<?php if($CRG_TYP_CD=="BLK"){?>checked<?php }?>>BULK</label>
+                                            <label><input type="radio" name="CRG_TYP_CD" value="AIR"<?php if($CRG_TYP_CD=="AIR"){?>checked<?php }?>>AIR</label>
+                                        </div>
+                                        <div class="col-2">
+                                            <select class="input" name="NTC_STS_CD" id="NTC_STS_CD" >
+                                                <option value="" <?php if($NTC_STS_CD == "") echo "selected"; ?>>전체</option>
+                                                <option value="00" <?php if($NTC_STS_CD == "00") echo "selected"; ?>>미제출</option>
+                                                <option value="20" <?php if($NTC_STS_CD == "20") echo "selected"; ?>>검토중</option>
+                                                <option value="30" <?php if($NTC_STS_CD == "30") echo "selected"; ?>>진행중</option>
+                                                <option value="40" <?php if($NTC_STS_CD == "40") echo "selected"; ?>>마감</option>
+                                                <option value="50" <?php if($NTC_STS_CD == "50") echo "selected"; ?>>완료</option>
+                                                <option value="99" <?php if($NTC_STS_CD == "99") echo "selected"; ?>>낙찰</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-4">
+                                            <input type="text" name="sKEY" class="input" placeholder="공고명, 견적명, 공고번호, 견적번호" value="<?php echo $sKEY?>">
+                                        </div>
+                                        <div class="col-2 inner-right">
+                                            <button type="submit" class="btn caption xs-col-12">조회</button>
+                                        </div>
+                                    </div>
+                                    <?php } else { ?>
+                                        <div class="row info-title">
+                                            <div class="col-4">
+                                                <label><input type="radio" name="CRG_TYP_CD" value=""<?php if($CRG_TYP_CD=="") echo "checked";?>>ALL</label>
+                                                <label><input type="radio" name="CRG_TYP_CD" value="SEA" <?php if($CRG_TYP_CD=="SEA") echo "checked";?>>SEA</label>
+                                                <label><input type="radio" name="CRG_TYP_CD" value="AIR"<?php if($CRG_TYP_CD=="AIR") echo "checked";?>>AIR</label>
+                                            </div>
+                                            <div class="col-2">
+                                                <select class="input" name="NTC_STS_CD" id="NTC_STS_CD" >
+                                                    <option value="" <?php if($NTC_STS_CD == "") echo "selected"; ?>>전체</option>
+                                                    <option value="00" <?php if($NTC_STS_CD == "00") echo "selected"; ?>>미제출</option>
+                                                    <option value="20" <?php if($NTC_STS_CD == "20") echo "selected"; ?>>검토중</option>
+                                                    <option value="30" <?php if($NTC_STS_CD == "30") echo "selected"; ?>>진행중</option>
+                                                    <option value="40" <?php if($NTC_STS_CD == "40") echo "selected"; ?>>마감</option>
+                                                    <option value="50" <?php if($NTC_STS_CD == "50") echo "selected"; ?>>완료</option>
+                                                    <option value="99" <?php if($NTC_STS_CD == "99") echo "selected"; ?>>낙찰</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-4">
+                                                <input type="text" name="sKEY" class="input" placeholder="공고명, 견적명, 공고번호, 견적번호" value="<?php echo $sKEY?>">
+                                            </div>
+                                            <div class="col-2 inner-right">
+                                                <button type="submit" class="btn caption xs-col-12">조회</button>
+                                            </div>
+                                        </div>
+                                    <?php  } ?>
+                            </form>                            
+                            <div class="row mb10 relative">
+                                <ul class="info-value">
+                                    <li <?php if($order=="1"){?> class="active cursor" <?php } else {?> class="cursor"<?php }?> onclick="window.location.href='<?php echo RT_PATH;?>/html/quotation/bid_info.html?<?php echo $qstr?>&SORT='">최근순</li>
+                                    <li <?php if($order=="2"){?> class="active cursor" <?php } else {?> class="cursor"<?php }?> onclick="window.location.href='<?php echo RT_PATH;?>/html/quotation/bid_info.html?<?php echo $qstr?>&SORT=BID'">마감일순</li>
+                                    <li <?php if($order=="3"){?> class="active cursor" <?php } else {?> class="cursor"<?php }?> onclick="window.location.href='<?php echo RT_PATH;?>/html/quotation/bid_info.html?<?php echo $qstr?>&SORT=CNT'">응찰자순</li>
+                                </ul>
+                            </div>
+
+                            <?php 
+                            for ($i=0; $row=sql_fetch_array($result); $i++) {
+                                $num = $list_num - $i;
+                            ?>
+                                <div class="row bg-white mb20">
+                                    <div class="width70 border-r clearfix">
+                                        <div class="d-cell bg-gray">
+                                            <img src="../../img/icon/icon-<?php echo $row['CRG_TYP_CD']?>.png" alt="" class="icon-d-cell">
+                                        </div>
+                                        <div class="d-cell ml30 height100 ">
+                                            <?php if($NTC_CLS_CD == "SPOT") { ?>
+                                                <a href="bid_view.html?pid=<?php echo $row['NTC_NO']?>"><p><?php echo $row['NTC_NM']?></p></a>
+                                            <?php } else { ?>
+                                                <a href="bid_view_fix.html?pid=<?php echo $row['NTC_NO']?>"><p><?php echo $row['NTC_NM']?></p></a>
+                                            <?php }?>
+                                            <div class="row">
+                                                <div class="width320">
+                                                    <img src="../../img/icon/<?php echo $row['POL_FLAG']?>.png" width="28" alt="">
+                                                    <span> <?php if(strlen($row['POL_NM']) > 38) echo substr($row['POL_NM'], 0, 38)."..."; else echo $row['POL_NM'];?></span>
+                                                </div>
+                                                <div class="width320">
+                                                    <img src="../../img/icon/<?php echo $row['POD_FLAG']?>.png" width="28" alt="">
+                                                    <span> <?php if(strlen($row['POD_NM']) > 40) echo substr($row['POD_NM'], 0, 40)."..."; else echo $row['POD_NM'];?></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="width30 clearfix">
+                                        <div class="row l-height100 text-center">
+                                            <div class="width33 border-r">
+                                                <?php echo substr($row[NTC_CLOSE_YMD],0,4)."-".substr($row[NTC_CLOSE_YMD],4,2)."-".substr($row[NTC_CLOSE_YMD],6,2)?>
+                                            </div>
+                                            <div class="width33 border-r <?php if($row[NTC_CLOSE_YMD]>date('Ymd')){?> text-primary<?php }?>">
+                                                <?php if($row[NTC_CLOSE_YMD]<=date('Ymd')){?>입찰마감<?php }else{ ?>
+                                                <?php echo substr($row[NTC_CLOSE_YMD],4,2)?>월 <?php echo substr($row[NTC_CLOSE_YMD],6,2)?>일 마감<?php }?>
+                                            </div>
+                                            <div class="width33 <?php if($row[NTC_CLOSE_YMD]>date('Ymd')){?> text-primary<?php }?>">
+                                                <img src="../../img/icon/icon-user.png" alt="" class="icon-user"><?php echo number_format($row['ROUTE_CNT'])?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php }?>
+
+                            <div class="row text-center mt50">
+                                <div class="pagination">
+                                        <?php echo get_paging3(5, $page, $total_page, $_SERVER['SCRIPT_NAME'].'?'.$qstr.$SORT); ?>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- #tab2 -->
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function search(Join){
+        document.getElementById('search').submit();
+        return false;
+    }
+</script>
+
+<?php
+    include_once ('../../include/html_foot.html');
+?>
+

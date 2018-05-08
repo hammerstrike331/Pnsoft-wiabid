@@ -1,0 +1,445 @@
+<?php 
+session_start();
+include_once('lib/common.php');
+
+// 관리자 세션 확인
+if(!isset($_SESSION['ADMIN_GRPNAME'])) {
+    alertMove('로그인 후 이용해 주세요', "index.html");
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <?php 
+    include_once ('./include/head.html');
+    ?>
+
+</head>
+<body class="fixed-left">
+
+<!-- Begin page -->
+<div id="wrapper">
+
+    <?php 
+    include_once ('./include/menu.html');
+    ?>
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+<?php 
+//  일반쿼리
+$sql_common = " from `tcmn_faq_code` ";
+$sql_search = " where (1) ";
+$sql_order = " order by FAQ_NO desc ";
+
+// 검색 옵션
+$faq_typ_cd = addslashes($_GET['faq_typ_cd']);
+    $use_yn = addslashes($_GET['use_yn']);
+
+    $faq_typ_cd = clean_xss_tags($faq_typ_cd);
+    $use_yn = clean_xss_tags($use_yn);
+
+    if($faq_typ_cd) {
+        $sql_search .= " and `faq_typ_cd` = '{$faq_typ_cd}'";
+    }
+
+    if($use_yn) {
+        $sql_search .= " and `use_yn` = '{$use_yn}'";
+    }
+
+    $sql1 = "select count(FAQ_NO) as cnt {$sql_common}";
+    $row1 = sql_fetch($sql1);
+    $total_member = $row1['cnt'];
+
+
+    $sql = "select count(*) as cnt {$sql_common} {$sql_search} ";
+    $row = sql_fetch($sql);
+    $total_count = $row['cnt'];
+
+    $pageNum = (int)$_GET['pageNum'];
+
+    if(!$pageNum) {
+        $rows = 10;
+    } else {
+        $rows = $pageNum;
+    }
+
+    $qstr = "faq_typ_cd=".$faq_typ_cd."&use_yn=".$use_yn."&pageNum=".$pageNum."&page=".$page;
+
+    $page = (int)$_GET['page'];
+
+    $total_page  = ceil($total_count / $rows);  // 전체 페이지 계산
+    if ($page < 1) { $page = 1; } // 페이지가 없으면 첫 페이지 (1 페이지)
+    $from_record = ($page - 1) * $rows; // 시작 열을 구함
+
+    $list_page_rows = 10;
+    //순번
+    $list_num = $total_count - ($page - 1) * $list_page_rows;
+
+    $sql = " select * {$sql_common} {$sql_search} {$sql_order} limit {$from_record}, {$rows} ";
+    $result = sql_query($sql);
+
+    ?>
+    <div class="content-page">
+        <!-- Start content -->
+        <div class="content">
+            <div class="container">
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card-box p-b-0">
+                            <h5 class="m-b-10"><b>FAQ 검색</b></h5>
+                            <hr class="m-t-0">
+                            <div class="row">
+
+                                <form class="form-horizontal group-border-dashed" action="<?php echo $_SERVER[PHP_SELF]?>">
+                                    <div class="col-sm-12">
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">질문유형</label>
+                                                    <div class="col-sm-5">
+                                                        <select name="faq_typ_cd" id="faq_typ_cd" class="form-control input-sm">
+                                                            <option value="">전체</option>
+                                                            <option value="01" <?php  if($_GET['faq_typ_cd']=='01') echo "selected"; ?>>일반질문</option>
+                                                            <option value="02" <?php  if($_GET['faq_typ_cd']=='02') echo "selected"; ?>>입찰공고 질문</option>
+                                                            <option value="03" <?php  if($_GET['faq_typ_cd']=='03') echo "selected"; ?>>견적작성 질문</option>
+                                                            <option value="04" <?php  if($_GET['faq_typ_cd']=='04') echo "selected"; ?>>전문포워더 질문</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">사용여부</label>
+                                                    <div class="col-sm-5">
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" name="use_yn" id="use_yn" value="" <?php  if(!$_GET['use_yn']) echo "checked"; ?>>
+                                                            <label for="use_yn"> 전체 </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" name="use_yn" id="use_yn1" value="Y" <?php  if($_GET['use_yn']=='Y') echo "checked"; ?>>
+                                                            <label for="use_yn1"> 사용 </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" name="use_yn" id="use_yn2" value="N" <?php  if($_GET['use_yn']=='N') echo "checked"; ?>>
+                                                            <label for="use_yn2"> 사용안함 </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="form-group">
+                                                    <div class="col-sm-offset-5 col-sm-7 m-t-15">
+                                                        <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                                            검색
+                                                        </button>
+                                                        <button type="button" class="btn btn-inverse waves-effect m-l-5" onclick="location.href='manageFAQ.html'">
+                                                            초기화
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+                <?php   //echo "<p>". $sql ."<p>";  ?>
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card-box p-b-0">
+
+                            <form name="fupdate" id="fupdate" method="post" >
+                                <input type="hidden" name="no" value="">
+                            <div class="row m-b-10">
+                                <div class="col-lg-12">
+                                    <h5 class="pull-left"><b>FAQ 검색</b><span class="text-muted font-13 m-l-15"> 검색결과 <span class="font-bold text-dark"><?php echo number_format($total_count)?></span> 건</span></h5>
+                                    <div class="form-group pull-right m-b-0">
+                                        <button type="button" id="btn_update" class="btn btn-warning waves-effect" onclick="faq_update();" >수정</button>
+                                        <button type="button" id="btn_delete" class="btn btn-primary waves-effect" onclick="faq_delete();" >삭제</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="m-t-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover text-center middle">
+                                    <thead>
+                                    <tr class="bg-lightdark">
+                                        <th class="text-center" width="40">
+                                            <!-- <input type="checkbox" name="chkall" value="1" id="chkall" onclick="check_all(this.form)"> -->
+                                        </th>
+                                        <th class="text-center" width="80">NO</th>
+                                        <th class="text-center" width="150">질문유형</th>
+                                        <th class="text-center">질문</th>
+                                        <th class="text-center" width="200">사용여부</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php 
+                                    for ($i=0; $row=sql_fetch_array($result); $i++) {
+                                        $num = $list_num - $i;
+
+                                        $faq_no = $row['FAQ_NO'];
+                                        $qst_desc = $row['QST_DESC'];
+                                        $ask_desc = $row['ASK_DESC'];
+
+                                        if($row['FAQ_TYP_CD'] == '01')  $faq_typ_cd = '일반질문';
+                                        if($row['FAQ_TYP_CD'] == '02')  $faq_typ_cd = '입찰공고';
+                                        if($row['FAQ_TYP_CD'] == '03')  $faq_typ_cd = '견적작성';
+                                        if($row['FAQ_TYP_CD'] == '04')  $faq_typ_cd = '전문포워더';
+                                        if($row['FAQ_TYP_CD'] == '05')  $faq_typ_cd = '관리자';
+
+                                        $use_yn = $row['USE_YN'];
+
+                                    ?>
+                                    <tr>
+                                        <td scope="row" class="sel">
+                                            <label for="chk_<?php echo $i; ?>" class="sound_only"></label>
+                                            <input type="radio" name="select" value="<?php echo $faq_no?>" id="chk_<?php echo $i ?>">
+                                        </td>
+                                        <td><?php echo $num?></td>
+                                        <td><?php echo $faq_typ_cd?></td>
+                                        <td class="text-primary"><?php echo $qst_desc?></td>
+                                        <td class="enable">
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="USE_YN<?php echo $row[FAQ_NO]?>" value="Y" name="<?php echo $row[FAQ_NO]?>" <?php  if($row[USE_YN] == 'Y') echo "checked"; ?>>
+                                                <label for="USE_YN<?php echo $row[FAQ_NO]?>"> 허용</label>
+                                            </div>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="DISP_YN_<?php echo $row[FAQ_NO]?>" value="N" name="<?php echo $row[FAQ_NO]?>" <?php  if($row[USE_YN] == 'N') echo "checked"; ?>>
+                                                <label for="DISP_YN_<?php echo $row[FAQ_NO]?>"> 허용안함 </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?php  } ?>
+                                    </tbody>
+                                </table>
+                                </form>
+                            </div>
+                            <div class="clearfix">
+                                <div class="pull-right">
+                                    <select class="form-control" size="1" name="pageNum" id="pageNum" onchange="viewCount(this.options[this.selectedIndex].value)">
+                                        <option <?php  if($pageNum=='10') echo "selected"; ?>>10</option>
+                                        <option <?php  if($pageNum=='25') echo "selected"; ?>>25</option>
+                                        <option <?php  if($pageNum=='50') echo "selected"; ?>>50</option>
+                                        <option <?php  if($pageNum=='100')  echo "selected"; ?>>100</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <?php  echo get_paging2(5, $page, $total_page, $_SERVER['SCRIPT_NAME'].'?'.$qstr.'&amp;page='); ?>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+
+<script type="text/javascript">
+
+    function faq_update(f)
+    {
+        var f = document.fupdate;
+
+        var checkboxValues = $("td.sel input[type=radio]:checked").val();
+        
+        if (!checkboxValues) {
+            swal("수정 하실 항목을 하나 이상 선택하세요.");
+            return false;
+        }
+
+        $("input[name=no]").val(checkboxValues);
+        f.action="<?php echo RT_PATH; ?>/admin/update_FAQ.html";
+        
+        f.submit();
+
+  /*
+
+        $.ajaxSettings.traditional = true;
+
+        var chk_array = new Array;
+        $("input[name='chk[]']:checked").each(function() {
+            chk_array.push($(this).val());
+        });
+
+        var useyn_array = new Array;
+        for(var i=0; i< ; i++) {
+            $("input[name='use_yn[i]']:checked").each(function(){
+                useyn_array.push($(this).val());
+            });
+        }
+
+        //alert(useyn_array);
+
+     // object를 string형태로 변환
+        objData1 = JSON.stringify(chk_array);
+        objData2 = JSON.stringify(useyn_array);
+
+        alert(useyn_array);
+
+        swal({
+            title: "사용여부 수정",
+            text: "사용여부 수정을 하시겠습니까?",
+            icon: "warning",
+            buttons: ["취소", "수정"],
+            dangerMode: true,
+        }) .then(function(result) {
+            if (result) {
+
+                $.ajax({
+                    type: 'POST',
+                    url: './php/ajax_update_faq.php',
+                    data: {
+                        "objData1": chk_array,
+                        "objData2": useyn_array
+                    },
+                    //dataType: 'json',
+                    success: function (data) {
+                        var str_data = data.split('|');
+                        var rslt = str_data[0];
+                        var msg = str_data[1];
+
+                        if (rslt == 'ok') {
+                            swal({
+                                title: "사용중지 완료",
+                                //text: msg,
+                                text: data,
+                                icon: "success",
+                            })
+                                .then(function () {
+                                    window.location.href = "manageFAQ.html";
+                                });
+                        } else {
+                            swal({
+                                title: "사용중지 실패",
+                                //text: msg,
+                                text: data,
+                                icon: "warning",
+                            })
+                                .then(function () {
+                                    window.location.href = "manageFAQ.html";
+                                });
+                        }
+
+                    },  //success
+                    error: function (request,status,error) {
+                        alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                    } //error
+
+                });    //end ajax
+
+            } else {
+                swal({
+                    title: "취소 처리",
+                    text: "취소 되었습니다.",
+                    icon: "info",
+                });
+            }
+        });
+
+*/
+    }  // faq_update
+
+    function faq_delete(f)
+    {
+        var fupdate = document.fupdate;
+   
+        var checkboxValues = $("td.sel input[type=radio]:checked").val();
+        
+        if (!checkboxValues) {
+            swal("삭제 하실 항목을 하나 이상 선택하세요.");
+            return false;
+        }
+
+        swal({
+            title: "삭제",
+            text: "삭제 하시겠습니까?",
+            icon: "warning",
+            buttons: ["취소", "삭제"],
+            dangerMode: true,
+        }) .then(function(result) {
+            if (result) {
+                var params = "no=" + checkboxValues +  "&type=delete";
+                $.ajax({
+                    type: 'POST',
+                    url: '<?php echo RT_PATH; ?>/admin/php/ajax_update_faq.php',
+                    data: params,
+                    success: function (data) {
+
+                        if (data) {
+                            swal({
+                                title: "삭제 완료",
+                                //text: msg,
+                                text: "삭제 하였습니다",
+                                icon: "success",
+                            })
+                                .then(function () {
+                                    window.location.href = "manageFAQ.html";
+                                });
+                        } else {
+                            swal({
+                                title: "삭제 실패",
+                                text: "실패 하였습니다",
+                                icon: "warning",
+                            })
+                                .then(function () {
+                                    window.location.href = "manageFAQ.html";
+                                });
+                        }
+
+                    },  //success
+                    error: function (request,status,error) {
+                        alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                    } //error
+
+                });    //end ajax
+
+            } else {
+                swal({
+                    title: "취소 처리",
+                    text: "취소 되었습니다.",
+                    icon: "info",
+                });
+            }
+        });
+
+    }  // faq_delete
+
+    // permition ajax
+    $(document).ready(function() {
+        $("td.enable input[type=radio]").change(function() {
+            var no = $(this).attr('name');
+            var value = $(this).val();
+
+            var params = "no=" + no + "&value=" + value +  "&type=permitionUpdate";
+            $.ajax({
+                url: "<?php echo RT_PATH; ?>/admin/php/ajax_update_faq.php",
+                type: "POST",
+                data: params,
+                success: function (result) {
+                    console.log(result);
+                }
+            });
+        });
+    });
+
+    function viewCount(val) {
+        self.location = "<?php echo $_SERVER[PHP_SELF]?>?<?php echo  $qstr ?>&pageNum=" + val;
+    }
+</script>
+
+
+<?php 
+    include_once ('./include/footer.html');
+?>

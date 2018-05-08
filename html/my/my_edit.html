@@ -1,0 +1,387 @@
+<?php 
+    session_start();
+    include_once ('../../admin/lib/common.php');
+
+    if(!$_SESSION['MBM_EMAIL']){
+        alertMove("로그인후 이용해주세요.",RT_PATH);
+    }
+
+    include_once ('../../include/html_head.html');
+?>
+
+<div class="container">
+<?php 
+//회원정보
+$sql = "SELECT
+  A.MBR_NO
+  ,A.MBM_EMAIL_ID
+  ,A.MBR_NM
+  ,IFNULL(B.REG_TYP_CD, A.REG_TYP_CD) AS REG_TYP_CD
+  ,IFNULL(B.REG_NO, A.REG_NO) AS REG_NO
+  ,IFNULL(B.COMP_NM, A.COMP_NM) AS COMP_NM
+  ,IFNULL(B.COMP_KND_CD, A.COMP_KND_CD) AS COMP_KND_CD
+  ,IFNULL(B.LIMIT_KND_CD, '') AS LIMIT_KND_CD
+  ,IFNULL(B.COMP_DTL_KND_CD, A.COMP_DTL_KND_CD) AS COMP_DTL_KND_CD
+  ,A.DEPT_NM
+  ,A.HP_NO
+  ,A.TEL_NO
+  ,A.FAX_NO
+  ,B.COMP_KND_ETC_NM
+  ,B.PB_TYPE
+  ,B.COMP_CD
+FROM tcmn_mbr_join A
+  LEFT OUTER JOIN tcmn_mbr_comp B ON B.REG_NO = A.REG_NO 
+WHERE A.MBM_EMAIL_ID = '{$_SESSION['MBM_EMAIL']}'";
+$row = sql_fetch($sql);
+
+$MBM_EMAIL_ID = $row['MBM_EMAIL_ID'];  // 회원이메일
+$MBR_NM = $row['MBR_NM'];  // 성명
+$REG_TYP_CD = $row['REG_TYP_CD'];  // 성명
+$COMP_NM = $row['COMP_NM'];  // 회사명
+$COMP_KND_CD = $row['COMP_KND_CD'];  // 업체구분 코드
+$LIMIT_KND_CD = $row['LIMIT_KND_CD'];  // 제한입찰구분
+$COMP_DTL_KND_CD = $row['COMP_DTL_KND_CD'];  // 업무상세구분 코드
+$DEPT_NM = $row['DEPT_NM'];  // 부서명
+$REG_NO = $row['REG_NO'];  // 등록번호(주민/사업자)
+$HP_NO = $row['HP_NO'];  //
+$TEL_NO = $row['TEL_NO'];  //
+$FAX_NO = $row['FAX_NO'];  //
+$COMP_KND_ETC_NM = $row['COMP_KND_ETC_NM'];  //
+$PB_TYPE = $row['PB_TYPE'];  //
+$COMP_CD = $row['COMP_CD'];  //
+
+// print_r($sql);exit;
+?>
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                    <li>My</li>
+                    <li class="active">개인정보</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="quotation-title">
+            <h1>개인정보 수정</h1>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <form method="post" name="fupdate" id=fupdate">
+                <div class="portlet view">
+                    <div class="form-group">
+                        <div class="col-3">
+                            이메일(ID) <span class="text-primary">*</span>
+                        </div>
+                        <div class="col-9">
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type="email" class="input" id="inputEmail" name="MBM_EMAIL_ID_TMP" value="<?php echo $MBM_EMAIL_ID?>" disabled placeholder="Enter Email" required placeholder="유효하지 않은 이메일입니다.">
+                                    <input type="hidden" id="MBM_EMAIL_ID" name="MBM_EMAIL_ID" value="<?php echo $MBM_EMAIL_ID?>">
+                                </div>
+                                <div class="col-6 text-primary font14 pd-l">※ 로그인시 아이디와 동일</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-3">
+                            이름 <span class="text-primary">*</span>
+                        </div>
+                        <div class="col-9">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="row">
+                                        <div class="col-49 mr-2">
+                                            <input type="text" class="input" id="inputMBR_NM" name="MBR_NM" value="<?php echo $MBR_NM?>" placeholder="이름">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-3">
+                            등록구분<span class="text-primary">*</span>
+                        </div>
+                        <div class="col-9">
+                            <label><input type="radio" name="rdoREG_TYP_CD" value="P" <?php  if($REG_TYP_CD == 'P') echo "checked"; ?>>개인</label>
+                                <span class="ml20">기업 (
+                                <label><input type="radio" name="rdoREG_TYP_CD" value="D" <?php  if($PB_TYPE == 'D') echo "checked"; ?>>국내</label>
+                                <label><input type="radio" name="rdoREG_TYP_CD" value="E" <?php  if($PB_TYPE == 'E') echo "checked"; ?>>국외</label>
+                                 )</span></label>
+                            <!-- <input type="hidden" name="REG_TYP_CD" value="<?php echo $REG_TYP_CD?>">
+                            <input type="hidden" name="PB_TYPE" value="<?php echo $PB_TYPE?>"> -->
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-3">
+                            사업자번호
+                        </div>
+                        <div class="col-4">
+                            <input type="text" class="input" id="inputRegno" name="REG_NO" value="<?php echo $REG_NO?>" numberonly="true" placeholder="000-00-00000">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-3">
+                            회사명<span class="text-primary">*</span>
+                        </div>
+                        <div class="col-4">
+                            <input type="text" class="input" placeholder="회사명 입력" name="COMP_NM" id="COMP_NM" value="<?php echo $COMP_NM?>">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-3">
+                            업체구분<span class="text-primary">*</span>
+                        </div>
+                        <div class="col-9">
+                            <div class="row">
+                                <div class="col-6">
+                                    <label><input type="radio" name="COMP_KND_CD" value="SHP" <?php  if($COMP_KND_CD == "SHP") echo "checked";  ?>>화주</label>
+                                    <label><input type="radio" name="COMP_KND_CD" value="FWD" <?php  if($COMP_KND_CD == "FWD") echo "checked";  ?>>포워더</label>
+                                    <label><input type="radio" name="COMP_KND_CD" value="SEA" <?php  if($COMP_KND_CD == "SEA") echo "checked";  ?>>선사</label>
+                                    <label><input type="radio" name="COMP_KND_CD" value="AIR" <?php  if($COMP_KND_CD == "AIR") echo "checked";  ?>>항공사</label>
+                                    <label><input type="radio" name="COMP_KND_CD" value="ETC" <?php  if($COMP_KND_CD == "ETC") echo "checked";  ?>>기타</label>
+                                </div>
+
+                                <div class="col-3">
+                                <!-- <select class="input selectwidth" id="COMP_DTL_KND_CD" name="COMP_DTL_KND_CD" style="display: none; " >
+                                    <option value="01" <?php  if($COMP_DTL_KND_CD  == "01") echo "checked";  ?>>방역업체</option>
+                                    <option value="02" <?php  if($COMP_DTL_KND_CD  == "02") echo "checked";  ?>>쇼링& 낫싱 업체</option>
+                                    <option value="03" <?php  if($COMP_DTL_KND_CD  == "03") echo "checked";  ?>>내륙운송업체</option>
+                                    <option value="04" <?php  if($COMP_DTL_KND_CD  == "04") echo "checked";  ?>>관세사</option>
+                                    <option value="05" <?php  if($COMP_DTL_KND_CD  == "05") echo "checked";  ?>>하역회사</option>
+                                    <option value="06" <?php  if($COMP_DTL_KND_CD  == "06") echo "checked";  ?>>적하보험</option>
+                                    <option value="07" <?php  if($COMP_DTL_KND_CD  == "07") echo "checked";  ?>>창고업체</option>
+                                    <option value="08" <?php  if($COMP_DTL_KND_CD  == "08") echo "checked";  ?>>훼리운송</option>
+                                    <option value="99" <?php  if($COMP_DTL_KND_CD  == "99") echo "checked";  ?>>기타</option>
+                                </select> -->
+                                    <input type="text" name="COMP_KND_ETC_NM" class="input searchEtc" value="<?php echo $COMP_KND_ETC_NM?>" placeholder="기타업체" >
+                                    <ul class="popmenu vhidden">
+                                        <li class="selected">관세사</li><li>방역회사</li><li>쇼링회사</li><li>검역회사</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-3">
+                            입찰참가분야
+                        </div>
+                        <div class="col-9"  id="LIMIT_KND_CD_GRP">
+                            <label><input type="radio" name="LIMIT_KND_CD" value="SEA" <?php  if($LIMIT_KND_CD  == "SEA") echo "checked";  ?>>해상</label>
+                            <label><input type="radio" name="LIMIT_KND_CD" value="BLK" <?php  if($LIMIT_KND_CD  == "BLK") echo "checked";  ?>>Bulk</label>
+                            <label><input type="radio" name="LIMIT_KND_CD" value="AIR" <?php  if($LIMIT_KND_CD  == "AIR") echo "checked";  ?>>Air</label>
+                            <label><input type="radio" name="LIMIT_KND_CD" value="ALL" <?php  if($LIMIT_KND_CD  == "ALL") echo "checked";  ?>>전체참여</label>
+                            <label><input type="radio" name="LIMIT_KND_CD" value="NON" <?php  if($LIMIT_KND_CD  == "NON") echo "checked";  ?>>미참여</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-3">
+                            부서
+                        </div>
+                        <div class="col-4">
+                            <input type="text" class="input" id="inputDeptNm" name="DEPT_NM" value="<?php echo $DEPT_NM?>">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-3">
+                            휴대전화<span class="text-primary">*</span>
+                        </div>
+                        <div class="col-4">
+                            <input type="text" class="input" id="inputHpNo" name="HP_NO_TMP" value="<?php echo $HP_NO?>" numberonly="true" placeholder="휴대전화 번호 입력"  disabled>
+                            <input type="hidden" class="input" id="HP_NO" name="HP_NO" value="<?php echo $HP_NO?>">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-3">
+                            전화번호
+                        </div>
+                        <div class="col-4">
+                            <input type="text" class="input" id="inputTelNo" name="TEL_NO" value="<?php echo $TEL_NO?>" numberonly="true">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-3">
+                            팩스번호
+                        </div>
+                        <div class="col-4">
+                            <input type="text" class="input" id="inputFaxNo" name="FAX_NO" value="<?php echo $FAX_NO?>" numberonly="true">
+                        </div>
+                    </div>
+                </div>
+                </form>
+            </div>
+        </div>
+        <div class="three-btn center mt20">
+            <button  class="btn" onclick="update_my(<?php echo $REG_NO?>);">개인정보 수정</button>
+            <button  class="btn bg-orange" id="btn_pwdModify" data-toggle="modal" data-target="#passwdModal" data-modal-width="400">비밀번호 수정</button>
+        </div>
+    </div>
+
+</div>
+
+<?php // 비밀번호 ?>
+<div class="modal fade" id="passwdModal" role="dialog">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+        <form method="post" name="fpasswd" id="fpasswd" action="<?php echo RT_PATH; ?>/php/update_passwd.php">
+            <div class="modal-header">
+                <span class="close reset" id="close" data-dismiss="modal" aria-hidden="true">&times;</span>
+                <p>비밀번호 수정</p>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <div class="col-4">
+                        현 비밀번호
+                    </div>
+                    <div class="col-6">
+                        <input type="text" class="input" id="PASSWD_OLD" name="PASSWD_OLD">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-4">
+                        변경 비밀번호
+                    </div>
+                    <div class="col-6 row">
+                        <div>
+                            <input type="password" class="input" id="PASSWD1" name="PASSWD1" value="">
+                        </div>
+                        <div>
+                            <input type="password" class="input" id="PASSWD2" name="PASSWD2" value="">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group three-btn">
+                    <button type="button" class="btn vhidden col-4"></button>
+                    <button type="submit" class="btn btn-info btn-lg col-4">비밀번호 수정</button>
+                    <button type="button" class="btn btn-info btn-lg col-4" id="cancelReset">취소</button>
+                </div>
+            </div>
+        </form>
+        </div>
+    </div>
+</div>
+
+<style type="text/css">
+    #passwdModal .modal-body { padding: 2rem; }
+    #passwdModal .modal-content { width: 30%; }
+    #passwdModal .modal-body .col-4 { position: relative; top: 10px; }
+    #passwdModal .modal-body input#PASSWD1 { margin-bottom: 10px; }
+    #passwdModal button { margin-left: 5px; font-size: 16px;}
+    .vhidden { visibility: hidden; }
+</style>
+
+<?php // 로그인 ?>
+<script type="text/javascript">
+
+    function update_my(myID) {
+        var form = document.fupdate;
+        form.action = "<?php echo RT_PATH; ?>/php/update_my.php";
+        form.submit();
+        // alert(myID);
+    }
+
+    function update_pw(myID) {
+        alert(myID);
+    }
+
+    function btn_cancle(myID) {
+        alert(myID);
+    }
+
+    var emailFormat = /[0-9a-zA-Z][_0-9a-zA-Z-]*@[_0-9a-zA-Z-]+(\.[_0-9a-zA-Z-]+){1,2}$/;
+    var passwordFormat = /^.*(?=^.{6,200}$)(?=.*\d)(?=.*[a-zA-Z]).*$/;
+    //	var passwordFormat = /^.*(?=^.{6,200}$)(?=.*\d)(?=.*[a-zA-Z])(?=.*[!@#$%^&+=]).*$/;
+    var regNoFormat = /\d{10}/;
+
+    //핸드폰 번호 마스킹
+    var hpMask = function(val){
+        return val.replace(/\D/g, "").length < 11 ? "000-000-00000" : "000-0000-0000";
+    }
+
+    var hpOption = {
+        onKeyPress : function(val, e, field, options){
+            field.mask(hpMask.apply({}, arguments), options);
+        }
+    };
+
+    //전화번호,팩스번호 마스킹
+    var telFaxMask = function(val){
+        var maskStr = "";
+        if(/^02/.test(val.replace(/\D/g, ""))){
+            maskStr = val.replace(/\D/g, "").length < 10 ? "(00)000-00000" : "(00)0000-0000";
+        }else{
+            maskStr = val.replace(/\D/g, "").length < 11 ? "(000)000-00000" : "(000)0000-0000";
+        }
+        return maskStr;
+    }
+
+    var confirmSepa = null;
+    $(document).ready(function(){
+        confirmSepa = "";
+        $("input:text[numberOnly]").keypress(function(){
+            if (!(event.keyCode >= 48 && event.keyCode <= 57)) { //숫자키만 입력
+                return false;
+            }
+        });
+
+        $("input:radio[name=rdoREG_TYP_CD]").change(function(){
+            if(this.value == "P"){
+                $("#inputRegno").prop("disabled", true);
+                $("input:radio[name='LIMIT_KND_CD'][value='NON']").click();
+            }else{
+                $("#inputRegno").prop("disabled", false);
+            }
+            fnBidKindInputCntr();
+        });
+
+        function fnBidKindInputCntr(){
+
+            if ($("input:radio[name=COMP_KND_CD]:checked").val() !="ALL" ) {
+                if(($("input:radio[name=rdoREG_TYP_CD]:checked").val() =="P") || ($("input:radio[name=COMP_KND_CD]:checked").val() =="SHP" )) {
+                    $("input:radio[name='LIMIT_KND_CD'][value='NON']").click();
+                    $("#LIMIT_KND_CD_GRP").find("input:radio[name=LIMIT_KND_CD]").prop("disabled", true);
+
+                } else {
+                    if ($("input:radio[name=LIMIT_KND_CD]:checked").val() == "NON" )  {
+                        $("#LIMIT_KND_CD_GRP").find("input:radio[name=LIMIT_KND_CD]").prop("checked", false);
+                    }
+                    $("#LIMIT_KND_CD_GRP").find("input:radio[name=LIMIT_KND_CD]").prop("disabled", false);
+                }
+
+            }
+
+            $("input:radio[name='LIMIT_KND_CD'][value='ALL']").prop("disabled", true);
+        }
+
+        $("input:radio[name=COMP_KND_CD]").change(function(){
+            if(this.value == "ETC"){
+                $("#ET_CLS").show(300);
+            }else{
+                $("#ET_CLS").hide(300);
+                $("#ET_CLS option:eq(0)").attr("selected", "selected");
+                $("#inputCOMP_KND_ETC_NM").hide(300);
+            }
+            fnBidKindInputCntr();
+        });
+
+        $("select[name=ET_CLS]").change(function(){
+            if(this.value == "99"){
+                $("#inputCOMP_KND_ETC_NM").show(300);
+            }else{
+                $("#inputCOMP_KND_ETC_NM").hide(300);
+                $("#inputCOMP_KND_ETC_NM").val("");
+            }
+        });
+
+    });
+</script>
+<?php 
+include_once ('../../include/html_foot.html');
+?>
+

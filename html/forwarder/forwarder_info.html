@@ -1,0 +1,336 @@
+<?php
+session_start();
+    include_once ('../../admin/lib/common.php');
+
+    if(!$_SESSION['MBM_EMAIL']){
+        alert("로그인후 이용해주세요.","/");
+    }
+
+    include_once ('../../include/html_head.html');
+
+
+$FDR_NO = addslashes($_GET['idx']);
+
+$sql = "SELECT * FROM tbid_spc_fdr WHERE FDR_NO = '{$FDR_NO}'";
+
+$row = sql_fetch($sql);
+//echo $sql;
+
+$SERVICE = explode(", ", $row['SERVICE']);
+$AREA_CD = explode(", ", $row['AREA_DTL_NM']);
+$ITEM_CD = explode(", ", $row['ITEM_CD']);
+
+$serChk = array();
+foreach ($SERVICE as $key => $value) {
+    switch ($value) {
+        case '해상': $serChk[0] = "checked"; break;
+        case '항공': $serChk[1] = "checked"; break;
+        case '항공': $serChk[2] = "checked"; break;
+        case '프로젝트': $serChk[3] = "checked"; break;
+        case 'LCL콘솔': $serChk[4] = "checked"; break;
+        case 'Sea & Air': $serChk[5] = "checked"; break;
+        case '위험물': $serChk[6] = "checked"; break;
+        case '냉동·냉장': $serChk[7] = "checked"; break;
+        case 'Perishable': $serChk[8] = "checked"; break;
+        case '까르네(Carnet)': $serChk[9] = "checked"; break;
+        case '전시화물': $serChk[10] = "checked"; break;
+        case '핸드캐리': $serChk[11] = "checked"; break;
+        case '해외이주화물': $serChk[12] = "checked"; break;
+        case '쿠리어(Courrier)': $serChk[13] = "checked"; break;
+        case '따이공': $serChk[14] = "checked"; break;
+        case '기타': $serChk[15] = "checked"; break;
+    }
+}
+
+$areaChk = array();
+foreach ($AREA_CD as $key => $value) {
+    switch ($value) {
+        case '일본·동아시아': $areaChk[0] = "checked"; break;
+        case '중국·홍콩': $areaChk[1] = "checked"; break;
+        case '동남아시아': $areaChk[2] = "checked"; break;
+        case '서남아시아': $areaChk[3] = "checked"; break;
+        case '중앙아시아': $areaChk[4] = "checked"; break;
+        case '중동': $areaChk[5] = "checked"; break;
+        case '오세아니아': $areaChk[6] = "checked"; break;
+        case '북아프리카': $areaChk[7] = "checked"; break;
+        case '지중해연안': $areaChk[8] = "checked"; break;
+        case '북유럽': $areaChk[9] = "checked"; break;
+        case '서유럽': $areaChk[10] = "checked"; break;
+        case '동유럽': $areaChk[11] = "checked"; break;
+        case '아프리카': $areaChk[12] = "checked"; break;
+        case '북미': $areaChk[13] = "checked"; break;
+        case '남미': $areaChk[14] = "checked"; break;
+        case '러시아': $areaChk[15] = "checked"; break;
+    }
+}
+
+$itemChk = array();
+foreach ($ITEM_CD as $key => $value) {
+    switch ($value) {
+        case '자동차부품': $itemChk[0] = "checked"; break;
+        case '타이어': $itemChk[1] = "checked"; break;
+        case '전자·전기제품/부품': $itemChk[2] = "checked"; break;
+        case '레진(Resin)': $itemChk[3] = "checked"; break;
+        case '제지·인쇄물': $itemChk[4] = "checked"; break;
+        case '기계류': $itemChk[5] = "checked"; break;
+        case '케미칼(Chemical)': $itemChk[6] = "checked"; break;
+        case '식품·음료(Food Stuff)': $itemChk[7] = "checked"; break;
+        case '농수산물': $itemChk[8] = "checked"; break;
+        case '의류': $itemChk[9] = "checked"; break;
+        case '신발·안경·모자': $itemChk[10] = "checked"; break;
+        case '섬유·직물': $itemChk[11] = "checked"; break;
+        case '철강·코일·파이프': $itemChk[12] = "checked"; break;
+        case '화장품·향수': $itemChk[13] = "checked"; break;
+        case '가재도구(Household)': $itemChk[14] = "checked"; break;
+        case '악기': $itemChk[15] = "checked"; break;
+        case '가죽·털': $itemChk[16] = "checked"; break;
+        case '의료기기': $itemChk[17] = "checked"; break;
+        case '자전거·오토바이': $itemChk[18] = "checked"; break;
+        case '플라스틱': $itemChk[19] = "checked"; break;
+        case '포장재': $itemChk[20] = "checked"; break;
+        case '스포츠용품': $itemChk[21] = "checked"; break;
+        case '문구류': $itemChk[22] = "checked"; break;
+        case '담배·술': $itemChk[23] = "checked"; break;
+        case '장난감': $itemChk[24] = "checked"; break;
+        case '무기류': $itemChk[25] = "checked"; break;
+        case '기타': $itemChk[26] = "checked"; break;
+    }
+}
+?>
+
+<div class="container">
+
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                    <li>Forwarder</li>
+                    <li class="active">전문포워더</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="jumbotron bg-dark-blue">
+            <img src="../../img/icon/icon-company.png" alt="">
+            <h1 class="mb20 font40"><?=$row['FDR_NM']?></h1>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="row">
+            <div class="col-12">
+                <div id="main-tab">
+
+                    <div class="tab_container clearfix">
+                        
+                        <div id="tab1" class="tab_content my_history">
+                            <div class="row ">
+                                <div class="col-12">
+                                    <div class="portlet">
+                                        <div class="portlet-title">
+                                            <caption>About</caption>
+                                        </div>
+                                        <div class="row view">
+                                            <div class="form-group" style="padding: .5rem 0;">
+                                                <div class="col-12">
+                                                    <p class="l-height4">
+                                                        <?php echo nl2br($row['INTRDC_DESC']); ?>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt20">
+                                <div class="col-12">
+                                    <div class="portlet">
+                                        <div class="portlet-title">
+                                            <caption>Profile</caption>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="portlet">
+                                        <div class="row view">
+                                            <div class="form-group border-none checkCont">
+                                                <div class="col-3">업계경력</div>
+                                                <div class="col-9 row">
+                                                    <span><?php echo $row['CAREER_YY_CNT']?>년 <?php echo $row['CAREER_MM_CNT']?>개월</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="portlet">
+                                        <div class="row view">
+                                            <div class="form-group checkCont">
+                                                <div class="col-3">지역</div>
+                                                <div class="col-9">
+                                                    
+                                                    <label for="SEA"><input type="checkbox" id="SEA" name="SEA" <?php echo $serChk[0]; ?>>해상</label>
+                                                    <label for="AIR"><input type="checkbox" id="AIR" name="AIR" <?php echo $serChk[1]; ?>>항공</label>
+                                                    <label for="BULK"><input type="checkbox" id="BULK" name="BULK" <?php echo $serChk[2]; ?>>벌크</label>
+                                                    <label for="PRO"><input type="checkbox" id="PRO" name="PRO" <?php echo $serChk[3]; ?>>프로젝트</label>
+                                                    <label for="LCL"><input type="checkbox" id="LCL" name="LCL" <?php echo $serChk[4]; ?>>LCL콘솔</label>
+                                                    <label for="SEAIR"><input type="checkbox" id="SEAIR" name="SEAIR" <?php echo $serChk[5]; ?>>Sea & Air</label>
+                                                    <label for="DAN"><input type="checkbox" id="DAN" name="DAN" <?php echo $serChk[6]; ?>>위험물</label>
+                                                    <label for="ICE"><input type="checkbox" id="ICE" name="ICE" <?php echo $serChk[7]; ?>>냉동·냉장</label>
+                                                    <label for="PER"><input type="checkbox" id="PER" name="PER" <?php echo $serChk[8]; ?>>Perishable</label>
+                                                    <label for="KAR"><input type="checkbox" id="KAR" name="KAR" <?php echo $serChk[9]; ?>>까르네(Carnet)</label>
+                                                    <label for="JON"><input type="checkbox" id="JON" name="JON" <?php echo $serChk[10]; ?>>전시화물</label>
+                                                    <label for="HAND"><input type="checkbox" id="HAND" name="HAND"> <?php echo $serChk[11]; ?>핸드캐리</label>
+                                                    <label for="BRO"><input type="checkbox" id="BRO" name="BRO" <?php echo $serChk[12]; ?>>해외이주화물</label>
+                                                    <label for="COU"><input type="checkbox" id="COU" name="COU" <?php echo $serChk[13]; ?>>쿠리어(Courrier)</label>
+                                                    <label for="DAI"><input type="checkbox" id="DAI" name="DAI" <?php echo $serChk[14]; ?>>따이공</label>
+                                                    <label for="AETC"><input type="checkbox" id="AETC" name="ETC" <?php echo $serChk[15]; ?>>기타</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="portlet">
+                                        <div class="row view">
+                                            <div class="form-group checkCont">
+                                                <div class="col-3">관심지역</div>
+                                                <div class="col-9">
+
+                                                    <label for="JAP"><input type="checkbox" id="JAP" name="JAP" <?php echo $areaChk[0]; ?>>일본·동아시아</label>
+                                                    <label for="CHI"><input type="checkbox" id="CHI" name="CHI" <?php echo $areaChk[1]; ?>>중국·홍콩</label>
+                                                    <label for="ESA"><input type="checkbox" id="ESA" name="ESA" <?php echo $areaChk[2]; ?>>동남아시아</label>
+                                                    <label for="WSA"><input type="checkbox" id="WAS" name="WAS" <?php echo $areaChk[3]; ?>>서남아시아</label>
+                                                    <label for="CAS"><input type="checkbox" id="CAS" name="CAS" <?php echo $areaChk[4]; ?>>중앙아시아</label>
+                                                    <label for="CEA"><input type="checkbox" id="CEA" name="CEA" <?php echo $areaChk[5]; ?>>중동</label>
+                                                    <label for="OCE"><input type="checkbox" id="OCE" name="OCE" <?php echo $areaChk[6]; ?>>오세아니아</label>
+                                                    <label for="NAF"><input type="checkbox" id="NAF" name="NAF" <?php echo $areaChk[7]; ?>>북아프리카</label>
+                                                    <label for="MEDS"><input type="checkbox" id="MEDS" name="MEDS" <?php echo $areaChk[8]; ?>>지중해연안</label>
+                                                    <label for="NEU"><input type="checkbox" id="NEU" name="NEU" <?php echo $areaChk[9]; ?>>북유럽</label>
+                                                    <label for="WEU"><input type="checkbox" id="WEU" name="WEU" <?php echo $areaChk[10]; ?>>서유럽</label>
+                                                    <label for="EEU"><input type="checkbox" id="EEU" name="EEU" <?php echo $areaChk[11]; ?>>동유럽</label>
+                                                    <label for="AFR"><input type="checkbox" id="AFR" name="AFR" <?php echo $areaChk[12]; ?>>아프리카</label>
+                                                    <label for="NAM"><input type="checkbox" id="NAM" name="NAM" <?php echo $areaChk[13]; ?>>북미</label>
+                                                    <label for="SAM"><input type="checkbox" id="SAM" name="SAM" <?php echo $areaChk[14]; ?>>남미</label>
+                                                    <label for="RUS"><input type="checkbox" id="RUS" name="RUS" <?php echo $areaChk[15]; ?>>러시아</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="portlet">
+                                        <div class="row view">
+                                            <div class="form-group checkCont">
+                                                <div class="col-3">ITEM</div>
+                                                <div class="col-9">
+
+                                                    <label for="CAR"><input type="checkbox" id="CAR" name="CAR" <?php echo $itemChk[0]; ?>>자동차부품</label>
+                                                    <label for="TIR"><input type="checkbox" id="TIR" name="TIR" <?php echo $itemChk[1]; ?>>타이어</label>
+                                                    <label for="ELC"><input type="checkbox" id="ELC" name="ELC" <?php echo $itemChk[2]; ?>>전자·전기제품/부품</label>
+                                                    <label for="RES"><input type="checkbox" id="RES" name="RES" <?php echo $itemChk[3]; ?>>레진(Resin)</label>
+                                                    <label for="PRI"><input type="checkbox" id="PRI" name="PRI" <?php echo $itemChk[4]; ?>>제지·인쇄물</label>
+                                                    <label for="MEC"><input type="checkbox" id="MEC" name="MEC" <?php echo $itemChk[5]; ?>>기계류</label>
+                                                    <label for="CHE"><input type="checkbox" id="CHE" name="CHE" <?php echo $itemChk[6]; ?>>케미칼(Chemical)</label>
+                                                    <label for="FOO"><input type="checkbox" id="FOO" name="FOO" <?php echo $itemChk[7]; ?>>식품·음료(Food Stuff)</label>
+                                                    <label for="FAR"><input type="checkbox" id="FAR" name="FAR" <?php echo $itemChk[8]; ?>>농수산물</label>
+                                                    <label for="WEA"><input type="checkbox" id="WEA" name="WEA" <?php echo $itemChk[9]; ?>>의류</label>
+                                                    <label for="SHO"><input type="checkbox" id="SHO" name="SHO" <?php echo $itemChk[10]; ?>>신발·안경·모자</label>
+                                                    <label for="FIB"><input type="checkbox" id="FIB" name="FIB" <?php echo $itemChk[11]; ?>>섬유·직물</label>
+                                                    <label for="IRO"><input type="checkbox" id="IRO" name="IRO" <?php echo $itemChk[12]; ?>>철강·코일·파이프</label>
+                                                    <label for="COS"><input type="checkbox" id="COS" name="COS" <?php echo $itemChk[13]; ?>>화장품·향수</label>
+                                                    <label for="HOU"><input type="checkbox" id="HOU" name="HOU" <?php echo $itemChk[14]; ?>>가재도구(Household)</label>
+                                                    <label for="INS"><input type="checkbox" id="INS" name="INS" <?php echo $itemChk[15]; ?>>악기</label>
+                                                    <label for="SKI"><input type="checkbox" id="SKI" name="SKI" <?php echo $itemChk[16]; ?>>가죽·털</label>
+                                                    <label for="MED"><input type="checkbox" id="MED" name="MED" <?php echo $itemChk[17]; ?>>의료기기</label>
+                                                    <label for="BIC"><input type="checkbox" id="BIC" name="BIC" <?php echo $itemChk[18]; ?>>자전거·오토바이</label>
+                                                    <label for="PLA"><input type="checkbox" id="PLA" name="PLA" <?php echo $itemChk[19]; ?>>플라스틱</label>
+                                                    <label for="PAC"><input type="checkbox" id="PAC" name="PAC" <?php echo $itemChk[20]; ?>>포장재</label>
+                                                    <label for="SPO"><input type="checkbox" id="SPO" name="SPO" <?php echo $itemChk[21]; ?>>스포츠용품</label>
+                                                    <label for="STA"><input type="checkbox" id="STA" name="STA" <?php echo $itemChk[22]; ?>>문구류</label>
+                                                    <label for="TOB"><input type="checkbox" id="TOB" name="TOB" <?php echo $itemChk[23]; ?>>담배·술</label>
+                                                    <label for="TOY"><input type="checkbox" id="TOY" name="TOY" <?php echo $itemChk[24]; ?>>장난감</label>
+                                                    <label for="GUN"><input type="checkbox" id="GUN" name="GUN" <?php echo $itemChk[25]; ?>>무기류</label>
+                                                    <label for="IETC"><input type="checkbox" id="IETC" name="IETC" <?php echo $itemChk[26]; ?>>기타</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!--내이력-->
+                            <div class="row mt20">
+                                <div class="portlet">
+                                    <div class="portlet-title">
+                                        <caption>Contact</caption>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="portlet view pd12 border-radius-0">
+                                            <div class="form-group">
+                                                <div class="col-3">전화번호
+                                                </div>
+                                                <div class="col-9">
+                                                    <input type="tel" class="input" name="TEL_NO" value="<?php echo $row['TEL_NO']?>" placeholder="전화번호 입력" disabled>
+                                                </div>
+                                            </div>
+                                            <div class="form-group border-none">
+                                                <div class="col-3">Mobile</div>
+                                                <div class="col-9">
+                                                    <input type="tel" class="input" name="HP_NO" value="<?php echo $row['HP_NO']?>" placeholder="핸드폰번호 입력" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="portlet view pd12 border-left border-radius-0">
+                                            <div class="form-group">
+                                                <div class="col-3">팩스번호</div>
+                                                <div class="col-9">
+                                                    <input type="tel" class="input" name="FAX_NO" value="<?php echo $row['FAX_NO']?>" placeholder="팩스번호 입력" disabled>
+                                                </div>
+                                            </div>
+                                            <div class="form-group border-none">
+                                                <div class="col-3">
+                                                    E-mail
+                                                </div>
+                                                <div class="col-9">
+                                                    <input type="email" class="input" name="MBM_EMAIL_ID" value="<?php echo $row['EMAIL_ID']?>" placeholder="이메일 입력" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("input").attr("disabled", "disabled");
+        $("input").css("cursor", "not-allowed");
+    });
+</script>
+
+<?php
+include_once ('../../include/html_foot.html');
+?>
+

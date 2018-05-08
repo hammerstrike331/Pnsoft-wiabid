@@ -1,0 +1,896 @@
+<?php
+session_start();
+include_once('lib/common.php');
+
+// 관리자 세션 확인
+if(!isset($_SESSION['ADMIN_GRPNAME'])) {
+    alertMove('로그인 후 이용해 주세요', "index.html");
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <?php
+    include_once ('./include/head.html');
+    ?>
+
+</head>
+<body class="fixed-left">
+
+<!-- Begin page -->
+<div id="wrapper">
+
+    <?php
+    include_once ('./include/menu.html');
+    ?>
+
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+<?php
+//  일반쿼리
+$sql_common = " FROM `tcmn_frt_code` A ";
+$sql_search = " where (1) ";
+$sql_order = " order by IDX desc ";
+
+// 검색 옵션
+##############################################################
+
+$SA_CLS_CD = addslashes($_GET['SA_CLS_CD']);
+$FRT_GRP_CD = addslashes($_GET['FRT_GRP_CD']);
+$SFRT_NM = addslashes($_GET['SFRT_NM']);
+
+$SA_CLS_CD = clean_xss_tags($SA_CLS_CD);
+$FRT_GRP_CD = clean_xss_tags($FRT_GRP_CD);
+$SFRT_NM = clean_xss_tags($SFRT_NM);
+
+if($SA_CLS_CD) {
+    $sql_search .= " and A.SA_CLS_CD = '{$SA_CLS_CD}'";
+}
+
+if($FRT_GRP_CD) {
+    $sql_search .= " and A.FRT_GRP_CD = '{$FRT_GRP_CD}'";
+}
+
+if($SFRT_NM) {
+    $sql_search .= " and (A.FRT_NM LIKE CONCAT('%',{$SFRT_NM},'%') OR A.FRT_ENG_NM LIKE CONCAT('%,'{$SFRT_NM},'%'))";
+
+}
+##############################################################
+
+
+$sql1 = "select count(FAQ_NO) as cnt {$sql_common}";
+$row1 = sql_fetch($sql1);
+$total_member = $row1['cnt'];
+
+
+$sql = "select count(*) as cnt {$sql_common} {$sql_search} ";
+$row = sql_fetch($sql);
+$total_count = $row['cnt'];
+
+$pageNum = (int)$_GET['pageNum'];
+
+if(!$pageNum) {
+    $rows = 10;
+} else {
+    $rows = $pageNum;
+}
+
+$qstr = "SA_CLS_CD=".$SA_CLS_CD."&FRT_GRP_CD=".$FRT_GRP_CD."&FRT_NM=".$FRT_NM."&pageNum=".$pageNum."&page=".$page;
+
+$page = (int)$_GET['page'];
+
+$total_page  = ceil($total_count / $rows);  // 전체 페이지 계산
+if ($page < 1) { $page = 1; } // 페이지가 없으면 첫 페이지 (1 페이지)
+$from_record = ($page - 1) * $rows; // 시작 열을 구함
+
+$list_page_rows = 10;
+//순번
+$list_num = $total_count - ($page - 1) * $list_page_rows;
+
+$sql = "SELECT A.IDX,
+                A.SA_CLS_CD,
+                A.FRT_CD ,
+                A.FRT_GRP_CD ,
+               (SELECT B.CODE_NM 
+                  FROM tcmn_code_dtl B 
+                 WHERE B.CLSS_CD = 'FRT_GRP' 
+                   AND B.CODE_CD = A.FRT_GRP_CD) AS FRT_GRP_NM ,        
+                A.FRT_NM ,
+                A.FRT_ENG_NM ,
+                A.TAX_RATE ,
+                A.CURR_CD ,
+               (SELECT B.CODE_NM 
+                  FROM tcmn_code_dtl B 
+                 WHERE B.CLSS_CD = 'CURR_CD' 
+                   AND B.CODE_CD = A.CURR_CD) AS CURR_NM ,           
+                A.DSP_SEQ_NO , 
+                A.DISP_YN ,
+                A.REMARK , 
+                A.USE_YN ,
+                A.INP_USR ,
+                A.INP_YMD ,
+                A.UPD_USR ,
+                A.UPD_YMD ,
+                A.SA_CLS_CD AS SA_CLS_CD_OLD,
+                A.FRT_CD  AS FRT_CD_OLD
+{$sql_common} {$sql_search} {$sql_order} limit {$from_record}, {$rows} ";
+
+$result = sql_query($sql);
+
+?>
+    <div class="content-page">
+        <!-- Start content -->
+        <div class="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="card-box p-b-0">
+                            <h5 class="m-b-10"><b>운임코드 검색</b></h5>
+                            <hr class="m-t-0">
+
+                            <div class="row">
+                                <form class="form-horizontal group-border-dashed" action="<?=$_SERVER[PHP_SELF]?>">
+                                    <div class="col-sm-12">
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">구분</label>
+                                                    <div class="col-sm-10">
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="SA_CLS_CD1" value="" name="SA_CLS_CD"  <? if($SA_CLS_CD == '') echo 'checked'; ?>>
+                                                            <label for="SA_CLS_CD1"> ALL </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="SA_CLS_CD2" value="SEA" name="SA_CLS_CD" <? if($SA_CLS_CD == 'SEA') echo 'checked'; ?>>
+                                                            <label for="SA_CLS_CD2"> SEA </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="SA_CLS_CD3" value="AIR" name="SA_CLS_CD" <? if($SA_CLS_CD == 'AIR') echo 'checked'; ?>>
+                                                            <label for="SA_CLS_CD3"> AIR </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">운임그룹</label>
+                                                    <div class="col-sm-10">
+                                                        <select class="form-control" name="FRT_GRP_CD">
+                                                            <option value="">전체</option>
+                                                            <option value=""></option>
+                                                            <option value=""></option>
+                                                            <option value=""></option>
+                                                        </select>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">운임명</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" name="SFRT_NM" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <div class="col-sm-offset-5 col-sm-7 m-t-15">
+                                                        <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                                            검색
+                                                        </button>
+                                                        <button type="button" class="btn btn-inverse waves-effect m-l-5" onclick="location.href='manageCodeFare.html'">초기화</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <!-- end row -->
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+    <style>
+        .tableSclroll{
+            width: 100%;
+            /*height: 340px;*/
+            overflow: auto;
+        }
+        .tableSclroll table{
+            width: 1380px;
+        }
+    </style>
+    <?  // echo "<p>". $sql."<p>";    ?>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card-box p-b-0">
+                            <div class="row m-b-10">
+                                <div class="col-sm-6">
+                                    <h5><b>운임코드 목록</b><span class="text-muted font-13 m-l-15"> 검색결과 <span class="font-bold text-dark"><?=number_format($total_count)?></span> 건</span></h5>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-inline pull-right">
+                                        <div class="form-group">
+                                            <button type="button" class="btn btn-danger waves-effect" onclick="delete_fare();">삭제</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="m-t-0">
+                            <div class="table-responsive tableSclroll">
+                                <form name="fupdate" id="fupdate" method="post" >
+                                <table class="table table-bordered table-hover text-center fold-table middle">
+                                    <thead>
+                                    <tr class="bg-lightdark">
+                                        <th class="text-center">
+                                            <input type="checkbox" name="chkall" value="" id="chkall" onclick="check_all(this.form)">
+                                        </th>
+                                        <th class="text-center" width="80">해운/항공</th>
+                                        <th class="text-center" width="100">운임그룹</th>
+                                        <th class="text-center">운임코드</th>
+                                        <th class="text-center">운임영문명</th>
+                                        <th class="text-center">운임한글명</th>
+                                        <th class="text-center">TAX</th>
+                                        <th class="text-center">화폐코드</th>
+                                        <th class="text-center">자동표기</th>
+                                        <th class="text-center">표기순서</th>
+                                        <th class="text-center" width="170">사용유무</th>
+                                        <th class="text-center">처리</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    <tr class="info">
+                                        <td scope="row"><i class="fa fa-times"></i></td>
+                                        <td>
+                                            <select class="form-control input-sm" name="s_SA_CLS_CD" id="s_SA_CLS_CD">
+                                                <option>SEA</option>
+                                                <option>AIR</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="form-control input-sm text-center" name="s_FRT_GRP_CD" id="s_FRT_GRP_CD">
+                                                <option value="SAF">SAF</option>
+                                                <option value="DMF">DMF</option>
+                                                <option value="AVF">AVF</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control input-sm" name="s_FRT_CD" id="s_FRT_CD" />
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control input-sm" name="s_FRT_ENG_NM" id="s_FRT_ENG_NM" />
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control input-sm" name="s_FRT_NM" id="s_FRT_NM" />
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control input-sm"  placeholder="0.00000" name="s_TAX_RATE" id="s_TAX_RATE"/>
+                                        </td>
+                                        <td>
+                                            <select class="form-control input-sm text-center" name="s_CURR_CD" id="s_CURR_CD">
+                                                <option value="KRW">KRW</option>
+                                                <option value="USD">USD</option>
+                                                <option value="EUR">EUR</option>
+                                                <option value="CNY">CNY</option>
+                                                <option value="JPY">JPY</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="form-control input-sm text-center" name="s_DISP_YN" id="s_DISP_YN">
+                                                <option value="Y">예</option>
+                                                <option value="N">아니오</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control input-sm" required placeholder="" name="s_DSP_SEQ_NO" id="s_DSP_SEQ_NO"/>
+                                        </td>
+                                        <td>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="s_USE_YN1" value="Y" name="s_USE_YN" checked>
+                                                <label for="s_USE_YN1"> 사용 </label>
+                                            </div>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="s_USE_YN2" value="N" name="s_USE_YN">
+                                                <label for="s_USE_YN"> 사용안함 </label>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary waves-effect waves-light" onclick="insert_fare();">추가</button>
+                                        </td>
+                                    </tr>
+                                    <?
+                                    for ($i=0; $row=sql_fetch_array($result); $i++) {
+                                        $num = $list_num - $i;
+
+                                        $IDX = $row['IDX']; // 순번
+                                        $SA_CLS_CD = $row['SA_CLS_CD']; // 해운/항공
+                                        $FRT_GRP_NM = $row['FRT_GRP_NM']; // 운임그룹
+                                        $FRT_GRP_CD = $row['FRT_GRP_CD'];  //운임그룹 코드
+                                        $REMARK = $row['REMARK'];  //운임그룹 비고
+                                        $FRT_CD = $row['FRT_CD'];  //운임코드
+                                        $FRT_ENG_NM = $row['FRT_ENG_NM'];  //운임영문명
+                                        $FRT_NM = $row['FRT_NM'];  //운임한글명
+                                        $TAX_RATE = $row['TAX_RATE'];  //TAX
+                                        $CURR_CD = $row['CURR_CD'];  // 화폐코드
+                                        $DISP_YN = $row['DISP_YN'];  //자동표기
+                                        $DSP_SEQ_NO = $row['DSP_SEQ_NO'];  //표기순서
+                                        $USE_YN = $row['USE_YN'];  // 사용여부
+
+                                    ?>
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="chk[]" value="<?=$IDX?>" id="chk_<?php echo $i ?>">
+                                        </td>
+                                        <td><?=$SA_CLS_CD?></td>
+                                        <td><?=$FRT_GRP_NM?></td>
+                                        <td><?=$FRT_CD?></td>
+                                        <td><?=$FRT_ENG_NM?></td>
+                                        <td><?=$FRT_NM?></td>
+                                        <td><?=$TAX_RATE?></td>
+                                        <td><?=$CURR_CD?></td>
+                                        <td><?=$DISP_YN?></td>
+                                        <td><?=$DSP_SEQ_NO?></td>
+                                        <td>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="USE_YN1<?=$IDX?>" value="Y" name="USE_YN<?=$IDX?>" <? if($USE_YN == "Y") echo "checked"; ?>>
+                                                <label for="USE_YN1<?=$IDX?>"> 사용 </label>
+                                            </div>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="USE_YN2<?=$IDX?>" value="N" name="USE_YN<?=$IDX?>" <? if($USE_YN == "N") echo "checked"; ?>>
+                                                <label for="USE_YN2<?=$IDX?>"> 사용안함 </label>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-inverse waves-effect waves-light" onclick="update_modal(<?=$IDX?>);">수정</button>
+                                        </td>
+                                    </tr>
+                                        
+                                    <? } ?>
+                                    </tbody>
+                                </table>
+                                </form>
+                            </div>
+                            <div class="clearfix">
+                                <div class="pull-right">
+                                    <select class="form-control" size="1" name="pageNum" id="pageNum" onchange="viewCount(this.options[this.selectedIndex].value)">
+                                        <option <? if($pageNum=='10') echo "selected"; ?>>10</option>
+                                        <option <? if($pageNum=='25') echo "selected"; ?>>25</option>
+                                        <option <? if($pageNum=='50') echo "selected"; ?>>50</option>
+                                        <option <? if($pageNum=='100')  echo "selected"; ?>>100</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <?php echo get_paging2(5, $page, $total_page, $_SERVER['SCRIPT_NAME'].'?'.$qstr.'&amp;page='); ?>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+</div>
+    <!--  모달 수정  ----------------------------------------------------------------------->
+    <div class="modal fade modal-wide" id="myModal_update" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title_update" id="myModalLabel_update">Bootstrap Modal Popup</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="container">
+                        <form name="update_query" id="update_query" >
+                            <input type="hidden" name="up_idx" id="up_idx" value="<?=$_GET['target_idx']?>">
+                            <div class="table-responsive">
+                                <?php
+                                if($_GET['target_idx']) {
+                                    $target_idx = $_GET['target_idx'];
+                                    $sql2 = "select * from `tcmn_frt_code` where `IDX` = '{$target_idx}' ";
+                                    $row2 = sql_fetch($sql2);
+
+                                    $u_SA_CLS_CD = $row2['SA_CLS_CD'];   // 해운/항공구분
+                                    $u_FRT_CD = $row2['FRT_CD'];   // 운임코드 NAME
+                                    $u_FRT_GRP_CD = $row2['FRT_GRP_CD'];   // 운임 그룹 코드
+                                    $u_FRT_NM = $row2['FRT_NM'];   // 운임명
+                                    $u_FRT_ENG_NM = $row2['FRT_ENG_NM'];   // 운임영문명
+                                    $u_TAX_RATE= $row2['TAX_RATE'];   // 부가세율
+                                    $u_CURR_CD= $row2['CURR_CD'];   // 화폐코드
+                                    $u_DSP_SEQ_NO = $row2['DSP_SEQ_NO'];   // 정렬순서
+                                    $u_DISP_YN= $row2['DISP_YN'];   // 자동 표기여부
+                                    $u_USE_YN= $row2['USE_YN'];   // 사용유무
+
+                                }
+                               //  echo $sql2;
+                                ?>
+
+                                <table class="table table-bordered" id="dynamic_field">
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>해운항공</strong></div>
+                                                <div class="col-xs-9">
+                                                    <select class="form-control input-sm" name="u_SA_CLS_CD" id="u_SA_CLS_CD">
+                                                        <option value="ALL" <?if($u_SA_CLS_CD =='ALL') echo "selected";?>>전체</option>
+                                                        <option value="AIR" <?if($u_SA_CLS_CD =='AIR') echo "selected";?>>항공</option>
+                                                        <option value="SEA" <?if($u_SA_CLS_CD =='SEA') echo "selected";?>>해상</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>운임그룹</strong></div>
+                                                <div class="col-xs-9">
+                                                    <select class="form-control input-sm text-center" name="u_FRT_GRP_CD" id="u_FRT_GRP_CD">
+                                                        <option value="" <?if($u_FRT_GRP_CD =='') echo "selected";?>>선택</option>
+                                                        <option value="SAF" <?if($u_FRT_GRP_CD =='SAF') echo "selected";?>>SAF</option>
+                                                        <option value="DMF" <?if($u_FRT_GRP_CD =='DMF') echo "selected";?>>DMF</option>
+                                                        <option value="AVF" <?if($u_FRT_GRP_CD =='AVF') echo "selected";?>>AVF</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>운임코드</strong></div>
+                                                <div class="col-xs-9">
+                                                    <input type="text" name="u_FRT_CD" id="u_FRT_CD" class="form-control text-right input-sm" value="<?=$u_FRT_CD?>"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>운임영문명</strong></div>
+                                                <div class="col-xs-9">
+                                                    <input type="text" name="u_FRT_NM" id="u_FRT_NM" class="form-control text-right input-sm" required  value="<?=$u_FRT_NM?>"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>운임한글명</strong></div>
+                                                <div class="col-xs-9">
+                                                    <input type="text" name="u_FRT_ENG_NM" id="u_FRT_ENG_NM" class="form-control text-right input-sm" required  value="<?=$u_FRT_ENG_NM?>"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>TAX</strong></div>
+                                                <div class="col-xs-9">
+                                                    <input type="text" name="u_TAX_RATE" id="u_TAX_RATE" class="form-control text-right input-sm" value="<?=$u_TAX_RATE?>"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>화폐코드</strong></div>
+                                                <div class="col-xs-9">
+                                                    <select class="form-control input-sm text-center" name="u_CURR_CD" id="u_CURR_CD">
+                                                        <option value="KRW" <?if($u_CURR_CD =='KRW') echo "selected";?>>KRW</option>
+                                                        <option value="USD" <?if($u_CURR_CD =='USD') echo "selected";?>>USD</option>
+                                                        <option value="EUR" <?if($u_CURR_CD =='EUR') echo "selected";?>>EUR</option>
+                                                        <option value="CNY" <?if($u_CURR_CD =='CNY') echo "selected";?>>CNY</option>
+                                                        <option value="JPY" <?if($u_CURR_CD =='JPY') echo "selected";?>>JPY</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>자동표기</strong></div>
+                                                <div class="col-xs-9">
+                                                    <select class="form-control input-sm" name="u_DISP_YN" id="u_DISP_YN" >
+                                                        <option value="Y" <?if($u_DISP_YN =='Y') echo "selected";?>>사용</option>
+                                                        <option value="N" <?if($u_DISP_YN =='N') echo "selected";?>>사용안함</option>
+                                                    </select>
+
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>표기순서</strong></div>
+                                                <div class="col-xs-9">
+                                                    <input type="text" name="u_DSP_SEQ_NO" id="u_DSP_SEQ_NO" class="form-control text-right input-sm" value="<?=$u_DSP_SEQ_NO?>"/>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-xs-3 text-right" style="margin-top: 10px;"><strong>사용유무</strong></div>
+                                                <div class="col-xs-9">
+                                                    <select class="form-control input-sm" name="u_USE_YN" id="u_USE_YN" >
+                                                        <option value="Y" <?if($u_USE_YN =='Y') echo "selected";?>>사용</option>
+                                                        <option value="N" <?if($u_USE_YN =='N') echo "selected";?>>사용안함</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" name="submit_update" id="submit_update" class="btn btn-info" onclick="update_fare()">수정</button>
+
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!--  모달 수정 end // ----------------------------------------------------------------------->
+
+    <script type="text/javascript">
+
+        // 운임코드 삭제 ==========================
+        function delete_fare() {
+            var fupdate = document.fupdate;
+
+            if (!is_checked("chk[]")) {
+                swal("삭제 하실 항목을 하나 이상 선택하세요.");
+                return false;
+            }
+
+            $.ajaxSettings.traditional = true;
+
+            var checkboxValues = [];
+            $("input[name='chk[]']:checked").each(function(i) {
+                checkboxValues.push($(this).val());
+            });
+
+            // object를 string형태로 변환
+            objData = JSON.stringify(checkboxValues);
+
+            swal({
+                title: "운임코드 삭제",
+                text: "운임코드를 삭제 하시겠습니까?",
+                icon: "warning",
+                buttons: ["취소", "삭제"],
+                dangerMode: true,
+            }) .then(function(result) {
+                if (result) {
+
+                    $.ajax({
+                        type: 'POST',
+                        url: './php/ajax_delete_fare.php',
+                        data: {
+                            "chk": objData
+                        },
+                        dataType: 'json',
+                        success: function (data) {
+                            var str_data = data.split('|');
+                            var rslt = str_data[0];
+                            var msg = str_data[1];
+
+                            if (rslt == 'ok') {
+                                swal({
+                                    title: "삭제 완료",
+                                    text: msg,
+                                    //text: data,
+                                    icon: "success",
+                                })
+                                    .then(function () {
+                                        setTimeout(function() {
+                                            window.location.href = "manageCodeFare.html";
+                                        }, 1500);
+                                    });
+                            } else {
+                                swal({
+                                    title: "삭제 실패",
+                                    text: data,
+                                    icon: "warning",
+                                })
+                                    .then(function () {
+                                        window.location.href = "manageCodeFare.html";
+                                    });
+                            }
+
+                        },  //success
+                        error: function (request,status,error) {
+                            alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                        } //error
+
+                    });    //end ajax
+
+                } else {
+                    swal({
+                        title: "취소 처리",
+                        text: "취소 되었습니다.",
+                        icon: "info",
+                    });
+                }
+            });
+        }
+
+        // 운임코드 추가 ==========================
+        function insert_fare() {
+
+            var s_SA_CLS_CD = $("#s_SA_CLS_CD option:selected").val(); //select option
+            var s_FRT_GRP_CD = $("#s_FRT_GRP_CD option:selected").val(); //select option
+            var s_FRT_CD = $('#s_FRT_CD').val();
+            var s_FRT_ENG_NM = $('#s_FRT_ENG_NM').val();
+            var s_FRT_NM = $('#s_FRT_NM').val();
+            var s_TAX_RATE = $('#s_TAX_RATE').val();
+            var s_CURR_CD = $("#s_CURR_CD option:selected").val(); //select option
+            var s_DISP_YN = $("#s_DISP_YN option:selected").val(); //select option
+            var s_DSP_SEQ_NO = $('#s_DSP_SEQ_NO').val();
+            var s_USE_YN = $('input[name=s_USE_YN]:checked').val(); //radio value
+
+
+
+            if( s_SA_CLS_CD == '' || s_SA_CLS_CD == null ){
+                swal( '1. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    s_SA_CLS_CD.focus();
+                }, 1500);
+
+                return false;
+            }
+            if( s_FRT_GRP_CD == '' || s_FRT_GRP_CD == null ){
+                swal( '2. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    s_FRT_GRP_CD.focus();
+                }, 1500);
+                return false;
+            }
+            if( s_FRT_CD == '' || s_FRT_CD == null ){
+                swal( '3. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    s_FRT_CD.focus();
+                }, 1500);
+                return false;
+            }
+
+            if( s_FRT_ENG_NM == '' || s_FRT_ENG_NM == null ){
+                swal( '6. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    s_FRT_ENG_NM.focus();
+                }, 1500);
+                return false;
+            }
+
+            if( s_FRT_NM == '' || s_FRT_NM == null ){
+                swal( '7. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    s_FRT_NM.focus();
+                }, 1500);
+                return false;
+            }
+            if( s_TAX_RATE == '' || s_TAX_RATE == null ){
+                swal( '8. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    s_TAX_RATE.focus();
+                }, 1500);
+                return false;
+            }
+            if( s_CURR_CD == '' || s_CURR_CD == null ){
+                swal( '9. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    s_CURR_CD.focus();
+                }, 1500);
+                return false;
+            }
+            if( s_DISP_YN == '' || s_DISP_YN == null ){
+                swal( '10. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    s_DISP_YN.focus();
+                }, 1500);
+                return false;
+            }
+            if( s_DSP_SEQ_NO == '' || s_DSP_SEQ_NO == null ){
+                swal( '11. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    s_DSP_SEQ_NO.focus();
+                }, 1500);
+                return false;
+            }
+            if( s_USE_YN == '' || s_USE_YN == null ){
+                swal( '12. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    s_USE_YN.focus();
+                }, 1500);
+                return false;
+            }
+
+            $.ajax({
+                url:"./php/ajax_insert_fare.php",
+                method:"POST",
+                data:{
+                    s_SA_CLS_CD : s_SA_CLS_CD,
+                    s_FRT_GRP_CD : s_FRT_GRP_CD,
+                    s_FRT_CD : s_FRT_CD,
+                    s_FRT_ENG_NM : s_FRT_ENG_NM,
+                    s_FRT_NM : s_FRT_NM,
+                    s_TAX_RATE : s_TAX_RATE,
+                    s_CURR_CD : s_CURR_CD,
+                    s_DISP_YN : s_DISP_YN,
+                    s_DSP_SEQ_NO : s_DSP_SEQ_NO,
+                    s_USE_YN : s_USE_YN
+                },
+                success:function(data)
+                {
+                    swal('추가 완료',data,'info');
+                    setTimeout(function() {
+                        window.location.href = "manageCodeFare.html";
+                    }, 1500);
+                }
+                ,  //success
+                error: function (request,status,error) {
+                    alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                } //error
+            });
+        }
+
+        // 운임코드 수정 ==========================
+        function update_fare() {
+            var up_idx = $('#up_idx').val();
+            var u_SA_CLS_CD = $("#u_SA_CLS_CD option:selected").val(); //select option
+            var u_FRT_GRP_CD = $("#u_FRT_GRP_CD option:selected").val(); //select option
+            var u_FRT_CD = $('#u_FRT_CD').val();
+            var u_FRT_ENG_NM = $('#u_FRT_ENG_NM').val();
+            var u_FRT_NM = $('#u_FRT_NM').val();
+            var u_TAX_RATE = $('#u_TAX_RATE').val();
+            var u_CURR_CD = $("#u_CURR_CD option:selected").val(); //select option
+            var u_DISP_YN = $("#u_DISP_YN option:selected").val(); //select option
+            var u_DSP_SEQ_NO = $('#u_DSP_SEQ_NO').val();
+            var u_USE_YN = $("#u_USE_YN option:selected").val(); //select option
+
+
+            if( u_SA_CLS_CD == '' || u_SA_CLS_CD == null ){
+                swal( '1. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    u_SA_CLS_CD.focus();
+                }, 1500);
+
+                return false;
+            }
+            if( u_FRT_GRP_CD == '' || u_FRT_GRP_CD == null ){
+                swal( '2. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    u_FRT_GRP_CD.focus();
+                }, 1500);
+                return false;
+            }
+            if( u_FRT_CD == '' || u_FRT_CD == null ){
+                swal( '3. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    u_FRT_CD.focus();
+                }, 1500);
+                return false;
+            }
+
+            if( u_FRT_ENG_NM == '' || u_FRT_ENG_NM == null ){
+                swal( '6. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    u_FRT_ENG_NM.focus();
+                }, 1500);
+                return false;
+            }
+
+            if( u_FRT_NM == '' || u_FRT_NM == null ){
+                swal( '7. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    u_FRT_NM.focus();
+                }, 1500);
+                return false;
+            }
+            if( u_TAX_RATE == '' || u_TAX_RATE == null ){
+                swal( '8. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    u_TAX_RATE.focus();
+                }, 1500);
+                return false;
+            }
+            if( u_CURR_CD == '' || u_CURR_CD == null ){
+                swal( '9. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    u_CURR_CD.focus();
+                }, 1500);
+                return false;
+            }
+            if( u_DISP_YN == '' || u_DISP_YN == null ){
+                swal( '10. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    u_DISP_YN.focus();
+                }, 1500);
+                return false;
+            }
+            if( u_DSP_SEQ_NO == '' || u_DSP_SEQ_NO == null ){
+                swal( '11. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    u_DSP_SEQ_NO.focus();
+                }, 1500);
+                return false;
+            }
+            if( u_USE_YN == '' || u_USE_YN == null ){
+                swal( '12. 입력이 필요합니다.' );
+                setTimeout(function() {
+                    u_USE_YN.focus();
+                }, 1500);
+                return false;
+            }
+
+            $.ajax({
+                url:"./php/ajax_update_fare.php",
+                method:"POST",
+                data:{
+                    up_idx : up_idx,
+                    u_SA_CLS_CD : u_SA_CLS_CD,
+                    u_FRT_GRP_CD : u_FRT_GRP_CD,
+                    u_FRT_CD : u_FRT_CD,
+                    u_FRT_ENG_NM : u_FRT_ENG_NM,
+                    u_FRT_NM : u_FRT_NM,
+                    u_TAX_RATE : u_TAX_RATE,
+                    u_CURR_CD : u_CURR_CD,
+                    u_DISP_YN : u_DISP_YN,
+                    u_DSP_SEQ_NO : u_DSP_SEQ_NO,
+                    u_USE_YN : u_USE_YN
+                },
+                success:function(data)
+                {
+                    swal('수정 완료',data,'info');
+                    setTimeout(function() {
+                        window.location.href = "manageCodeFare.html";
+                    }, 1500);
+                }
+                ,  //success
+                error: function (request,status,error) {
+                    alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                } //error
+            });
+        }
+
+
+        //질문 업데이트 모달 띄우기...  ###################################
+        function update_modal(q_idx) {
+            window.location.href = "manageCodeFare.html?x_idx=<?=$x_idx?>&target_idx="+q_idx;
+        }
+
+        function viewCount(val) {
+            self.location = "<?=$_SERVER[PHP_SELF]?>?<?= $qstr ?>&pageNum=" + val;
+        }
+    </script>
+
+    <? if($target_idx) { ?>
+        <script type="text/javascript">
+            $(window).on('load',function(){
+                $('#myModal_update').modal('show');
+                $('.modal-title_update').html('운임코드 수정');
+            });
+        </script>
+    <? } ?>
+
+<?php
+    include_once ('./include/footer.html');
+?>

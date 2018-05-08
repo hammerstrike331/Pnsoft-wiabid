@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3/jquery.min.js"></script>
+
+<button onclick="addDiv();">Add address form</button>
+<form name="test">
+<div id="addresses">
+    <div class="address">
+        <input type="text" name="address[0].street" value="">
+        <input type="text" name="address[0].city" value="">
+        <input type="text" name="address[0].zip" value="">
+        <input type="text" name="address[0].state" value="">
+    </div>
+</div>
+    <button onclick="DivOK();">Add address form</button>
+</form>
+
+<script type="text/javascript">
+    var i = 0;
+    function addDiv(){
+        var newaddress= $("#addresses div.address").eq(0).clone();
+                newaddress.find('input').each(function() {
+                    this.name= this.name.replace('[0]', '['+i+']');
+                 });
+            $('#addresses').append(newaddress);
+    }
+    function DivOK() {
+
+
+    }
+
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<?php 
+$pageName = basename($_SERVER['PHP_SELF']);
+
+if($pageName == 'stats.html') { $page_title = "통계"; $page_title2 = "통계"; $class_icon = "zmdi zmdi-view-dashboard zmdi-hc-4x"; }
+
+if($pageName == 'memberList.html')  { $page_title = "회원관리"; $page_title2 = "회원목록조회";  $class_icon = "fa fa-users fa-4x"; }
+if($pageName == 'memberListPremium.html')  { $page_title = "회원관리"; $page_title2 = "프리미엄회원목록조회";  $class_icon = "fa fa-users fa-4x"; }
+if($pageName == 'viewInfo.html')  { $page_title = "회원관리"; $page_title2 = "기업정보";  $class_icon = "fa fa-users fa-4x"; }
+
+
+if($pageName == 'bidClose.html')  { $page_title = "입찰관리"; $page_title2 = "입찰마감";  $class_icon = "fa fa-pencil-square fa-4x"; }
+if($pageName == 'bidLimit.html')  { $page_title = "입찰관리"; $page_title2 = "입찰제한관리";  $class_icon = "fa fa-pencil-square fa-4x"; }
+if($pageName == 'mailList.html')  { $page_title = "입찰관리"; $page_title2 = "안내메일전송";  $class_icon = "fa fa-pencil-square fa-4x"; }
+
+if($pageName == 'settleBidFee.html') { $page_title = "정산관리"; $page_title2 = "입찰수수료정산";  $class_icon = "fa fa-calculator fa-4x"; }
+
+if($pageName == 'exposeForwarder.html') { $page_title = "노출관리"; $page_title2 = "포워더노출관리";  $class_icon = "fa fa-book fa-4x"; }
+if($pageName == 'exposeFare.html') { $page_title = "노출관리"; $page_title2 = "운임노출관리";  $class_icon = "fa fa-book fa-4x"; }
+
+if($pageName == 'manageFAQ.html')  { $page_title = "환경설정"; $page_title2 = "질문과답변관리";  $class_icon = "fa fa-cog fa-4x"; }
+if($pageName == 'manageTerms.html')  { $page_title = "환경설정"; $page_title2 = "약관관리";  $class_icon = "fa fa-cog fa-4x"; }
+if($pageName == 'manageFees.html')  { $page_title = "환경설정"; $page_title2 = "수수료요율관리";  $class_icon = "fa fa-cog fa-4x"; }
+if($pageName == 'manageCodeBasic.html')  { $page_title = "환경설정"; $page_title2 = "공통코드관리";  $class_icon = "fa fa-cog fa-4x"; }
+if($pageName == 'manageCodeArea.html')  { $page_title = "환경설정"; $page_title2 = "지역코드관리";  $class_icon = "fa fa-cog fa-4x"; }
+if($pageName == 'manageCodeFare.html')  { $page_title = "환경설정"; $page_title2 = "운임코드관리";  $class_icon = "fa fa-cog fa-4x"; }
+if($pageName == 'Regist_FAQ.html')  { $page_title = "환경설정"; $page_title2 = "FAQ 등록";  $class_icon = "fa fa-cog fa-4x"; }
+if($pageName == 'update_FAQ.html')  { $page_title = "환경설정"; $page_title2 = "FAQ 수정";  $class_icon = "fa fa-cog fa-4x"; }
+
+?>
+
+<!-- Top Bar Start -->
+<div class="topbar">
+
+    <!-- LOGO -->
+    <div class="topbar-left">
+        <a href="stats.html"><img src="assets/images/logo-s.png" alt="" class="m-t-15"></a>
+        <p class="font-bold text-primary hidden-sm hidden-xs">관리자 시스템</p>
+    </div>
+
+    <!-- Button mobile view to collapse sidebar menu -->
+    <div class="navbar navbar-default" role="navigation">
+        <div class="container">
+
+            <!-- Page title -->
+            <ul class="nav navbar-nav navbar-left">
+                <li>
+                    <button class="button-menu-mobile open-left">
+                        <i class="zmdi zmdi-menu"></i>
+                    </button>
+                </li>
+                <li>
+                    <h4 class="page-title"><?php  echo $page_title2?>
+            <?php  if($pageName == 'manageFAQ.html')  { ?>
+                    <a href="Regist_FAQ.html" class="btn btn-sm btn-primary waves-effect waves-light m-l-10"><i class="fa fa-plus"></i> <span>등록</span></a>
+            <?php  } ?>
+                    </h4>
+                </li>
+            </ul>
+        </div><!-- end container -->
+    </div><!-- end navbar -->
+</div>
+<!-- Top Bar End -->
+
+<!-- ========== Left Sidebar Start ========== -->
+<div class="left side-menu">
+    <div class="sidebar-inner slimscrollleft">
+
+        <!-- User -->
+        <div class="user-box bg-primary ">
+            <i class="<?php  echo $class_icon?>"></i>
+            <h5 class="text-white"><?php  echo $page_title?></h5>
+        </div>
+        <!-- End User -->
+
+        <div id="sidebar-menu">
+            <ul>
+                <li class="text-muted menu-title">Navigation</li>
+
+                <li>
+                    <a href="stats.html" class="waves-effect"><i class="zmdi zmdi-view-dashboard"></i> <span> 통계 </span> </a>
+                </li>
+
+                <li class="has_sub">
+                    <a href="javascript:void(0);" class="waves-effect"><i class="fa fa-users"></i> <span> 회원관리 </span> <span class="menu-arrow"></span></a>
+                    <ul class="list-unstyled">
+                        <li><a href="memberList.html">회원목록조회</a></li>
+                        <li class="hidden"><a href="memberListPremium.html">프리미엄회원관리</a></li>
+                        <li class="hidden"><a href="sub01-02-01.html">프리미엄회원관리</a></li>
+                    </ul>
+                </li>
+
+                <li class="has_sub">
+                    <a href="javascript:void(0);" class="waves-effect"><i class="fa fa-pencil-square"></i> <span> 입찰관리 </span> <span class="menu-arrow"></span></a>
+                    <ul class="list-unstyled">
+                        <li><a href="bidClose.html">입찰마감</a></li>
+                        <li><a href="bidLimit.html">입찰제한관리</a></li>
+                        <li><a href="mailList.html">안내메일전송</a></li>
+                    </ul>
+                </li>
+
+                <li class="has_sub">
+                    <a href="javascript:void(0);" class="waves-effect"><i class="fa fa-calculator"></i> <span> 정산관리 </span> <span class="menu-arrow"></span></a>
+                    <ul class="list-unstyled">
+                        <li><a href="settleBidFee.html">입찰수수료정산</a></li>
+                    </ul>
+                </li>
+
+                <li class="has_sub">
+                    <a href="javascript:void(0);" class="waves-effect"><i class="fa fa-book"></i> <span> 노출관리 </span> <span class="menu-arrow"></span></a>
+                    <ul class="list-unstyled">
+                        <li><a href="exposeForwarder.html">포워더노출관리</a></li>
+                        <li><a href="exposeFare.html">운임노출관리</a></li>
+                    </ul>
+                </li>
+
+                <li class="has_sub">
+                    <a href="javascript:void(0);" class="waves-effect"><i class="fa fa-cog"></i><span> 환경설정 </span> <span class="menu-arrow"></span></a>
+                    <ul class="list-unstyled">
+                        <li><a href="manageFAQ.html">질문과답변관리</a></li>
+                        <li class="hidden"><a href="manageMember.html">프리미엄회원관리</a></li>
+                        <li><a href="manageTerms.html">약관관리</a></li>
+                        <li><a href="manageFees.html">수수료요율관리</a></li>
+                        <li class="hidden"><a href="manageCodeBasic.html">공통코드관리</a></li>
+                        <li class="hidden"><a href="manageCodeArea.html">지역코드관리</a></li>
+                        <li class="hidden"><a href="manageCodeFare.html">운임코드관리</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a href="./php/logout.php" class="text-primary"><i class="fa fa-sign-out"></i><span> 로그아웃 </span></a>
+                </li>
+
+            </ul>
+            <div class="clearfix"></div>
+        </div>
+        <!-- Sidebar -->
+        <div class="clearfix"></div>
+
+    </div>
+</div>
+<!-- Left Sidebar End -->

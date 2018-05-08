@@ -1,0 +1,357 @@
+<div class="quotation-r-title mb40 clearfix">
+    <div class="row">
+        <div class="col-6">
+            <h1 class="text-left">(일반) 입찰 공고 등록 - LCL</h1>
+        </div>
+        <div class="col-6">
+            <img src="../../img/step2.png" alt="">
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-6 pd10">
+        <div class="portlet">
+            <div class="portlet-title">
+                <caption>기본 정보</caption>
+            </div>
+            <div class="row view">
+                <div class="form-group">
+                    <div class="col-3">
+                        화물구분<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-9">
+                        <?php echo $CRG_TYP_CD?>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3">
+                        공고번호
+                    </div>
+                    <div class="col-9">
+                        <?php echo $NTC_NO?>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3">
+                        공고명<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-9">
+                        <?php echo $NTC_NM?>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3">
+                        공고자<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-9">
+                        <?php echo $NTC_PIC_NM?>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3">
+                        입찰마감일시<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-9 relative1">
+                        <?php echo $NTC_CLOSE_YMD?> <?php echo $NTC_CLOSE_TM?>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3">
+                        수/출입 구분<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-9">
+                        <?php 
+                        if($NTC_IO_TYP_CD == "O") echo "수출 ";
+                        if($NTC_IO_TYP_CD == "I") echo "수입 ";
+                        if($NTC_IO_TYP_CD == "T") echo "수출입 ";
+                        if($NTC_IO_TYP_CD == "A") echo "삼국간 ";
+                        ?>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3">
+                        요청서비스<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-9">
+                        <?php if($SEA_RQST_YN) echo " 해상운송 /"; ?>
+                        <?php if($AIR_RQST_YN) echo " 항공운송 /"; ?>
+                        <?php if($DOM_RQST_YN) echo " 국내운송 /"; ?>
+                        <?php if($CRG_RQST_YN) echo " 적하보험 "; ?>
+                        <?php if($CSTM_RQST_YN) echo " 통관 /"; ?>
+                        <?php if($PACK_RQST_YN) echo " 포장 "; ?>
+                    </div>
+                </div>
+                <div class="form-group border-none">
+                    <div class="col-3">
+                        운임지불조건
+                    </div>
+                    <div class="col-9">
+                        <?php if($PAY_COND_CD == "01") echo " B/L(AWB) 인수시점"; ?>
+                        <?php if($PAY_COND_CD == "02") echo " 수출(선적일), 수입(도착일)"; ?>
+                        <?php if($PAY_COND_CD == "03") echo " 수출(선적당월말), 수입(도착당월말)"; ?>
+                        <?php if($PAY_COND_CD == "04") echo " 수출(선적익월말), 수입(도착익월말)"; ?>
+                        <?php if($PAY_COND_CD == "05") echo " D/O 인수시점"; ?>
+                        <?php if($PAY_COND_CD == "99") echo " 기타 (아래 기타사항에 기재)"; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="portlet mt10">
+            <div class="portlet-title">
+                <caption>운송구간 및 거래조건</caption>
+            </div>
+            <div class="row view">
+                <div class="form-group">
+                    <div class="col-3">
+                        선적지
+                    </div>
+                    <div class="col-9">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="row mb10">
+                                    <div class="col-4">
+                                        선적항<span class="text-primary">*</span>
+                                    </div>
+                                    <div class="width70">
+                                        <select class="input" name="POL_CD" required>
+                                            <?php echo list_loc(SEA, POL_CD); ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4 mb10">
+                                        PICK UP지
+                                    </div>
+                                    <div class="width70">
+                                        <input type="text" class="input mr-2" name="DOOR_NM">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        픽업일자
+                                    </div>
+                                    <div class="width70 relative1">
+                                        <input type="text" class="input mr-2"  id="datepicker2" value="" name="DOOR_YMD">
+                                        <img src="../../img/icon/icon-calendar.png" alt="" class="icon-calendar-2">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3">
+                        도착지
+                    </div>
+                    <div class="col-9">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="row mb10">
+                                    <div class="col-4">
+                                        양하항<span class="text-primary">*</span>
+                                    </div>
+                                    <div class="width70">
+                                        <select class="input" name="POD_CD" required>
+                                            <?php echo list_loc(SEA, POD_CD); ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4 mb10">
+                                        DELIVERY 장소
+                                    </div>
+                                    <div class="width70">
+                                        <input type="text" class="input mr-2" name="FDS_NM">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        도착요구일자
+                                    </div>
+                                    <div class="width70 relative1">
+                                        <input type="text" class="input mr-2"  id="datepicker3"  value="" name="FDS_YMD">
+                                        <img src="../../img/icon/icon-calendar.png" alt="" class="icon-calendar-2">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group border-none">
+                    <div class="col-3">
+                        거래조건<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-9">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="row">
+                                    <div class="col-4">
+                                        무역거래조건<span class="text-primary">*</span>
+                                    </div>
+                                    <div class="width70">
+                                        <select class="input" name="INCTRMS_CD" required>
+                                            <?php echo list_options(INCTRMS); ?>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 pd10 m-mt20">
+        <div class="portlet">
+            <div class="portlet-title">
+                <caption>물동량</caption>
+            </div>
+            <div class="row view">
+                <div class="form-group">
+                    <div class="col-3">
+                        품목명<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-9">
+                        <input type="text" class="input" name="CRG_NM" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3">
+                        물동량
+                    </div>
+                    <div class="col-9">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="row mb10">
+                                    <div class="col-40 xs-col-3">
+                                        포장형태
+                                    </div>
+                                    <div class="col-40 xs-col-7">
+                                        <select class="input" name="PKG_CD">
+                                            <?php echo list_options(PKG_CD); ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb10">
+                                    <div class="col-40 xs-col-3">
+                                        수량
+                                    </div>
+                                    <div class="col-40 xs-col-4">
+                                        <input type="text" class="input" name="CRG_CNT">
+                                    </div>
+                                    <div class="col-2 xs-col-3">
+                                        <span class="small-span ml4">KGS</span>
+                                    </div>
+                                </div>
+                                <div class="row mb10">
+                                    <div class="col-40 xs-col-3">
+                                        중량
+                                    </div>
+                                    <div class="col-40 xs-col-4">
+                                        <input type="text" class="input" name="CRG_WGT">
+                                    </div>
+                                    <div class="col-2 xs-col-3">
+                                        <span class="small-span ml4">KGS</span>
+                                    </div>
+                                </div>
+                                <div class="row mb10">
+                                    <div class="col-40 xs-col-3">
+                                        용적<span class="text-primary">*</span>
+                                    </div>
+                                    <div class="col-40 xs-col-4">
+                                        <input type="text" class="input" name="CRG_VOL" required>
+                                    </div>
+                                    <div class="col-2 xs-col-3">
+                                        <span class="small-span ml4">KGS</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3">
+                        Dimension<span class="text-primary">*</span>
+                    </div>
+                    <div class="col-9">
+                        <div class="row">
+                            <div class="width33 xs-col-3">
+                                <input type="text" min="0" class="input width50" name="DIM_LEN" required>
+                                <span class="small-span"> (L)</span>
+                            </div>
+                            <div class="width33 xs-col-3">
+                                <input type="text" min="0" class="input width50" name="DIM_WID" required>
+                                <span class="small-span"> (W)</span>
+                            </div>
+                            <div class="width33 xs-col-4">
+                                <input type="text" min="0" class="input width50" name="DIM_HGT" required>
+                                <span class="small-span"> (H)(cm)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3">
+                        물품가 기준
+                    </div>
+                    <div class="col-9">
+                        <input type="text" class="input" placeholder="BL, CNTR. SHIPMENT 등" name="CRG_UNIT_NM">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-3">
+                        물품가액(FOB)
+                    </div>
+                    <div class="col-9">
+                        <div class="row">
+                            <div class="width29 mr-2">
+                                <input type="text" class="input" name="CRG_AMT" id="CRG_AMT" value="1,000">
+                            </div>
+                            <div class="width70">
+                                <select class="input" name="CRG_CURR_CD">
+                                    <?php echo list_options(CURR_CD); ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>                
+                <div class="form-group">
+                    <div class="col-3">
+                        위험물
+                    </div>
+                    <div class="col-9 ">
+                        <select class="input" name="IMDG_CD">
+                            <?php echo list_options(IMDG_CD); ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-4">
+                        견적적용환율 <span class="small-span">(1USD)</span><span class="text-primary">*</span>
+                    </div>
+                    <div class="col-8">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="width33 xs-col-5">
+                                    <input type="text" class="input" placeholder="" value="1,130" name="EX_RATE" required>
+                                </div>
+                                <span class="small-span">(KRW)</span>
+                            </div>
+                            <div class="col-6"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group border-none">
+                    <div class="col-3">
+                        기타요청사항
+                    </div>
+                    <div class="col-9 l-height0">
+                        <textarea name="REMARK" id="REMARK" class="input height166" placeholder="미기재 필요사항 기술"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

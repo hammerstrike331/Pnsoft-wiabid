@@ -1,0 +1,141 @@
+<?php
+    session_start();
+    include_once('../../admin/lib/common.php');
+    include_once('../../include/html_head.html');
+
+    $pid = $_GET['pid'];
+?>
+
+<style type="text/css">
+    @media screen and (max-width: 768px) {
+        ul.tabs li:nth-child(2) {
+            position: absolute !important;
+            top: 0;
+            left: 18.5rem;            
+        }
+        ul.tabs li:nth-child(3) {
+            position: absolute !important;
+            top: 43px;
+            left: 0;
+        }
+        ul.tabs li:nth-child(4) {
+            position: absolute !important;
+            top: 43px;
+            left: 18.5rem;            
+        }        
+    }
+    ul.tabs {
+        font-size: 15px !important;
+    }
+</style>
+
+<div class="container">
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                    <li>Quotation</li>
+                    <li>입찰정보</li>
+                    <li class="active">입찰공고</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="row">
+            <div class="col-12">
+                <div id="main-tab">
+                    <ul class="tabs tabs-c clearfix inner-left m-tabs">
+                        <li onclick="location.href='bid_view.html?pid=<?php echo $pid?>'">SHIPMENT</li>
+                        <li onclick="location.href='participation_status.html?pid=<?php echo $pid?>'">QUOTE STATUS</li>
+                        <li onclick="location.href='contract.html?pid=<?php echo $pid?>'">CONTRACT</li>
+                        <li class="active" onclick="location.href='questions_and_answers.html?pid=<?php echo $pid?>'">Q&A</li>
+                    </ul>
+
+                    <div class="tab_container clearfix">
+                        <div class="tab_content">                            
+                            <div class="portlet">
+                                <div class="portlet-title clearfix">
+                                    <caption>입찰공고 문의사항</caption>
+                                    <span class="text-mute m-full">입찰공고 관련 문의 및 궁금하신 점을 남겨주세요.</span>
+                                </div>
+                                <div class="row view">
+                                    <form name="fQuestion" id="fQuestion" method="post" action="">
+                                        <input type="hidden" name="pid" value="<?php echo $pid?>">
+                                        <input type="hidden" id="MBM_NO" name="MBM_NO" value="<?php echo $_SESSION['MBM_NO']?>">
+                                        <input type="hidden" id="MBM_NM" name="MBM_NM" value="<?php echo $_SESSION['MBM_NM']?>">
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                작성자
+                                            </div>
+                                            <div class="col-9">
+                                                <?php echo $_SESSION['MBM_NM']?>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">
+                                                제목
+                                            </div>
+                                            <div class="col-9">
+                                                <input type="text" class="input" placeholder="제목입력" name="title" maxlength="256" value="">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="col-3">옵션</div>
+                                            <div class="col-9">
+                                                <input type="checkbox" id="s-check" name="check_pass"><label for="s-check">비밀글</label>
+                                                <input type="password" name="password" class="input width30 float-none m-border-t" placeholder="비밀번호(4~10자)" maxlength="10" value="">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group border-none">
+                                            <div class="col-12">
+                                                <textarea placeholder="내용을 입력해 주세요 (1,000자 이하)" maxlength="1000" name="content"></textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="contract-agree">
+                                            <p class="btn-area text-center">
+                                                <button type="button" onClick="javascript:Register();" class="btn caption">등록</button>
+                                                <button type="button" onClick="javascript:Cancel();" class="btn caption bg-silver">취소</button>
+                                            </p>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>                            
+                        </div>                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var login = $("#MBM_NM").val();
+    if(!login) {        
+        window.location.href = "questions_and_answers.html?pid=<?php echo $pid?>";
+    }        
+</script>
+
+<script type="text/javascript">    
+    function Register(){
+        var f =document.fQuestion;
+        
+        if(f.title.value ==""){
+            swal("제목을 입력해주세요","","info");
+            return false;
+        }
+        f.action = "../../php/question_regi_ok.php";
+        f.submit();
+    }
+    function Cancel(){
+        window.location.href = "questions_and_answers.html?pid=<?php echo $pid?>";
+    }
+</script>
+
+<?php
+    include_once('../../include/html_foot.html');
+?>

@@ -1,0 +1,56 @@
+<?php
+session_start();
+include_once ('../../admin/lib/common.php');
+
+
+$rtime = mktime();
+
+$sql = " update tbid_ntc_crgo
+                set 
+                     CRG_NM = '{$CRG_NM}',
+                     CRG_AMT  = '{$CRG_AMT}',
+                     DIM_WID = '{$DIM_WID}',
+                     DIM_LEN = '{$DIM_LEN}',
+                     DIM_HGT = '{$DIM_HGT}',
+                     CRG_CURR_CD = '{$CRG_CURR_CD}',
+                     DNGR_YN  = '{$DNGR_YN}',
+                     CRG_CNT = '{$CRG_CNT}',
+                     CRG_WGT = '{$CRG_WGT}',
+                     DECK_TYP_CD = '{$DECK_TYP_CD}',
+                     CRG_UNIT_NM = '{$CRG_UNIT_NM}',
+                     PKG_CD = '{$PKG_CD}'
+					 where NTC_NO = '$NTC_NO'
+					 ";
+sql_query($sql);
+
+$sql = " update tbid_ntc_mst
+                set 
+                     EX_RATE = '{$EX_RATE}',
+                     ETC_SVC_DESC  = '{$ETC_SVC_DESC}'
+					 where NTC_NO = '$NTC_NO'
+					 ";
+sql_query($sql);
+
+/*
+	$sql = " update a_plist
+                set
+                     p_packtype = '{$p_packtype}',
+                     p_quantity = '{$p_quantity}',
+                     p_weight = '{$p_weight}',
+                     p_square = '{$p_square}',
+					 product = '{$product}',
+                     dimension_l = '{$dimension_l}',
+                     dimension_w = '{$dimension_w}',
+                     dimension_h = '{$dimension_h}',
+                     fob = '{$fob}',
+                     fob_type = '{$fob_type}',
+                     fob_type2 = '{$fob_type2}',
+                     fob_notice = '{$fob_notice}',
+                     fob_ex = '{$fob_ex}',
+                     memo = '{$memo}',
+                     rtime = '{$rtime}' where pid = '$pid'
+					 ";
+    sql_query($sql);
+*/
+alert("입찰공고가 등록되었습니다.","/html/quotation/bid_info.html");
+?>

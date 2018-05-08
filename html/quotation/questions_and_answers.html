@@ -1,0 +1,247 @@
+<?php
+    session_start();
+    include_once('../../admin/lib/common.php');
+    include_once('../../include/html_head.html');
+
+    $pid = $_GET['pid'];
+
+    $sql1 = "SELECT COUNT(*) AS cnt FROM tbl_question";
+    $row = sql_fetch($sql1);
+    $total_count = $row['cnt'];
+
+    $pageNum = (int)$_GET['pageNum'];
+
+    if(!$pageNum) {
+        $rows = 10;
+    } else {
+        $rows = $pageNum;
+    }
+    
+    $qstr = "pid=".$pid.$page;
+
+    $page = (int)$_GET['page'];
+
+    $total_page  = ceil($total_count / $rows);  // 전체 페이지 계산
+    if ($page < 1) 
+        $page = 1;  // 페이지가 없으면 첫 페이지 (1 페이지)
+    
+    $from_record = ($page - 1) * $rows; // 시작 열을 구함
+
+    $sql2 = "SELECT * FROM tbl_question ORDER BY ins_date DESC LIMIT {$from_record}, {$rows}";
+    
+    $quesiton_list = sql_query($sql2);
+?>
+
+<style type="text/css">
+    @media screen and (max-width: 768px) {
+        ul.tabs li:nth-child(2) {
+            position: absolute !important;
+            top: 0;
+            left: 51%;            
+        }
+        ul.tabs li:nth-child(3) {
+            position: absolute !important;
+            top: 43px;
+            left: 0;
+        }
+        ul.tabs li:nth-child(4) {
+            position: absolute !important;
+            top: 43px;
+            left: 51%;            
+        }
+    }
+    #inputPWModal .modal-content {
+        width: 370px;
+    }
+    #inputPWModal .input {
+        width: 190px;
+        float: left;
+    }
+    #inputPWModal .btn {        
+        float: left;
+    }
+    .ml10 {
+        margin-left: 10px !important;
+    }
+    #inputPWModal .modal-body {
+        height: 40px;
+    }
+    ul.tabs {
+        font-size: 15px !important;
+    }
+</style>
+
+<div class="container">
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                    <li>Quotation</li>
+                    <li>입찰정보</li>
+                    <li class="active">입찰공고</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="row">
+            <div class="col-12">
+                <div id="main-tab">
+                    <ul class="tabs tabs-c clearfix inner-left m-tabs">
+                        <li onclick="location.href='bid_view.html?pid=<?php echo $pid?>'">SHIPMENT</li>
+                        <li onclick="location.href='participation_status.html?pid=<?php echo $pid?>'">QUOTE STATUS</li>
+                        <li onclick="location.href='contract.html?pid=<?php echo $pid?>'">CONTRACT</li>
+                        <li class="active" onclick="location.href='questions_and_answers.html?pid=<?php echo $pid?>'">Q&A</li>
+                    </ul>
+
+                    <div class="tab_container clearfix">
+                        <div class="tab_content">
+                            <input type="hidden" id="login_session" value="<?php echo $_SESSION['MBM_NM']?>">
+                            <!--: 질문과답변-->
+                            <div class="portlet">
+                                <div class="portlet-title clearfix">
+                                    <caption>입찰공고 문의사항</caption>
+                                    <span class="text-mute m-full">입찰공고 관련 문의 및 궁금하신 점을 남겨주세요.</span>
+                                    <span class="inner-right m-float-none"><button type="button" onClick="javascript:AddQuestion();" class="btn caption bg-orange">글쓰기</button></span>
+                                </div>
+                                <div class="row view text-center">                                    
+                                    <div class="form-group m-hidden">
+                                        <div class="col-6">
+                                            제목
+                                        </div>
+                                        <div class="col-2">
+                                            작성자
+                                        </div>
+                                        <div class="col-2">
+                                            작성일
+                                        </div>
+                                        <div class="col-1 ">
+                                            조회
+                                        </div>
+                                    </div>
+                                <?php for($i = 0; $rowQ = sql_fetch_array($quesiton_list); $i++) { ?>
+                                    <div class="form-group m-questions">
+                                        <div class="col-6 text-left">
+                                        <?php if($rowQ['check_pass'] == 1) { ?>
+                                            <img src="../../img/icon/icon-lock.png" alt="" class="icon-lock">                                            
+                                            <span data-toggle="modal" id="q_<?php echo $rowQ['id']?>" onmousedown="javascript:clickQ(this);" class="cursor"><?php echo $rowQ['title']?></span>
+                                        <?php } else { ?>
+                                            <a href="view_question.html?pid=<?php echo $pid?>&qid=<?php echo $rowQ['id']?>"><span><?php echo $rowQ['title']?></span></a>
+                                        <?php } ?>
+                                        </div>
+                                        <div class="col-2 xs-col-5">
+                                            <?php echo $rowQ['writer']?>
+                                        </div>
+                                        <div class="col-2 xs-col-5">
+                                            <?php echo $rowQ['ins_date']?>
+                                        </div>
+                                        <div class="col-1">
+                                            <?php echo $rowQ['visit_count']?>
+                                        </div>
+                                    </div>
+                                    <?php $sql = "SELECT * FROM tbl_answer WHERE question_id='{$rowQ['id']}' ORDER BY ins_date DESC";
+                                        $answer_list = sql_query($sql); 
+                                        for($j = 0; $rowA = sql_fetch_array($answer_list); $j++) { ?>
+                                        <div class="form-group reply m-questions">
+                                            <div class="col-6 text-left">
+                                                <img src="../../img/icon/icon-reply.png" alt="" class="icon-reply">
+                                                <?php if($rowA['check_pass'] == 1) { ?>
+                                                    <img src="../../img/icon/icon-lock.png" alt="" class="icon-lock">
+                                                    <span data-toggle="modal" id="a_<?php echo $rowA['id']?>" onmousedown="javascript:clickA(this);" class=" cursor text-primary"><?php echo $rowA['title']?></span>
+                                                <?php } else { ?>                                             
+                                                    <a href="view_answer.html?pid=<?php echo $pid?>&aid=<?php echo $rowA['id']?>"><span class="text-primary"><?php echo $rowA['title']?></span></a>
+                                                <?php } ?>
+                                            </div>
+                                            <div class="col-2 xs-col-5">
+                                                <?php echo $rowA['writer']?>
+                                            </div>
+                                            <div class="col-2 xs-col-5">
+                                                <?php echo $rowA['ins_date']?>
+                                            </div>
+                                            <div class="col-1">
+                                                <?php echo $rowA['visit_count']?>
+                                            </div>
+                                        </div>
+                                    <?php } ?>
+                                <?php } ?>
+                                </div>
+                            </div>
+                            <div class="row text-center mt50">                                
+                                <div class="pagination">
+                                    <?php echo get_paging3(5, $page, $total_page, $_SERVER['SCRIPT_NAME'].'?'.$qstr); ?>
+                                </div>                            
+                            </div>
+                        </div>                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="inputPWModal" class="modal">
+    <form name="fQuestion" method="post" action="">
+        <input type="hidden" name="pid" value="<?php echo $pid?>">
+        <input type="hidden" id="qid" name="qid" value="">
+        <input type="hidden" id="aid" name="aid" value="">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close" id="pwclose" data-dismiss="modal" aria-hidden="true">&times;</span>
+                <p>비밀번호 입력</p>
+            </div>
+            <div class="modal-body">
+                <input type="password" class="input" name="q_pw" id="q_pw" placeholder="비밀번호" value="">
+                <button type="button" onClick="javascript:Confirm();" class="btn caption ml10">확인</button>                    
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    function AddQuestion() {
+        var login = $("#login_session").val();
+        if(!login) {
+            alert("로그인 후 이용해 주세요");
+            return;
+        }
+        window.location.href = "add_question.html?pid=<?php echo $pid?>";
+    }
+
+    function clickQ(obj) { 
+        var inputPWModal = document.getElementById('inputPWModal');       
+        inputPWModal.style.display = "block";
+        var id = obj.getAttribute('id');
+        id = id.substr(2);
+        $("#qid").val(id);
+    }
+
+    function clickA(obj) { 
+        var inputPWModal = document.getElementById('inputPWModal');       
+        inputPWModal.style.display = "block";
+        var id = obj.getAttribute('id');
+        id = id.substr(2);
+        $("#aid").val(id);
+    }
+    
+    function Confirm() {
+        var f =document.fQuestion;
+        f.action = "../../php/q_a_check_pw.php";
+        f.submit();        
+    }
+</script>
+
+<script type="text/javascript">
+    var inputPWModal = document.getElementById('inputPWModal');
+    
+    $('#pwclose').click(function () {
+        inputPWModal.style.display = "none";
+        $("#qid").val("");
+        $("#aid").val("");
+    });
+</script>
+
+<?php
+    include_once('../../include/html_foot.html');
+?>

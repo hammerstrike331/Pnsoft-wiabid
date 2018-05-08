@@ -1,0 +1,159 @@
+@charset "UTF-8";
+
+/* tracking area */
+form#trackingSubmit { display: none; }
+.trackingCont .form-box {
+    padding: 50px;
+    background: #fff;
+    border-radius: 0 0 6px 6px;
+    -webkit-box-shadow: 0 0.46875rem 2.1875rem rgba(90,97,105,.1), 0 0.9375rem 1.40625rem rgba(90,97,105,.1), 0 0.25rem 0.53125rem rgba(90,97,105,.12), 0 0.125rem 0.1875rem rgba(90,97,105,.1);
+    box-shadow: 0 0.46875rem 2.1875rem rgba(90,97,105,.1), 0 0.9375rem 1.40625rem rgba(90,97,105,.1), 0 0.25rem 0.53125rem rgba(90,97,105,.12), 0 0.125rem 0.1875rem rgba(90,97,105,.1);
+}
+.trackingCont .tracking h4 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    font-weight: 700;
+    color: #212121;
+}
+.trackingCont .tracking .selIcon {
+    position: absolute;
+    top: 21px;
+    left: 17px;
+    z-index: 99;
+    color: #444;
+    font-size: 18px;
+}
+.trackingCont .tracking .main-auto-complete {
+    position: relative;
+    width: 100%;
+    height: 60px;
+    background: #fff;
+    margin-bottom: 40px;
+}
+.trackingCont .tracking .main-auto-complete input.cargo-search-input {
+    float: left;
+    width: 54%;
+    border-width: 1px 0 1px 0;
+    border-style: solid;
+    border-color: #ccc;
+    padding: 21px 10px;
+}
+.trackingCont .tracking .main-auto-complete .track-btn {
+    width: 20%;
+    float: right;
+    display: block;
+    border-radius: 0;
+    height: 58px;
+    font-size: 15px;
+    border: 1px solid #03a9f4;
+    border-radius: 2px;
+    background: #03a9f4;
+    cursor: pointer;
+}
+.trackingCont .chosen-container {
+    width: 20%;
+    text-align: left;
+    font-size: 15px;
+    padding: 16px 12px 16px 30px;
+    color: #6b6b6b;
+    cursor: pointer;
+    -webkit-transition: all .2s ease-in-out;
+    transition: all .2s ease-in-out;
+    position: relative;
+    float: left;
+    border: 1px solid #ccc;
+    border-right: 1px solid #eee;
+    background: #f7f7f7;
+}
+.trackingCont .chosen-container:hover {
+    background: rgba(0,0,0,0.1);
+    color: #03a9f4;
+    -webkit-transition: all .2s ease-in-out;
+    transition: all .2s ease-in-out;
+}
+@media (max-width: 767px) {
+    .trackingCont .form-box { padding: 50px 20px; }
+    .trackingCont .chosen-container { width: 40%; padding: 17px 12px 16px 30px; }
+    .trackingCont .tracking .selIcon { left: 10px; }
+    .trackingCont .tracking .main-auto-complete input.cargo-search-input { width: 46%; border-right: 1px solid #ccc; }
+    .trackingCont .tracking select.chosen-select {
+      float: left;
+      padding: 12px 0px 12px 29px;
+      height: 60px;
+      width: 46%;
+    }
+    .trackingCont .tracking .main-auto-complete .track-btn { 
+        clear: both;
+        width: 100%;
+        height: 40px;
+        margin-top: 10px;
+    }
+    .trackingCont .tracking .main-auto-complete { margin-bottom: 100px !important; }
+    .my_history .form-group.checkCont label { width: 170px !important; }
+    .my_history .checkCont .col-3{ width: 100% !important; border-bottom: none; }
+}
+
+/* addition area */
+.limit {
+    cursor: not-allowed;
+    color: #aaa;
+}
+
+/* my_info my history */
+/*.my_history .form-group.checkCont { border-top: 1px solid #e4e5e7; }*/
+.my_history .form-group.checkCont label { width: 200px; display: inline-block; border-bottom: none; }
+.checkCont .col-3{ width: 12.5% !important; }
+
+/* popup menu */
+ul.popmenu {
+    position: absolute;
+    right: 0;
+    top: 40px;
+    width: 50%;
+    max-height: 260px;
+    cursor: pointer;
+    background: #e6e9f0;
+    z-index: 5;
+    overflow: auto;
+    -webkit-box-shadow: 0 8px 14px 0 rgba(0,0,0,.1), 0 4px 15px 0 rgba(0,0,0,.15);
+    box-shadow: 0 8px 14px 0 rgba(0,0,0,.1), 0 4px 15px 0 rgba(0,0,0,.15);
+}
+ul.popmenu li {
+    position: relative;
+    display: block;
+    width: 93%;
+    padding: 0 10px;
+    border-bottom: 1px dotted #fff;
+    color: #000;
+    text-align: left;
+    -webkit-transition: all .3s;
+    transition: all .3s;
+    font-size: 13px;
+    margin: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-wrap: normal;
+    overflow: hidden;
+}
+ul.popmenu li.selected, ul.popmenu li:hover,ul.popmenu li:first-child {
+    color: #fff;
+    background: #61ccfd;
+    padding-left: 20px;
+} 
+.port .popmenuCont { position: relative; top: 0; left: 0; }
+.port ul.popmenu {
+    width: 200px;
+    top: 0;
+    left: 0;
+}
+.port ul.popmenu li {
+    width: 84%;
+}
+
+@media (max-width: 767px) {
+    ul.popmenu {
+        top: 82px;
+        width: 100%;
+    }
+
+}

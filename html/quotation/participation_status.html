@@ -1,0 +1,430 @@
+<?php
+    session_start();
+    include_once('../../admin/lib/common.php');
+    include_once('../../include/html_head.html');
+
+    $pid = $_GET['pid'];
+
+    // admin 체크
+    $adminFlag = 0;
+    if($_SESSION['MBM_TYPE'] == 'adm')
+        $adminFlag = 1;
+    /////////////
+
+    $sql1 ="SELECT * FROM tbid_ntc_mst WHERE NTC_NO = '{$pid}'";
+    $ntc_mst = sql_fetch($sql1);
+
+    // 입찰마감 체크
+    $NTC_CLOSE_YMD = $ntc_mst['NTC_CLOSE_YMD'];     // 입찰마감일시
+    $NTC_CLOSE_TM = $ntc_mst['NTC_CLOSE_TM'];       // 입찰마감시간
+
+    $NTC_CLOSE_DATE_TIME = substr($NTC_CLOSE_YMD, 0, 4).'-'.substr($NTC_CLOSE_YMD, 4, 2).'-'.substr($NTC_CLOSE_YMD, 6, 2).' '.substr($NTC_CLOSE_TM, 0,2).':'.substr($NTC_CLOSE_TM, 2, 2).':00';
+
+    $closeDate = new DateTime($NTC_CLOSE_DATE_TIME);
+    $now = new DateTime();
+
+    $stepFlag = 0;                 // 입찰진행중    
+    if($closeDate < $now) {
+        $stepFlag = 1;             // 심사중        
+    }    
+    /////////////
+
+    // 본인 공고물 체크
+    $mineFlag = 0;
+    if($_SESSION['MBM_NO'] == $ntc_mst['NTC_PIC_NO'])
+        $mineFlag = 1;
+    /////////////
+
+    $sql2 = "SELECT A.*, B.TRS_DAYS_CNT FROM tbid_qtn_mst A LEFT JOIN tbid_qtn_trs B ON A.QTN_NO = B.QTN_NO WHERE A.NTC_NO = '{$pid}'";
+    $qtn_mst = sql_query($sql2);
+
+    $sql3 = "SELECT QTN_STS_CD FROM tbid_qtn_mst WHERE NTC_NO = '{$pid}'";
+    $qtn_sts = sql_query($sql3);
+
+    $sql4 = "SELECT QTN_PIC_NO, COMP_NM FROM tbid_qtn_mst WHERE NTC_NO = '{$pid}' AND QTN_STS_CD = '20'";
+    $qtn_bided_companys = sql_query($sql4);
+
+    $status00Flag = false;
+    for($i = 0; $rowQ = sql_fetch_array($qtn_sts); $i++) {
+        if($rowQ['QTN_STS_CD'] == "00") {
+            $status00Flag = true;
+            break;
+        }
+    }
+
+    $sql5 = "SELECT COUNT(*) AS cnt FROM tbid_qtn_mst WHERE NTC_NO = '{$pid}'";
+    $qtn_cnt = sql_fetch($sql5);
+
+    if($status00Flag == false && $qtn_cnt['cnt'] > 0) {
+        $stepFlag = 2;                                      // 업체선정
+    }
+
+    $total_qtn = 0;
+    $sql6 = "SELECT COUNT(*) AS cnt FROM tbid_qtn_mst WHERE NTC_NO = '{$pid}'";
+    $row_qtn = sql_fetch($sql6);
+    $total_qtn = $row_qtn['cnt'];
+?>
+
+<style type="text/css">
+    @media screen and (max-width: 768px) {
+        ul.tabs li:nth-child(2) {
+            position: absolute !important;
+            top: 0;
+            left: 51%;            
+        }
+        ul.tabs li:nth-child(3) {
+            position: absolute !important;
+            top: 43px;
+            left: 0;
+        }
+        ul.tabs li:nth-child(4) {
+            position: absolute !important;
+            top: 43px;
+            left: 51%;            
+        }
+    }
+    button {
+        cursor: pointer;
+    }
+    ul.tabs {
+        font-size: 15px !important;
+    }    
+</style>
+
+<div class="container">
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                    <li>Quotation</li>
+                    <li>입찰정보</li>
+                    <li class="active">입찰공고</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="row">
+            <div class="col-12">
+                <div id="main-tab">
+                    <ul class="tabs tabs-c clearfix inner-left m-tabs">
+                        <li onclick="location.href='bid_view.html?pid=<?php echo $pid?>'">SHIPMENT</li>
+                        <li class="active" onclick="location.href='participation_status.html?pid=<?php echo $pid?>'">QUOTE STATUS</li>
+                        <li onclick="location.href='contract.html?pid=<?php echo $pid?>'">CONTRACT</li>
+                        <li onclick="location.href='questions_and_answers.html?pid=<?php echo $pid?>'">Q&A</li>
+                    </ul>
+
+                    <div class="tab_container clearfix">
+                        <div class="tab_content">
+                            <form name="Join" id="Join" method="post" action="<?php echo RT_PATH."/php/participation_status_update_ok.php";?>">
+                                <input type="hidden" name="NTC_NO" value="<?php echo $pid?>">
+                                <input type="hidden" id="QTN_NO" name="QTN_NO" value="">
+                                <input type="hidden" id="QTN_STS_CD" name="QTN_STS_CD" value="">
+                            </form>
+                            <!-- 입찰진행중일때 -->
+                            <?php if($stepFlag == 0) { ?>
+                                <div class="m40 clearfix">
+                                    <div class="col-6 inner-right text-right">
+                                        <img src="../../img/view-step0.png" alt="" class="block">
+                                    </div>
+                                </div>
+                                <div class="portlet">
+                                    <div class="portlet-title">
+                                        <caption>참여</caption>
+                                    </div>
+                                    <div class="row height150">
+                                        <p class="text-center">입찰진행중입니다.</p>
+                                    </div>
+                                </div>
+                                <div class="mt20">
+                                    <div class="status-tit">
+                                        참여자 <span>총 <span class="text-primary"><?php echo $total_qtn?></span>명</span>
+                                    </div>
+                                    <div class="m-table">
+                                        <div class="table">
+                                            <div class="table-responsive">
+                                                <table class="table-sample-8">
+                                                    <tr>
+                                                        <th>NO</th>
+                                                        <th>참가업체</th>
+                                                        <th>견적번호</th>
+                                                        <th>견적명</th>
+                                                        <th>견적총금액</th>
+                                                        <th>출발운임</th>
+                                                        <th>해상(항공)운임</th>
+                                                        <th>도착지운임</th>
+                                                        <th>운송일수</th>
+                                                        <th>결과</th>
+                                                    </tr>
+                                            <?php for($i = 0; $row = sql_fetch_array($qtn_mst); $i++) { 
+                                                // 참여자본인/관리자가 볼때
+                                                if($_SESSION['MBM_NO'] == $row['QTN_PIC_NO'] || $adminFlag == 1) { ?>
+                                                    <tr class="table-blink"><td colspan="10"></td></tr>
+                                                    <tr>
+                                                        <td><?php echo $i+1?></td>
+                                                        <td><?php echo $row['COMP_NM']?></td>
+                                                        <td><?php echo $row['QTN_NO']?></td>
+                                                        <td><a href="estimate.html?pid=<?php echo $pid?>&qid=<?php echo $row['QTN_NO']?>" style="font-weight: bold;"><?php echo $row['QTN_NM']?></a></td>
+                                                        <td><?php echo number_format($row['TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['DOM_KOR_TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['SA_KOR_TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['ARV_KOR_TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['TRS_DAYS_CNT'])?></td>
+                                                        <td></td>
+                                                    </tr>
+                                                <?php } else { 
+                                                // 일반회원이 볼때 ?>
+                                                    <tr class="table-blink"><td colspan="10"></td></tr>
+                                                    <tr>
+                                                        <td><?php echo $i+1?></td>
+                                                        <td><?php echo substr($row['COMP_NM'], 0, 3)?>**********</td>
+                                                        <td colspan="8" class="text-left">견적은 의뢰자만 확인 가능합니다.</td>
+                                                    </tr>
+                                                <?php } ?>
+                                            <?php } ?>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php } ?>
+                            <!-- 입찰진행중일때 -->                            
+                            <!-- 심사중일때 -->
+                            <?php if($stepFlag == 1) { ?>
+                                <div class="m40 clearfix">
+                                    <div class="col-6 inner-right text-right">
+                                        <img src="../../img/view-step1.png" alt="" class="block">
+                                    </div>
+                                </div>
+                                <div class="portlet">
+                                    <div class="portlet-title">
+                                        <caption>참여</caption>
+                                    </div>
+                                    <div class="row height150">
+                                        <p class="text-center">심사중입니다.</p>
+                                    </div>
+                                </div>
+                                <div class="mt20">
+                                    <div class="status-tit">
+                                        참여자 <span>총 <span class="text-primary"><?php echo $total_qtn?></span>명</span>
+                                    </div>
+                                    <div class="m-table">
+                                        <div class="table">
+                                            <div class="table-responsive">
+                                                <table class="table-sample-5">
+                                                    <tr>
+                                                        <th>NO</th>
+                                                    <!-- 입찰공고자나 관리자가 볼때 -->
+                                                    <?php if($mineFlag == 1 || $adminFlag == 1) { ?>
+                                                        <th>추천순위</th>
+                                                    <?php } ?>
+                                                        <th>참가업체</th>
+                                                        <th>견적번호</th>
+                                                        <th>견적명</th>
+                                                        <th>견적총금액</th>
+                                                        <th>출발운임</th>
+                                                        <th>해상(항공)운임</th>
+                                                        <th>도착지운임</th>
+                                                        <th>운송일수</th>
+                                                        <th>결과</th>
+                                                    <!-- 입찰공고자나 관리자가 볼때 -->
+                                                    <?php if($mineFlag == 1 || $adminFlag == 1) { ?>
+                                                        <th>업체선정</th>
+                                                    <?php } ?>
+                                                    </tr>
+                                            <?php for($i = 0; $row = sql_fetch_array($qtn_mst); $i++) { 
+                                                $QTN_STATUS = "";
+                                                if($row['QTN_STS_CD'] == "20")
+                                                    $QTN_STATUS = "낙찰";
+                                                if($row['QTN_STS_CD'] == "40")
+                                                    $QTN_STATUS = "유보";
+                                                if($row['QTN_STS_CD'] == "50")
+                                                    $QTN_STATUS = "제외";
+                                                // 입찰공고자나 관리자가 볼때
+                                                if($mineFlag == 1 || $adminFlag == 1) { ?>
+                                                    <tr class="table-blink"><td colspan="10"></td></tr>
+                                                    <tr>
+                                                        <td><?php echo $i+1?></td>
+                                                        <td><?php echo $row['OTH_RANK_CD']?></td>
+                                                        <td><?php echo $row['COMP_NM']?></td>
+                                                        <td><?php echo $row['QTN_NO']?></td>
+                                                        <td><a href="estimate.html?pid=<?php echo $pid?>&qid=<?php echo $row['QTN_NO']?>" style="font-weight: bold;"><?php echo $row['QTN_NM']?></a></td>
+                                                        <td><?php echo number_format($row['TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['DOM_KOR_TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['SA_KOR_TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['ARV_KOR_TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['TRS_DAYS_CNT'])?></td>
+                                                        <td><?php echo $QTN_STATUS?></td>
+                                                        <td>
+                                                        <?php if($QTN_STATUS == "") { ?>
+                                                            <button type="button" onClick="javascript:Bid(<?php echo "'".$row['QTN_NO']."'"?>);" class="btn-primary">낙찰</button>
+                                                            <button type="button" onClick="javascript:Hold(<?php echo "'".$row['QTN_NO']."'"?>);" class="btn-green">유보</button>
+                                                            <button type="button" onClick="javascript:Exclude(<?php echo "'".$row['QTN_NO']."'"?>);" class="btn-red">제외</button>
+                                                        <?php } ?>
+                                                        </td>
+                                                    </tr>
+                                                <?php } else if($_SESSION['MBM_NO'] == $row['QTN_PIC_NO']) { 
+                                                // 참여자본인이 볼때 ?>
+                                                    <tr class="table-blink"><td colspan="10"></td></tr>
+                                                    <tr>
+                                                        <td><?php echo $i+1?></td>
+                                                        <td><?php echo $row['COMP_NM']?></td>
+                                                        <td><?php echo $row['QTN_NO']?></td>
+                                                        <td><a href="estimate.html?pid=<?php echo $pid?>&qid=<?php echo $row['QTN_NO']?>" style="font-weight: bold;"><?php echo $row['QTN_NM']?></a></td>
+                                                        <td><?php echo number_format($row['TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['DOM_KOR_TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['SA_KOR_TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['ARV_KOR_TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['TRS_DAYS_CNT'])?></td>
+                                                        <td><?php echo $QTN_STATUS?></td>
+                                                    </tr>
+                                                <?php } else { 
+                                                // 일반회원이 볼때 ?>
+                                                    <tr class="table-blink"><td colspan="10"></td></tr>
+                                                    <tr>
+                                                        <td><?php echo $i+1?></td>
+                                                        <td><?php echo substr($row['COMP_NM'], 0, 3)?>**********</td>
+                                                        <td colspan="8" class="text-left">견적은 의뢰자만 확인 가능합니다.</td>
+                                                    </tr>
+                                                <?php } ?>
+                                            <?php } ?>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php } ?>
+                            <!-- 심사중일때 -->                            
+                            <!-- 업체선정되었을때 -->
+                            <?php if($stepFlag == 2) { ?>
+                                <div class="m40 clearfix">
+                                    <div class="col-6 inner-right text-right">
+                                        <img src="../../img/view-step2.png" alt="" class="block">
+                                    </div>
+                                </div>
+                                <div class="portlet">
+                                    <div class="portlet-title">
+                                        <caption>참여</caption>
+                                    </div>
+                            <?php for($i = 0; $rowb = sql_fetch_array($qtn_bided_companys); $i++) { 
+                                // 선정된 업체가 볼때 
+                                if($_SESSION['MBM_NO'] == $rowb['QTN_PIC_NO']) {?>                                    
+                                    <div class="row contract">
+                                        <img src="../../img/icon/icon-company.png" alt="">
+                                        <p><?php echo $rowb['COMP_NM']?></p>
+                                        <span><a href="contract.html?pid=<?php echo $pid?>" class="btn caption">계약서 확인</a></span>
+                                    </div>
+                                <?php } else { ?>
+                                    <div class="row contract">
+                                        <img src="../../img/icon/icon-company.png" alt="">
+                                        <p><?php echo substr($rowb['COMP_NM'], 0, 3)?>**********</p>
+                                    </div>
+                                <?php } ?>
+                            <?php } ?>
+                                </div>
+                                <div class="mt20">
+                                    <div class="status-tit">
+                                        참여자 <span>총 <span class="text-primary"><?php echo $total_qtn?></span>명</span>
+                                    </div>
+                                    <div class="m-table">
+                                        <div class="table">
+                                            <div class="table-responsive">
+                                                <table class="table-sample-5">
+                                                    <tr>
+                                                        <th>NO</th>                                                    
+                                                        <th>참가업체</th>
+                                                        <th>견적번호</th>
+                                                        <th>견적명</th>
+                                                        <th>견적총금액</th>
+                                                        <th>출발운임</th>
+                                                        <th>해상(항공)운임</th>
+                                                        <th>도착지운임</th>
+                                                        <th>운송일수</th>
+                                                        <th>결과</th>                                                    
+                                                    </tr>
+                                            <?php for($i = 0; $row = sql_fetch_array($qtn_mst); $i++) {
+                                                $QTN_STATUS = "";
+                                                if($row['QTN_STS_CD'] == "20")
+                                                    $QTN_STATUS = "낙찰";
+                                                if($row['QTN_STS_CD'] == "40")
+                                                    $QTN_STATUS = "유보";
+                                                if($row['QTN_STS_CD'] == "50")
+                                                    $QTN_STATUS = "제외";
+                                                // 참여자본인/관리자가 볼때
+                                                if($_SESSION['MBM_NO'] == $row['QTN_PIC_NO'] || $adminFlag == 1) { ?>
+                                                    <tr class="table-blink"><td colspan="10"></td></tr>
+                                                    <tr>
+                                                        <td><?php echo $i+1?></td>                                                        
+                                                        <td><?php echo $row['COMP_NM']?></td>
+                                                        <td><?php echo $row['QTN_NO']?></td>
+                                                        <td><a href="estimate.html?pid=<?php echo $pid?>&qid=<?php echo $row['QTN_NO']?>" style="font-weight: bold;"><?php echo $row['QTN_NM']?></a></td>
+                                                        <td><?php echo number_format($row['TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['DOM_KOR_TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['SA_KOR_TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['ARV_KOR_TOT_AMT'])?></td>
+                                                        <td><?php echo number_format($row['TRS_DAYS_CNT'])?></td>
+                                                        <td><?php echo $QTN_STATUS?></td>                                                        
+                                                    </tr>                                                
+                                                <?php } else { 
+                                                // 일반회원이 볼때 ?>
+                                                    <tr class="table-blink"><td colspan="10"></td></tr>
+                                                    <tr>
+                                                        <td><?php echo $i+1?></td>
+                                                        <td><?php echo substr($row['COMP_NM'], 0, 3)?>**********</td>
+                                                        <td colspan="8" class="text-left">견적은 의뢰자만 확인 가능합니다.</td>
+                                                    </tr>
+                                                <?php } ?>
+                                            <?php } ?>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php } ?>
+                            <!-- 업체선정되었을때 -->
+                            <!-- 계약되었을때 -->
+                            <?php if($stepFlag == 3) { ?>
+                                <div class="m40 clearfix">
+                                    <div class="col-6 inner-right text-right">
+                                        <img src="../../img/view-step3.png" alt="" class="block">
+                                    </div>
+                                </div>
+                            <?php } ?>
+                            <!-- 계약되었을때 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    function Bid(QTN_NO) {
+        $("#QTN_NO").val(QTN_NO);
+        $("#QTN_STS_CD").val(20);
+        var f =document.Join;
+        f.submit();
+    }
+
+    function Hold(QTN_NO) {
+        $("#QTN_NO").val(QTN_NO);
+        $("#QTN_STS_CD").val(40);
+        var f =document.Join;
+        f.submit();
+    }
+
+    function Exclude(QTN_NO) {
+        $("#QTN_NO").val(QTN_NO);
+        $("#QTN_STS_CD").val(50);
+        var f =document.Join;
+        f.submit();   
+    }
+</script>
+
+<?php
+    include_once('../../include/html_foot.html');
+?>

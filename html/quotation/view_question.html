@@ -1,0 +1,170 @@
+<?php
+    session_start();
+    include_once('../../admin/lib/common.php');
+    include_once('../../include/html_head.html');
+
+    $pid = $_GET['pid'];
+    $qid = $_GET['qid'];
+
+    // admin 체크
+    $adminFlag = 0;
+    if($_SESSION['MBM_TYPE'] == 'adm')
+        $adminFlag = 1;
+
+    $sql1 ="SELECT * FROM tbl_question WHERE id = '{$qid}'";
+    $question = sql_fetch($sql1);
+
+    if($question['mem_no'] != $_SESSION['MBM_NO']) {
+        $question['visit_count']++;
+        $sql2 ="UPDATE tbl_question SET visit_count={$question['visit_count']} WHERE id = '{$qid}'";
+        sql_query($sql2);    
+    }
+?>
+
+<style type="text/css">
+    @media screen and (max-width: 768px) {
+        ul.tabs li:nth-child(2) {
+            position: absolute !important;
+            top: 0;
+            left: 18.5rem;            
+        }
+        ul.tabs li:nth-child(3) {
+            position: absolute !important;
+            top: 43px;
+            left: 0;
+        }
+        ul.tabs li:nth-child(4) {
+            position: absolute !important;
+            top: 43px;
+            left: 18.5rem;            
+        }
+    }
+    ul.tabs {
+        font-size: 15px !important;
+    }
+</style>
+
+<div class="container">
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                    <li>Quotation</li>
+                    <li>입찰정보</li>
+                    <li class="active">입찰공고</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-content">
+        <div class="row">
+            <div class="col-12">
+                <div id="main-tab">
+                    <ul class="tabs tabs-c clearfix inner-left m-tabs">
+                        <li onclick="location.href='bid_view.html?pid=<?php echo $pid?>'">SHIPMENT</li>
+                        <li onclick="location.href='participation_status.html?pid=<?php echo $pid?>'">QUOTE STATUS</li>
+                        <li onclick="location.href='contract.html?pid=<?php echo $pid?>'">CONTRACT</li>
+                        <li class="active" onclick="location.href='questions_and_answers.html?pid=<?php echo $pid?>'">Q&A</li>
+                    </ul>
+
+                    <div class="tab_container clearfix">
+                        <div class="tab_content">
+                            <form name="fQuestion" id="fQuestion" method="post" action="">
+                                <input type="hidden" name="pid" value="<?php echo $pid?>">
+                                <input type="hidden" name="qid" value="<?php echo $qid?>">
+                            </form>
+                            <div class="portlet">
+                                <div class="portlet-title clearfix">
+                                    <caption>입찰공고 문의사항</caption>
+                                    <span class="text-mute m-full">입찰공고 관련 문의 및 궁금하신 점을 남겨주세요.</span>                                    
+                                </div>
+                                <div class="row view">
+                                    <div class="form-group">
+                                        <div class="col-12 text-center">
+                                        <?php if($question['check_pass'] == 1) { ?>
+                                            <img src="../../img/icon/icon-lock.png" alt="" class="icon-lock" style="vertical-align: baseline;">
+                                        <?php } ?>
+                                            <span style="font-size: 30px;"><?php echo $question['title']?></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group m-questions">
+                                        <div class="col-4">
+                                            <span>작성자</span>
+                                            <span class="ml20"><?php echo $question['writer']?></span>
+                                        </div>
+                                        <div class="col-4">
+                                            <span>작성일</span>
+                                            <span class="ml20"><?php echo $question['ins_date']?></span>
+                                        </div>
+                                        <div class="col-4" style="display:block;">
+                                            <span>조회</span>
+                                            <span class="ml20"><?php echo $question['visit_count']?></span>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-12 l-height4"><?php echo nl2br($question['content'])?></div>
+                                        <div class="col-12 page-btn">
+                                    <?php $sqlP = "SELECT id FROM tbl_question WHERE check_pass='0' AND ins_date < '{$question['ins_date']}' ORDER BY ins_date DESC LIMIT 1";
+                                          $prev = sql_fetch($sqlP); 
+                                          if($prev['id']) { ?>
+                                               <a href="view_question.html?pid=<?php echo $pid?>&qid=<?php echo $prev['id']?>" class="inner-left"><img src="../../img/icon/icon-back.png" alt="이전글">이전글</a>
+                                    <?php } ?>
+                                    <?php $sqlN = "SELECT id FROM tbl_question WHERE check_pass='0' AND ins_date > '{$question['ins_date']}' LIMIT 1";
+                                          $next = sql_fetch($sqlN); 
+                                          if($next['id']) { ?>
+                                                <a href="view_question.html?pid=<?php echo $pid?>&qid=<?php echo $next['id']?>" class="inner-right">다음글<img src="../../img/icon/icon-next.png" alt="다음글"></a>
+                                    <?php } ?>
+                                        </div>
+                                    </div>
+                                    <div class="contract-agree clearfix">
+                                        <p class="btn-area inner-left m-float-none">
+                                            <button type="button" onClick="javascript:List();" class="btn caption m-btn-5">목록</button>
+                                        <?php if($_SESSION['MBM_NM'] && $question['mem_no'] != $_SESSION['MBM_NO']) { ?>
+                                            <button type="button" onClick="javascript:Answer();" class="btn caption bg-dark-blue m-btn-5">답글쓰기</button>
+                                        <?php } ?>
+                                        </p>
+                                        <p class="btn-area inner-right m-float-none">
+                                        <?php if($adminFlag == 1 || $question['mem_no'] == $_SESSION['MBM_NO']) { ?>
+                                            <button type="button" onClick="javascript:Edit();" class="btn caption m-btn-5">편집</button>
+                                            <button type="button" onClick="javascript:Delete();" class="btn caption bg-dark-blue m-btn-5">삭제</button>
+                                        <?php } ?>
+                                            <button type="button" onClick="javascript:Cancel();" class="btn caption bg-silver m-btn-5">취소</button>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function List() {
+        window.location.href = "questions_and_answers.html?pid=<?php echo $pid?>";
+    }
+    function Answer() {
+        window.location.href = "add_answer.html?pid=<?php echo $pid?>&qid=<?php echo $qid?>";
+    }
+    function Edit(){
+        window.location.href = "edit_question.html?pid=<?php echo $pid?>&qid=<?php echo $qid?>";
+    }
+    function Delete(){
+        if(confirm("질문을 삭제하시겠습니까?")) {
+            var f =document.fQuestion;
+            f.action = "../../php/question_del_ok.php";
+            f.submit();
+        }
+    }
+    function Cancel(){
+        window.location.href = "questions_and_answers.html?pid=<?php echo $pid?>";
+    }    
+</script>
+
+<?php
+    include_once('../../include/html_foot.html');
+?>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>한국국제물류플랫폼</title>
+    <meta charset="UTF-8" />
+    <meta name="description" content="" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1, minimum-scale=1" />
+
+
+    <!-- <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/font-nanum/1.0/nanumgothic/nanumgothic.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/moonspam/NanumSquare/master/nanumsquare.css"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="<?php echo RT_PATH; ?>/css/reset.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo RT_PATH; ?>/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo RT_PATH; ?>/css/aa.css" />
+    <link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="<?php echo RT_PATH; ?>/css/jqx.base.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo RT_PATH; ?>/css/jqx.office.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo RT_PATH; ?>/css/custom.css" />
+
+    <!--    <script src="<?php echo RT_PATH; ?>//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>-->
+    <!--    <script src="<?php echo RT_PATH; ?>/js/plugins/jquery.min.js"></script>-->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript">
+        jQuery.browser = {};
+        (function () {
+            jQuery.browser.msie = false;
+            jQuery.browser.version = 0;
+            if (navigator.userAgent.match(/MSIE ([0-9]+)\./)) {
+                jQuery.browser.msie = true;
+                jQuery.browser.version = RegExp.$1;
+            }
+        })();
+    </script>
+    <script src="//code.jquery.com/ui/1.8.18/jquery-ui.min.js"></script>
+
+    <!--[if lt ie 9]>
+    <script src="<?php echo RT_PATH; ?>/js/lib/ie9.js"></script>
+    <script src="<?php echo RT_PATH; ?>/js/lib/respond.min.js"></script>
+    <![endif]-->
+
+<!--    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>-->
+    <script src="<?php echo RT_PATH; ?>/js/lib/modernizr-2.8.3.min.js"></script>
+    <script src="<?php echo RT_PATH; ?>/js/plugins/jquery.bxslider.min.js"></script>
+    <script src="<?php echo RT_PATH; ?>/js/plugins/jquery.easing.min.js"></script>
+    <script src="<?php echo RT_PATH; ?>/js/plugins/prefixfree.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="<?php echo RT_PATH; ?>/js/main.js"></script>
+
+<!--    <script type="text/javascript" src="<?php echo RT_PATH; ?>/js/jqwidgets/jqx-all.js"></script>-->
+<!--    <script type="text/javascript" src="<?php echo RT_PATH; ?>/js/jqwidgets/jqxcore.js"></script>-->
+
+</head>
+
+<body>
+<!--HEADER-->
+<header>
+    <div class="bg-gray">
+        <div class="info">
+			<?php if($_SESSION['MBM_EMAIL']){ ?>
+            <div class="login">
+
+                <?php if($_SESSION['MBM_TYPE'] == 'adm'){ ?>
+                <!--
+                    <select name="go_url" onchange="location = this.value;">
+                    <option value="">관리자페이지 바로가기</option>
+                    <option value="./admin/stats.html">통계</option>
+                    <option value="./admin/memberList.html">회원관리</option>
+                    <option value="./admin/bidClose.html">일찰관리</option>
+                    <option value="./admin/settleBidFee.html">정산관리</option>
+                    <option value="./admin/exposeForwarder.html">노출관리</option>
+                    <option value="./admin/manageFAQ.html">환경설정</option>
+                </select>
+                -->
+                <?php } ?>
+                <a href="<?php echo RT_PATH; ?>/html/my/my_info.html?tab=1&mb_id=<?php echo $_SESSION['MBM_NO']?>"><img src="<?php echo RT_PATH; ?>/img/icon/icon-pic-empty.png" alt="" width="30"><span class="text-primary pd0"><?php echo $_SESSION['MBM_NM']?></span></a>님 <span>l</span> <a href="<?php echo RT_PATH; ?>/php/logout.php">로그아웃</a>
+            </div>
+			<?php } else { ?>
+            <div class="logout">
+                <a href="<?php echo RT_PATH; ?>/html/member/login.html">로그인</a> <span>l</span> <a href="<?php echo RT_PATH; ?>/html/member/regist.html">회원가입</a>
+            </div>
+			<?php } ?>
+        </div>
+    </div>
+
+    <div class="m-hidden bg-white">
+        <div class="inner clearfix">
+            <div class="inner-left clearfix">
+                <a class="logo" href="<?php echo RT_PATH; ?>/"></a>
+                <ul class="main-menu clearfix">
+                    <li><a href="<?php echo RT_PATH; ?>/html/quotation/bid_info.html">Quotation</a></li>
+                    <li><a href="<?php echo RT_PATH; ?>/html/forwarder/forwarder_list.html">Forwarder</a></li>
+                    <!-- <li><a href="<?php echo RT_PATH; ?>/html/tracking/tracking_list.html">Tracking</a></li> -->
+                    <li><a href="<?php echo RT_PATH; ?>/html/addition/exchange_info.html">부가정보</a></li>
+                    <li><a href="<?php echo RT_PATH; ?>/html/faq/faq_list.html">FAQ</a></li>
+                    <li><a href="<?php echo RT_PATH; ?>/html/my/my_edit.html">MY</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="sub-menu">
+            <div class="inner clearfix">
+                <ul class="clearfix">
+                    <li><a href="<?php echo RT_PATH; ?>/html/quotation/bid_info.html">화물정보</a></li>
+                    <!-- <li><a href="<?php echo RT_PATH; ?>/html/my/my_info.html?tab=3&mb_id=<?php echo $_SESSION['MBM_NO']?>">MY입찰내역</a></li> -->
+                    <li><a href="<?php echo RT_PATH; ?>/html/quotation/bid_regi.html">견적요청</a></li>
+                </ul>
+                <ul class="clearfix">
+                    <li><a href="<?php echo RT_PATH; ?>/html/forwarder/forwarder_list.html">전문포워더 조회 </a></li>
+                    <li><a href="<?php echo RT_PATH; ?>/html/freight/freight_rate.html">운임률</a></li>
+                </ul>
+                <!-- <ul class="clearfix">
+                    <li></li>
+                    <li><a href="<?php echo RT_PATH; ?>/html/tracking/tracking_list.html">화물추적</a></li>
+                    <li><a href="<?php echo RT_PATH; ?>/html/tracking/vessel_traffic.html">Vessel위치추적</a></li>
+                    <li><a href="<?php echo RT_PATH; ?>/html/tracking/schedule_list.html">운항스케줄</a></li>
+                </ul> -->
+                <ul class="clearfix">
+                    <li><a href="<?php echo RT_PATH; ?>/html/tracking/tracking_list.html">Tracking</a></li>
+                    <li><a href="<?php echo RT_PATH; ?>/html/addition/exchange_info.html">환율조회</a></li>
+                    <li><a href="<?php echo RT_PATH; ?>/html/addition/dutycal.html">Duty Cal.</a></li>
+                    <li><a href="<?php echo RT_PATH; ?>/html/addition/distribution_list.html">물류업체정보</a></li>
+                </ul>
+                <ul class="clearfix">
+                    <li><a href="<?php echo RT_PATH; ?>/html/faq/faq_list.html">FAQ</a></li>
+                </ul>
+                <?php  if($_SESSION['MBM_EMAIL']){ ?>
+                <ul class="clearfix">
+                    <li><a href="<?php echo RT_PATH; ?>/html/my/my_edit.html">개인정보</a></li>
+                    <li><a href="<?php echo RT_PATH; ?>/html/my/my_info.html?tab=1&mb_id=<?php echo $_SESSION['MBM_NO']?>">마이페이지</a></li>
+                </ul>
+                <?php  } ?>
+            </div>
+        </div>
+    </div>
+    <div id="toggle-btn"></div>
+    <div class="m-menu none">
+        <nav id="m-menu" class="nav">
+            <ul>
+                <li>
+                    <p>메인메뉴</p>
+                    <ul>
+                        <li><a href="<?php echo RT_PATH; ?>/html/quotation/bid_info.html">화물정보</a></li>
+                        <!-- <li><a href="<?php echo RT_PATH; ?>/html/my/my_info.html?tab=3&mb_id=<?php echo $_SESSION['MBM_NO']?>">MY입찰내역</a></li> -->
+                        <li><a href="<?php echo RT_PATH; ?>/html/quotation/bid_regi.html">견적요청</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <p>Forwarder</p>
+                    <ul>
+                        <li><a href="<?php echo RT_PATH; ?>/html/forwarder/forwarder_list.html">전문포워더 조회</a></li>
+                        <li><a href="<?php echo RT_PATH; ?>/html/freight/freight_rate.html">운임률</a></li>
+                    </ul>
+                </li>
+                <!-- <li>
+                    <p>Tracking</p>
+                    <ul>
+                        <li><a href="<?php echo RT_PATH; ?>/html/tracking/tracking_list.html">화물추적</a></li>
+                        <li><a href="<?php echo RT_PATH; ?>/html/tracking/vessel_traffic.html">Vessel위치추적</a></li>
+                        <li><a href="<?php echo RT_PATH; ?>/html/tracking/schedule_list.html">운항스케줄</a></li>
+                    </ul>
+                </li> -->
+                <li>
+                    <p>부가정보</p>
+                    <ul>
+                        <li><a href="<?php echo RT_PATH; ?>/html/tracking/tracking_list.html">Tracking</a></li>
+                        <li><a href="<?php echo RT_PATH; ?>/html/addition/exchange_info.html">환율조회</a></li>
+                        <li><a href="<?php echo RT_PATH; ?>/html/addition/dutycal.html">Duty Cal.</a></li>
+                        <li><a href="<?php echo RT_PATH; ?>/html/addition/distribution_list.html">물류업체정보</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <p>My</p>
+                    <ul>
+                        <li><a href="<?php echo RT_PATH; ?>/html/my/my_edit.html">개인정보</a></li>
+                        <li><a href="<?php echo RT_PATH; ?>/html/my/my_info.html?tab=1&mb_id=<?php echo $_SESSION['MBM_NO']?>">마이페이지</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</header>
+

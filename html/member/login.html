@@ -1,0 +1,127 @@
+<?php
+session_start();
+include_once ('../../admin/lib/common.php');
+
+if($_SESSION['MBM_EMAIL']){
+    // alertMove("이미 로그인 되어있습니다.",RT_PATH);
+}
+
+include_once ('../../include/html_head.html');
+?>
+
+<div class="container">
+
+    <div class="page-header">
+        <div class="page-bar">
+            <div class="page-breadcrumb">
+                <ul class="clearfix">
+                    <li class="icon-home"><img src="<?php echo RT_PATH; ?>/img/icon/icon-home.png" alt="" width="16"></li>
+                    <li class="active">로그인</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="jumbotron">
+            <h1 class="mb20">로그인</h1>
+            <!-- <p> WiaBid 회원 가입을 진심으로 환영합니다.</p> -->
+        </div>
+    </div>
+
+    <div id="" class="login-modal">
+        <form name="fLogin" method="post" action="<?php echo RT_PATH;?>/php/login_ok.php">
+            <input type="hidden" name="url" value="./">
+            <div class="modal-content">
+                <!-- <div class="modal-header">
+                    <span class="close" id="close" data-dismiss="modal" aria-hidden="true">&times;</span>
+                    <p>로그인</p>
+                </div> -->
+                <div class="modal-body">
+                    <p class="tit">Welcome to Bidding Place</p>
+                    <div class="clearfix">
+                        <div class="inner-left">
+                            <input type="text" class="input" name="mb_id" id="mb_id" placeholder="아이디 (예시 id@wiabid.com)" value="">
+                            <input type="password" class="input" name="mb_pw" id="mb_pw" placeholder="비밀번호" value="">
+                        </div>
+                        <button type="submit" class="btn caption inner-right">로그인</button>
+                    </div>
+                    <div class="login-btn">
+                        <a href="javascript:void(0);" class="btn caption bg-silver" onclick="passwdFind();" >비밀번호 찾기</a>
+                        <a href="./regist.html" class="btn caption bg-silver" >회원가입</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<style type="text/css">
+    form { background: #fff; }
+    .modal-content { border: none; box-shadow: none;animation-name: unset; }
+    @media screen and (max-width: 1200px) {
+        .modal-content {
+            width: 100% !important;
+        }
+    }
+</style>
+
+<script>
+    function passwdFind() {
+        var f = document.fLogin;
+        if (f.mb_id.value == "") {
+            alert('ID (이메일)를 입력해주세요.');
+            f.mb_id.focus();
+            return false;
+        }
+
+        var u_email = $('#mb_id');
+        var regEmail = /([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$/;
+
+
+        if( !u_email.val() ){
+            alert('이메일주소를 입력 해 주세요');
+            u_email.focus();
+            return false;
+        } else {
+            if(!regEmail.test(u_email.val())) {
+                alert('이메일 주소가 유효하지 않습니다');
+                u_email.focus();
+                return false;
+            }
+        }
+
+
+        var mb_id = document.getElementById('mb_id').value;
+        if (confirm('저장된 메일로 변경된 비번을 발송하시겠습니까?')) {
+            $.ajax({
+                url: '<?php echo RT_PATH; ?>/php/ajax_send_passwd.php',
+                type: "POST",
+                data: {
+                    mb_id : mb_id
+                },
+                success: function (data) {
+                    var rdata= data.split('|');
+                    var rslt = rdata[0];
+                    var r_msg = rdata[1];
+
+                    if(rslt == 'ok') {
+                        swal('임시 비번을 메일로 발송했습니다.');
+                        setTimeout(function(){
+                            window.location.href="<?php echo RT_PATH; ?>/index.html";
+                            }, 2000);
+                    }
+                    else if (rslt == 'no') {
+                        swal('임시 비번을 메일로 발송하지 못했습니다.:' + r_msg);
+                    }
+
+                },  //success
+                error: function (request,status,error) {
+                    alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                } //error
+            });
+        }
+    }
+</script>
+<?php
+include_once ('../../include/html_foot.html');
+?>

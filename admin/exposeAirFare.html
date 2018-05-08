@@ -1,0 +1,259 @@
+<?php
+session_start();
+include_once('lib/common.php');
+
+// 관리자 세션 확인
+if(!isset($_SESSION['ADMIN_GRPNAME'])) {
+    alertMove('로그인 후 이용해 주세요', "index.html");
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <?php
+    include_once ('./include/head.html');
+    ?>
+
+</head>
+<body class="fixed-left">
+
+<!-- Begin page -->
+<div id="wrapper">
+
+    <?php
+    include_once ('./include/menu.html');
+    ?>
+
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+    <div class="content-page">
+        <!-- Start content -->
+        <div class="content">
+            <div class="container">
+                <!--항공-->
+                <!--항공-->
+                <div class="row">
+                    <div class="col-lg-9 col-xs-12">
+                        <div class="card-box p-b-0">
+                            <h5 class="m-b-10"><b>운임 검색</b></h5>
+                            <hr class="m-t-0">
+                            <div class="row">
+                                <form class="form-horizontal group-border-dashed" action="#">
+                                    <div class="col-sm-12">
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">구분</label>
+                                                    <div class="col-sm-5">
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="hRadio1" value="option1" name="userRadio" >
+                                                            <label for="hRadio1"> 해운 </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="hRadio2" value="option2" name="userRadio" checked>
+                                                            <label for="hRadio2"> 항공 </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">Carrier</label>
+                                                    <div class="col-sm-5">
+                                                        <input type="text" class="form-control" required placeholder=""/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">선적항</label>
+                                                    <div class="col-sm-5">
+                                                        <select class="form-control">
+                                                            <option>전체</option>
+                                                            <option>전체</option>
+                                                            <option>전체</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">양하(도착)항</label>
+                                                    <div class="col-sm-5">
+                                                        <select class="form-control">
+                                                            <option>전체</option>
+                                                            <option>전체</option>
+                                                            <option>전체</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="form-group">
+                                                    <div class="col-sm-offset-5 col-sm-7 m-t-15">
+                                                        <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                                            검색
+                                                        </button>
+                                                        <button type="reset" class="btn btn-inverse waves-effect m-l-5">
+                                                            초기화
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-xs-12">
+                        <div class="alert alert-info text-center p-30">
+                            <h4><strong>항공</strong> 운임 노출</h4>
+                            <p>노출 허용시: 메인 > Freight Rate에 노출됨</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card-box p-b-0">
+                            <h5><b>운임 목록</b><span class="text-muted font-13 m-l-15"> 검색결과 <span class="font-bold text-dark">234</span> 건</span></h5>
+                            <hr class="m-t-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover text-center middle">
+                                    <thead>
+                                    <tr class="bg-lightdark">
+                                        <th class="text-center">NO</th>
+                                        <th class="text-center">선적항</th>
+                                        <th class="text-center">도착항</th>
+                                        <th class="text-center">Carrier</th>
+                                        <th class="text-center">Min</th>
+                                        <th class="text-center">Nor</th>
+                                        <th class="text-center">+45</th>
+                                        <th class="text-center">+100</th>
+                                        <th class="text-center">+300</th>
+                                        <th class="text-center">+500</th>
+                                        <th class="text-center">+1000</th>
+                                        <th class="text-center">FCS</th>
+                                        <th class="text-center">SSC</th>
+                                        <th class="text-center">적용일자</th>
+                                        <th class="text-center">종료일자</th>
+                                        <th class="text-center">노출여부</th>
+                                    </tr>
+                                    </thead>
+
+                                    <tbody>
+                                    <tr>
+                                        <td scope="row">3</td>
+                                        <td>KRPUS)Busan, Korea</td>
+                                        <td>TWKAO)Kaohsung,Taiwan</td>
+                                        <td>로지틱스</td>
+                                        <td>\100</td>
+                                        <td>\100</td>
+                                        <td>\100</td>
+                                        <td>\100</td>
+                                        <td>\100</td>
+                                        <td>\100</td>
+                                        <td>\100</td>
+                                        <td>\100</td>
+                                        <td>\100</td>
+                                        <td>2017-11-02</td>
+                                        <td>2018-11-02</td>
+                                        <td>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="userRadio1" value="option1" name="userRadio" checked>
+                                                <label for="userRadio1"> 허용 </label>
+                                            </div>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="userRadio2" value="option2" name="userRadio">
+                                                <label for="userRadio2"> 허용안함 </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td scope="row">2</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td scope="row">1</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="clearfix">
+                                <div class="pull-right">
+                                    <select class="form-control">
+                                        <option>20개 보기</option>
+                                        <option>50개 보기</option>
+                                        <option>100개 보기</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <ul class="pagination pagination-split text-center">
+                                    <li class="disabled">
+                                        <a href="#"><i class="fa fa-angle-left"></i></a>
+                                    </li>
+                                    <li>
+                                        <a href="#">1</a>
+                                    </li>
+                                    <li class="active">
+                                        <a href="#">2</a>
+                                    </li>
+                                    <li>
+                                        <a href="#">3</a>
+                                    </li>
+                                    <li>
+                                        <a href="#">4</a>
+                                    </li>
+                                    <li>
+                                        <a href="#">5</a>
+                                    </li>
+                                    <li>
+                                        <a href="#"><i class="fa fa-angle-right"></i></a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+
+<?php
+include_once ('./include/footer.html');
+?>

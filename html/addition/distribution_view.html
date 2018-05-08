@@ -1,0 +1,203 @@
+<?php
+session_start();
+include_once('../../admin/lib/common.php');
+include_once('../../include/html_head.html');
+
+?>
+    <div class="container">
+
+        <div class="page-header">
+            <div class="page-bar">
+                <div class="page-breadcrumb">
+                    <ul class="clearfix">
+                        <li class="icon-home"><img src="../../img/icon/icon-home.png" alt="" width="16"></li>
+                        <li>부가정보</li>
+                        <li class="active">물류업체정보</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <?php
+
+            $minSql = " SELECT COMP_CD FROM tcmn_logis_comp WHERE COMP_CD ORDER BY COMP_CD LIMIT 1";
+            $minResult =sql_query($minSql);
+            $minRow=sql_fetch_array($minResult);
+            $minCOMP_CD = $minRow[COMP_CD];
+
+            $maxSql = " SELECT COMP_CD FROM tcmn_logis_comp WHERE COMP_CD ORDER BY COMP_CD DESC LIMIT 1";
+            $maxResult =sql_query($maxSql);
+            $maxRow=sql_fetch_array($maxResult);
+            $maxCOMP_CD = $maxRow[COMP_CD];
+            
+            $COMP_CD = clean_xss_tags($_GET['COMP_CD']);
+            $next = clean_xss_tags($_GET['next']);
+            $previouse = clean_xss_tags($_GET['previouse']);
+
+            if( $previouse ) {
+                $sql = " SELECT * FROM tcmn_logis_comp WHERE COMP_CD < '{$COMP_CD}' ORDER BY COMP_CD DESC LIMIT 1";
+            }
+            else if( $next ) {
+                $sql = " SELECT * FROM tcmn_logis_comp WHERE COMP_CD > '{$COMP_CD}' ORDER BY COMP_CD LIMIT 1";
+            }
+            else {
+                $sql = " SELECT * from tcmn_logis_comp where COMP_CD = '{$COMP_CD}'";
+            }
+
+            $result =sql_query($sql);
+            $row=sql_fetch_array($result);
+            
+        ?>
+        <div class="page-content">
+            <div class="row">
+                <div class="col-12">
+                    <div class="portlet">
+                        <div class="portlet-title text-center">
+                            <caption><?php echo $row[COMP_NM]; ?></caption>
+                        </div>
+                        <div class="row view">
+                            <div class="form-group">
+                                <div class="col-3">
+                                    등록자
+                                </div>
+                                <div class="col-9">
+                                    <?php echo $row[REG_NM]; ?>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    업체명
+                                </div>
+                                <div class="col-9">
+                                    <?php echo $row[COMP_NM]; ?>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    업체구분
+                                </div>
+                                <div class="col-9">
+                                    <?php switch ($row[COMP_CLS_CD]) {
+                                        case 'FWD':
+                                            echo "포워더"; break;
+                                        case 'SEA':
+                                            echo "선사"; break;
+                                        case 'AIR':
+                                            echo "항공사"; break;
+                                        case 'ETC':
+                                            echo "기타"; break;
+                                        case 'ALL':
+                                            echo "전체"; break;
+                                    } ?>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    담당자
+                                </div>
+                                <div class="col-9">
+                                    <?php echo $row[PIC_NM]; ?>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    전화번호
+                                </div>
+                                <div class="col-9">
+                                    <?php if(strpos($row[TEL_NO], "-")){ echo strpos($row[TEL_NO]); }else{
+                                        echo substr($row[TEL_NO], 0,3)."-";
+                                        echo substr($row[TEL_NO], 3,4)."-";
+                                        echo substr($row[TEL_NO], 7,4);
+                                    } ?>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    팩스번호
+                                </div>
+                                <div class="col-9">
+                                    <?php if(strpos($row[FAX_NO], "-")){ echo strpos($row[FAX_NO]); }else{
+                                        echo substr($row[FAX_NO], 0,3)."-";
+                                        echo substr($row[FAX_NO], 3,4)."-";
+                                        echo substr($row[FAX_NO], 7,4);
+                                    } ?>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    홈페이지
+                                </div>
+                                <div class="col-9">
+                                    <a href="http://<?php echo $row[HOME_PAGE];?>" target="_blank" ><?php echo $row[HOME_PAGE];?></a>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-3">
+                                    상세내역
+                                </div>
+                                <div class="col-9">
+                                    <?php echo $row[COMP_DESC]; ?>
+                                </div>
+
+                                <div class="col-12 page-btn">
+                                    <a href="<?php echo RT_PATH.'/html/addition/distribution_view.html?COMP_CD='.$row[COMP_CD];?>&previouse=1" class="inner-left previouse">
+                                        <img src="../../img/icon/icon-back.png" alt="">이전글
+                                    </a>
+                                    <a href="<?php echo RT_PATH.'/html/addition/distribution_view.html?COMP_CD='.$row[COMP_CD];?>&next=1" class="inner-right next">
+                                        다음글<img src="../../img/icon/icon-next.png" alt="">
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="contract-agree clearfix">
+                                <p class="btn-area inner-left m-float-none">
+                                    <a href="<?php echo RT_PATH; ?>/html/addition/distribution_list.html">
+                                        <button class="btn caption m-btn-5">목록</button>
+                                    </a>
+                                </p>
+                                <?php 
+                                // print_r($row);
+                                // exit;
+                                    if( $_SESSION['MBM_NO'] && ($_SESSION['MBM_NO'] === $row[INP_USR] || $_SESSION['MBM_TYPE'] === 'adm')) {
+                                ?>
+                                <p class="btn-area inner-right m-float-none">
+                                    <a href="<?php echo RT_PATH.'/html/addition/distribution_update.html?COMP_CD='.$row[COMP_CD]; ?>&update=1">
+                                        <button class="btn caption m-btn-5">편집</button>
+                                    </a>
+                                    <a href="javascript:void(0)">
+                                        <button class="btn caption bg-dark-blue m-btn-5" id="btnDelete">삭제</button>
+                                    </a>
+                                    <a href="<?php echo RT_PATH; ?>/html/addition/distribution_list.html">
+                                        <button class="btn caption bg-silver m-btn-5">취소</button>
+                                    </a>
+                                </p>
+                                <?php } ?>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="text/javascript">
+        <?php if($row[COMP_CD] == $minCOMP_CD) {?>
+            $(".inner-left.previouse").attr("href", "javascript:void(0)");
+            $(".inner-left.previouse").addClass("limit");
+        <?php } ?>
+
+        <?php if($row[COMP_CD] == $maxCOMP_CD) {?>
+            $(".inner-right.next").attr("href", "javascript:void(0)");
+            $(".inner-right.next").addClass("limit");
+        <?php } ?>
+
+        $("#btnDelete").click(function() {
+            if(confirm("정말로 삭제하시겠습니까?")) {
+                window.location.href = "<?php echo RT_PATH.'/html/addition/distribution_update.html?COMP_CD='.$row[COMP_CD]; ?>&delete=1";
+            }
+        });
+    </script>
+<?php
+include_once ('../../include/html_foot.html');
+?>

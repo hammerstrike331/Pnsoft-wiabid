@@ -1,0 +1,672 @@
+<?php
+    session_start();
+    include_once('lib/common.php');
+
+    // 관리자 세션 확인
+    if(!isset($_SESSION['ADMIN_GRPNAME'])) {
+        alertMove('로그인 후 이용해 주세요', "index.html");
+    }
+    
+    // 검색 옵션    
+    $BID_KND_CD = clean_xss_tags($_GET['BID_KND_CD']);
+    $COMP_NM = clean_xss_tags($_GET['COMP_NM']);
+
+    $qstr = "BID_KND_CD=".$BID_KND_CD."&COMP_NM=".$COMP_NM."&pageNum=".$pageNum.$page;
+
+    #################################################################################################
+
+    //  일반쿼리
+    $sql_common = " FROM `tcmn_fee_rate` A ";
+    $sql_search = " WHERE 1=1 ";
+    $sql_order = " ORDER BY CMTSN_RATE_NO DESC ";
+    
+    if($BID_KND_CD)
+        $sql_search .= " AND A.BID_CLS_CD = '{$BID_KND_CD}'";
+    
+    if($COMP_NM)
+        $sql_search .= " AND A.COMP_NM LIKE '{$COMP_NM}%'";
+    
+    #################################################################################################
+
+    $sql = "SELECT COUNT(*) AS cnt {$sql_common} {$sql_search} ";
+    $row = sql_fetch($sql);
+    $total_count = $row['cnt'];
+
+    $pageNum = (int)$_GET['pageNum'];
+
+    if(!$pageNum)
+        $rows = 10;
+    else
+        $rows = $pageNum;
+    
+    $page = (int)$_GET['page'];
+
+    $total_page  = ceil($total_count / $rows);  // 전체 페이지 계산
+    if ($page < 1) 
+        $page = 1; // 페이지가 없으면 첫 페이지 (1 페이지)
+
+    $from_record = ($page - 1) * $rows; // 시작 열을 구함
+    
+    $sql = "SELECT A.* {$sql_common} {$sql_search} {$sql_order} LIMIT {$from_record}, {$rows}";
+    $result = sql_query($sql);
+
+    $sql_comp = "SELECT COMP_CD, COMP_NM FROM tcmn_mbr_comp ORDER BY COMP_CD ASC";
+    $comp_list = sql_query($sql_comp);
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <?php include_once ('./include/head.html'); ?>
+</head>
+<body class="fixed-left">
+<!-- Begin page -->
+    <div id="wrapper">
+        <?php include_once ('./include/menu.html'); ?>
+        <!-- ============================================================== -->
+        <!-- Start right Content here -->
+        <!-- ============================================================== -->
+        <div class="content-page">
+            <!-- Start content -->
+            <div class="content">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="card-box p-b-0">
+                                <h5 class="m-b-10"><b>수수료요율 검색</b></h5>
+                                <hr class="m-t-0">
+                                <div class="row">
+                                    <form class="form-horizontal group-border-dashed" name="fsearch" id="fsearch" method="get">
+                                        <div class="col-sm-12">
+                                            <div class="row">
+                                                <div class="col-sm-6">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-2 control-label">입찰구분</label>
+                                                        <div class="col-sm-10">
+                                                            <select class="form-control" name="BID_KND_CD">
+                                                                <option value="" <?php if(!$BID_KND_CD) echo "selected"?>>전체</option>
+                                                                <option value="SPOT" <?php if($BID_KND_CD=="SPOT") echo "selected"?>>일반입찰</option>
+                                                                <option value="RGLR" <?php if($BID_KND_CD=="RGLR") echo "selected"?>>정기입찰</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <div class="form-group">
+                                                        <label class="col-sm-2 control-label">업체명</label>
+                                                        <div class="col-sm-10">
+                                                            <input type="text" name="COMP_NM" class="form-control" placeholder="" value="<?php echo $COMP_NM?>" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <div class="text-center">
+                                                            <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                                                검색
+                                                            </button>
+                                                            <button type="button" class="btn btn-inverse waves-effect m-l-5"  onclick="location.href='manageFees.html'">
+                                                                초기화
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>                                
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end row -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card-box p-b-0">
+                                <div class="row m-b-10">
+                                    <div class="col-sm-6">
+                                        <h5><b>수수료요율 목록</b><span class="text-muted font-13 m-l-15"> 검색결과 <span class="font-bold text-dark"><?php echo $total_count?></span> 건</span></h5>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-inline pull-right">
+                                            <div class="form-group">
+                                                <button type="reset" class="btn btn-danger waves-effect" onclick="fees_list_delete();">삭제</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr class="m-t-0">
+                                <div class="table-responsive tableSclroll">
+                                    <form name="fupdate" id="fupdate" method="post" >
+                                    <table class="table table-bordered table-hover text-center fold-table middle">
+                                        <thead>
+                                        <tr class="bg-lightdark">
+                                            <th class="text-center" style="width: 3%">
+                                                <input type="checkbox" name="chkall" value="" id="chkall" onclick="check_all(this.form)">
+                                            </th>
+                                            <th class="text-center" style="width: 17%">업체명</th>
+                                            <th class="text-center" style="width: 10%">입찰구분</th>
+                                            <th class="text-center" style="width: 10%">화물구분</th>
+                                            <th class="text-center" style="width: 10%">수수료구분</th>
+                                            <th class="text-center" style="width: 20%">수수료</th>
+                                            <th class="text-center" style="width: 10%">적용일자</th>
+                                            <th class="text-center" style="width: 10%">종료일자</th>
+                                            <th class="text-center" style="width: 10%">처리</th>
+                                        </tr>                                        
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td scope="row"><i class="fa fa-times"></i></td>
+                                            <td>
+                                                <select class="form-control input-sm" name="add_comp_cd" id="add_comp_cd">
+                                                    <option value="">선택</option>
+                                                <?php for ($i=0; $row=sql_fetch_array($comp_list); $i++) { ?>
+                                                    <option value="<?php echo $row['COMP_CD']?>"><?php echo $row['COMP_NM']?></option>
+                                                <?php } ?>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select class="form-control input-sm" name="add_bid_knd" id="add_bid_knd" onchange="javascript:ChangeKind(this);">
+                                                    <option value="SPOT">일반입찰</option>
+                                                    <option value="RGLR">정기입찰</option>                                                    
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select class="form-control input-sm" name="add_sa_cls_cd" id="add_sa_cls_cd1">
+                                                    <option value="ALL">전체</option>
+                                                    <option value="FCL">FCL</option>
+                                                    <option value="LCL">LCL</option>
+                                                    <option value="BULK">BULK</option>
+                                                    <option value="AIR">AIR</option>
+                                                </select>
+                                                <select class="form-control input-sm" name="add_sa_cls_cd" id="add_sa_cls_cd2" style="display: none;">
+                                                    <option value="ALL">전체</option>
+                                                    <option value="SEA">SEA</option>                                                    
+                                                    <option value="AIR">AIR</option>
+                                                </select>
+                                            </td>
+                                            <td>낙찰수수료</td>
+                                            <td>
+                                                <input type="number" name="add_fee_value" id="add_fee_value" class="form-control text-right input-sm" placeholder="0"/>
+                                                <select class="form-control input-sm" name="add_unit_rate" id="add_unit_rate">
+                                                    <option value="01">%</option>
+                                                    <option value="02">원(금액)</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="text" name="add_aply_ymd" id="add_aply_ymd" class="form-control date-range  text-center input-sm" value="<?php echo date("Y-m-d")?>">
+                                            </td>
+                                            <td>
+                                                <input type="text" name="add_expr_ymd" id="add_expr_ymd" class="form-control date-range text-center input-sm" value="<?php echo date("Y-m-d")?>">
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-primary waves-effect waves-light" onclick="fee_insert();">추가</button>
+                                            </td>                                        
+                                        </tr>
+                                    <?php for ($i=0; $row=sql_fetch_array($result); $i++) {
+                                            $num = ($page-1) * $rows + $i + 1; 
+                                            $CMTSN_RATE_NO = $row['CMTSN_RATE_NO'];     // 요율번호
+                                            $COMP_NM = $row['COMP_NM'];                 // 업체명
+                                            $BID_CLS_CD = $row['BID_CLS_CD'];           // 입찰구분
+                                            $SA_CLS_CD = $row['SA_CLS_CD'];             // 화물구분
+                                            $FEE_VAL = $row['FEE_VAL'];                 // 수수료
+                                            $UNIT_RATE = $row['UNIT_RATE'];             // 요율적용단위
+                                            $APLY_YMD = $row['APLY_YMD'];               // 적용일자
+                                            $EXPR_YMD = $row['EXPR_YMD'];               // 종료일자 ?>                                    
+                                        <tr>
+                                            <td>
+                                                <input type="checkbox" name="chk[]" value="<?php echo $CMTSN_RATE_NO?>" id="chk_<?php echo $CMTSN_RATE_NO ?>">
+                                            </td>
+                                            <td><?php if($COMP_NM) echo $COMP_NM; else echo "ALL";?></td>
+                                            <td><?php if($BID_CLS_CD=="SPOT") echo "일반입찰"; else echo "정기입찰";?></td>
+                                            <td><?php echo $SA_CLS_CD;?></td>
+                                            <td>낙찰수수료</td>
+                                            <td><?php echo $FEE_VAL; if($UNIT_RATE=="01") echo "%"; else echo "원(금액)"?></td>
+                                            <td><?php echo $APLY_YMD?></td>
+                                            <td><?php echo $EXPR_YMD?></td>
+                                            <td>
+                                                <button type="button" name="q_update" id="q_update" onclick="update_modal(<?php echo $CMTSN_RATE_NO?>);"   class="btn btn-inverse waves-effect waves-light">수정</button>
+                                            </td>
+                                        </tr>
+                                    <?php } ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="text-center">
+                                    <?php echo get_paging2(5, $page, $total_page, $_SERVER['SCRIPT_NAME'].'?'.$qstr.'&amp;page='); ?>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!--  모달 수정  -->
+                    <div class="modal fade modal-wide" id="myModal_update" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                    <h4 class="modal-title_update" id="myModalLabel_update"></h4>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="container">
+                                        <form name="update_query" id="update_query" >
+                                            <input type="hidden" name="up_idx" id="up_idx" value="<?php echo $_GET['target_idx']?>">
+                                            <div class="table-responsive">
+                                                <?php
+                                                    if($_GET['target_idx']) {
+                                                        $target_idx = $_GET['target_idx'];
+                                                        $sql2 = "SELECT * FROM `tcmn_fee_rate` WHERE CMTSN_RATE_NO = '{$target_idx}'";
+                                                        $row2 = sql_fetch($sql2);
+                                                    }
+
+                                                    $sql_comp1 = "SELECT COMP_CD, COMP_NM FROM tcmn_mbr_comp ORDER BY COMP_CD ASC";
+                                                    $comp_list1 = sql_query($sql_comp1);
+                                                ?>
+
+                                                <table class="table table-bordered" id="dynamic_field">
+                                                    <tr>
+                                                        <td>
+                                                            <div class="form-group">
+                                                                <div class="col-xs-3 text-right" style="margin-top: 5px;"><strong>업체명</strong></div>
+                                                                <div class="col-xs-9">
+                                                                    <select class="form-control input-sm" name="update_comp_cd" id="update_comp_cd">
+                                                                    <?php for ($i=0; $row1=sql_fetch_array($comp_list1); $i++) { ?>
+                                                                        <option value="<?php echo $row1['COMP_CD']?>" <?php if($row2['COMP_CD']==$row1['COMP_CD']) echo "selected"?>><?php echo $row1['COMP_NM']?></option>
+                                                                    <?php } ?>
+                                                                    </select>                                                                    
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div class="form-group">
+                                                                <div class="col-xs-3 text-right" style="margin-top: 5px;"><strong>입찰구분</strong></div>
+                                                                <div class="col-xs-9">
+                                                                    <select class="form-control input-sm" name="update_bid_knd" id="update_bid_knd" onchange="javascript:UChangeKind(this);">
+                                                                        <option value="SPOT" <?php if($row2['BID_CLS_CD'] =='SPOT') echo "selected";?>>일반입찰</option>
+                                                                        <option value="RGLR" <?php if($row2['BID_CLS_CD'] =='RGLR') echo "selected";?>>정기입찰</option>                                                    
+                                                                    </select>                                                                    
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div class="form-group">
+                                                                <div class="col-xs-3 text-right" style="margin-top: 5px;"><strong>화물구분</strong></div>
+                                                                <div class="col-xs-9">
+                                                                    <select class="form-control input-sm" name="update_sa_cls_cd" id="update_sa_cls_cd1" style="<?php if($row2['BID_CLS_CD'] =='SPOT') echo "display:block;"; else echo "display:none;"?>">
+                                                                        <option value="ALL" <?php if($row2['SA_CLS_CD'] =='ALL') echo "selected";?>>전체</option>
+                                                                        <option value="FCL" <?php if($row2['SA_CLS_CD'] =='FCL') echo "selected";?>>FCL</option>
+                                                                        <option value="LCL" <?php if($row2['SA_CLS_CD'] =='LCL') echo "selected";?>>LCL</option>
+                                                                        <option value="BULK" <?php if($row2['SA_CLS_CD'] =='BULK') echo "selected";?>>BULK</option>
+                                                                        <option value="AIR" <?php if($row2['SA_CLS_CD'] =='AIR') echo "selected";?>>AIR</option>
+                                                                    </select>
+                                                                    <select class="form-control input-sm" name="update_sa_cls_cd" id="update_sa_cls_cd2" style="<?php if($row2['BID_CLS_CD'] =='RGLR') echo "display:block;"; else echo "display:none;"?>">
+                                                                        <option value="ALL" <?php if($row2['SA_CLS_CD'] =='ALL') echo "selected";?>>전체</option>
+                                                                        <option value="SEA" <?php if($row2['SA_CLS_CD'] =='SEA') echo "selected";?>>SEA</option>
+                                                                        <option value="AIR" <?php if($row2['SA_CLS_CD'] =='AIR') echo "selected";?>>AIR</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div class="form-group">
+                                                                <div class="col-xs-3 text-right" style="margin-top: 5px;"><strong>수수료구분</strong></div>
+                                                                <div class="col-xs-9" style="margin-top: 5px;">낙찰수수료</div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div class="form-group">
+                                                                <div class="col-xs-3 text-right" style="margin-top: 5px;"><strong>수수료</strong></div>
+                                                                <div class="col-xs-9">                                                                    
+                                                                    <input type="number" name="update_fee_value" id="update_fee_value" class="form-control text-right input-sm" placeholder="0" value="<?php echo $row2['FEE_VAL']?>" />
+                                                                    <select class="form-control input-sm" name="update_unit_rate" id="update_unit_rate">
+                                                                        <option value="01" <?php if($row2['UNIT_RATE'] =='01') echo "selected";?>>%</option>
+                                                                        <option value="02" <?php if($row2['UNIT_RATE'] =='02') echo "selected";?>>원(금액)</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>                                                    
+                                                    <tr>
+                                                        <td>
+                                                            <div class="form-group">
+                                                                <div class="col-xs-3 text-right" style="margin-top: 5px;"><strong>적용일자</strong></div>
+                                                                <div class="col-xs-9">
+                                                                    <input type="text" name="update_aply_ymd" id="update_aply_ymd" class="form-control date-range  text-center input-sm" value="<?php echo $row2['APLY_YMD']?>"/>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>
+                                                            <div class="form-group">
+                                                                <div class="col-xs-3 text-right" style="margin-top: 5px;"><strong>종료일자</strong></div>
+                                                                <div class="col-xs-9">
+                                                                    <input type="text" name="update_expr_ymd" id="update_expr_ymd" class="form-control date-range text-center input-sm" value="<?php echo $row2['EXPR_YMD']?>"/>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                </table>
+                                            </div>
+
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">취소</button>
+                                    <button type="button" name="submit_update" id="submit_update" class="btn btn-info" onclick="fee_update()">수정</button>
+
+                                </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!--  모달 수정 end -->
+
+<style>
+    .tableSclroll{
+        width: 100%
+        overflow: auto;
+    }
+    .tableSclroll table{
+        width: 100%;
+    }
+    #add_fee_value,  #update_fee_value {
+        max-width: 48%;
+        float: left;
+    }
+    #add_unit_rate, #update_unit_rate {
+        max-width: 48%;
+        float: right;
+    }
+</style>
+
+<script type="text/javascript">
+        //#=== Fees 추가 =========
+    function fee_insert(f) {
+        var add_comp_cd = $('#add_comp_cd').val();
+        var add_bid_knd = $('#add_bid_knd').val();        
+        var add_sa_cls_cd = $('#add_sa_cls_cd1').val();
+        if(add_bid_knd == "RGLR")
+            add_sa_cls_cd = $('#add_sa_cls_cd2').val();
+
+        var add_fee_value = $('#add_fee_value').val();
+        var add_unit_rate = $('#add_unit_rate').val();        
+        var add_aply_ymd = $('#add_aply_ymd').val();
+        var add_expr_ymd = $('#add_expr_ymd').val();
+        
+        if(add_fee_value == '' || add_fee_value == null){
+            swal( '업체명 선택이 필요합니다.' );
+            return false;
+        }         
+        if(add_fee_value == '' || add_fee_value == null){
+            swal( '수수료 입력이 필요합니다.' );
+            return false;
+        }   
+        if(add_aply_ymd == '' || add_aply_ymd == null){
+            swal( '적용일자 입력이 필요합니다.' );
+            return false;
+        }
+        if(add_expr_ymd == '' || add_expr_ymd == null){
+            swal( '종료일자 입력이 필요합니다.' );
+            return false;
+        }
+
+        $.ajax({
+            url:"./php/ajax_insert_fees.php",
+            method:"POST",
+            data:{  
+                    comp_cd: add_comp_cd,
+                    bid_knd : add_bid_knd,
+                    sa_cls_cd : add_sa_cls_cd,
+                    fee_value : add_fee_value,
+                    unit_rate : add_unit_rate,                    
+                    aply_ymd : add_aply_ymd,
+                    expr_ymd : add_expr_ymd
+            },
+            success:function(data)
+            {
+                // swal('추가 완료',data,'info');
+                // setTimeout(function() {
+                    window.location.href = "manageFees.html";
+                // }, 1500);
+            }
+            ,  //success
+            error: function (request,status,error) {
+                alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+            } //error
+        });
+    }
+    //#=== Fees 수정 =========
+    function fee_update(f) {
+        var up_idx = $('#up_idx').val();
+        var update_comp_cd = $('#update_comp_cd').val();
+        var update_bid_knd = $('#update_bid_knd').val();        
+        var update_sa_cls_cd = $('#update_sa_cls_cd1').val();
+        if(update_bid_knd == "RGLR")
+            update_sa_cls_cd = $('#update_sa_cls_cd2').val();
+
+        var update_fee_value = $('#update_fee_value').val();
+        var update_unit_rate = $('#update_unit_rate').val();        
+        var update_aply_ymd = $('#update_aply_ymd').val();
+        var update_expr_ymd = $('#update_expr_ymd').val();
+        
+        if(update_fee_value == '' || update_fee_value == null){
+            swal( '수수료 입력이 필요합니다.' );
+            return false;
+        }   
+        if(update_aply_ymd == '' || update_aply_ymd == null){
+            swal( '적용일자 입력이 필요합니다.' );
+            return false;
+        }
+        if(update_expr_ymd == '' || update_expr_ymd == null){
+            swal( '종료일자 입력이 필요합니다.' );
+            return false;
+        }
+
+        $("#myModal_update").css("display", "none");
+
+        $.ajax({
+            url:"./php/ajax_update_fees.php",
+            method:"POST",
+            data:{
+                up_idx : up_idx,
+                comp_cd: update_comp_cd,
+                bid_knd : update_bid_knd,
+                sa_cls_cd : update_sa_cls_cd,
+                fee_value : update_fee_value,
+                unit_rate : update_unit_rate,                    
+                aply_ymd : update_aply_ymd,
+                expr_ymd : update_expr_ymd
+            },
+            success:function(data)
+            {                
+                swal({
+                        title: "수정 완료",
+                        text: data,
+                        //text: data,
+                        icon: "success",
+                    }).then(function () {                                
+                        window.location.href = "manageFees.html";                                
+                    });
+            }
+            ,  //success
+            error: function (request,status,error) {
+                alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+            } //error
+        });
+    }
+    //#=== Fees 삭제 =========
+    function fees_list_delete(f) {
+        var fupdate = document.fupdate;
+
+        if (!is_checked("chk[]")) {
+            swal("삭제 하실 항목을 하나 이상 선택하세요.");
+            return false;
+        }
+
+        $.ajaxSettings.traditional = true;
+
+        var checkboxValues = [];
+        $("input[name='chk[]']:checked").each(function(i) {
+            checkboxValues.push($(this).val());
+        });
+
+        // object를 string형태로 변환
+        objData = JSON.stringify(checkboxValues);
+
+        swal({
+            title: "수수료요율 삭제",
+            text: "수수료요율을 삭제 하시겠습니까?",
+            icon: "warning",
+            buttons: ["취소", "삭제"],
+            dangerMode: true,
+        }) .then(function(result) {
+            if (result) {
+
+                $.ajax({
+                    type: 'POST',
+                    url: './php/ajax_delete_fees.php',
+                    data: {
+                        "chk": objData
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        var str_data = data.split('|');
+                        var rslt = str_data[0];
+                        var msg = str_data[1];
+
+                        if (rslt == 'ok') {
+                            swal({
+                                title: "삭제 완료",
+                                text: msg,
+                                //text: data,
+                                icon: "success",
+                            }).then(function () {                                
+                                window.location.href = "manageFees.html";                                
+                            });
+                        } else {
+                            swal({
+                                title: "삭제 실패",
+                                text: data,
+                                icon: "warning",
+                            })
+                                .then(function () {
+                                    window.location.href = "manageFees.html";
+                                });
+                        }
+
+                    },  //success
+                    error: function (request,status,error) {
+                        alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                    } //error
+
+                });    //end ajax
+
+            } 
+            // else {
+            //     swal({
+            //         title: "취소 처리",
+            //         text: "취소 되었습니다.",
+            //         icon: "info",
+            //     });
+            // }
+        });
+    }  
+    // member_stop_submit
+
+    $(function () {
+        $.fn.datepicker.dates['kr'] = {
+            days: ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"],
+            daysShort: ["일", "월", "화", "수", "목", "금", "토", "일"],
+            daysMin: ["일", "월", "화", "수", "목", "금", "토", "일"],
+            months: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
+            monthsShort: ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
+        };
+
+        $('#add_aply_ymd').datepicker({
+            calendarWeeks: false,
+            todayHighlight: true,
+            autoclose: true,
+            toggleActive: true,
+            format: "yyyy-mm-dd",
+            language: "kr"
+       });
+
+        $('#add_expr_ymd').datepicker({
+            calendarWeeks: false,
+            todayHighlight: true,
+            autoclose: true,
+            format: "yyyy-mm-dd",
+            language: "kr"
+       });
+
+        $('#update_aply_ymd').datepicker({
+            calendarWeeks: false,
+            todayHighlight: true,
+            autoclose: true,
+            toggleActive: true,
+            format: "yyyy-mm-dd",
+            language: "kr"
+        });
+
+        $('#update_expr_ymd').datepicker({
+            calendarWeeks: false,
+            todayHighlight: true,
+            autoclose: true,
+            format: "yyyy-mm-dd",
+            language: "kr"
+        });
+    });
+
+    //질문 업데이트 모달 띄우기...###############
+    function update_modal(q_idx) {
+        window.location.href = "manageFees.html?x_idx=<?php echo $x_idx?>&target_idx="+q_idx;
+    }
+
+    function ChangeKind(obj) {
+        if(obj.value == "SPOT") {
+            $("#add_sa_cls_cd1").css("display", "block");
+            $("#add_sa_cls_cd2").css("display", "none");
+        }
+        else {
+            $("#add_sa_cls_cd1").css("display", "none");
+            $("#add_sa_cls_cd2").css("display", "block");
+        }
+    }
+
+    function UChangeKind(obj) {
+        if(obj.value == "SPOT") {
+            $("#update_sa_cls_cd1").css("display", "block");
+            $("#update_sa_cls_cd2").css("display", "none");
+        }
+        else {
+            $("#update_sa_cls_cd1").css("display", "none");
+            $("#update_sa_cls_cd2").css("display", "block");
+        }
+    }
+</script>
+
+<?php if($target_idx) { ?>
+    <script type="text/javascript">
+        $(window).on('load',function(){
+            $('#myModal_update').modal('show');
+            $('.modal-title_update').html('수수료요율 수정');
+        });
+    </script>
+<?php } ?>
+
+<?php
+    include_once ('./include/footer.html');
+?>

@@ -1,0 +1,133 @@
+<?php
+session_start();
+include_once('lib/common.php');
+
+// 관리자 세션 확인
+if(!isset($_SESSION['ADMIN_GRPNAME'])) {
+    alertMove('로그인 후 이용해 주세요', "index.html");
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <?php
+    include_once ('./include/head.html');
+    ?>
+
+</head>
+<body class="fixed-left">
+
+<!-- Begin page -->
+<div id="wrapper">
+
+    <?php
+    include_once ('./include/menu.html');
+    ?>
+
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+    <div class="content-page">
+        <!-- Start content -->
+        <div class="content">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-6 col-xs-12">
+                        <div class="card-box p-b-0">
+                            <h5><b>기본 정보</b></h5>
+
+                            <div class="table-responsive p-0">
+                                <table class="table table-bordered text-left">
+                                    <tbody>
+                                    <tr>
+                                        <th class="info middle-align">기업명</th>
+                                        <td colspan="3">
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="userRadio1" value="option1" name="userRadio" checked>
+                                                <label for="userRadio1"> 법인/개인사업자 </label>
+                                            </div>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="userRadio2" value="option2" name="userRadio">
+                                                <label for="userRadio2"> 일반개인 </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="info middle-align">사업자번호</th>
+                                        <td><input type="text" class="form-control input-sm" placeholder=""></td>
+                                        <th class="info middle-align">대표자명</th>
+                                        <td><input type="text" class="form-control input-sm" placeholder=""></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="info middle-align" width="150">대표자명</th>
+                                        <td colspan="3"><input type="text" class="form-control input-sm" placeholder=""></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="info middle-align">업종</th>
+                                        <td><input type="text" class="form-control input-sm" placeholder=""></td>
+                                        <th class="info middle-align">업태</th>
+                                        <td><input type="text" class="form-control input-sm" placeholder=""></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="info middle-align" width="150">주소</th>
+                                        <td colspan="3">
+                                            <input type="text" class="form-control input-sm form-control m-b-5 width-30" placeholder="">
+                                            <div class="form-inline">
+                                                <input type="text" class="form-control input-sm form-control width-40" placeholder="">
+                                                <input type="text" class="form-control input-sm form-control width-50" placeholder="">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="info middle-align" width="150">영업사원</th>
+                                        <td colspan="3">
+                                            <select class="form-control">
+                                                <option></option>
+                                                <option></option>
+                                                <option></option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="info middle-align" width="150">청구담당자</th>
+                                        <td colspan="3"><input type="text" class="form-control input-sm" placeholder=""></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="info middle-align" width="150">E-MAIL</th>
+                                        <td colspan="3"><input type="text" class="form-control input-sm" placeholder=""></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="info middle-align" width="150">전화번호</th>
+                                        <td colspan="3"><input type="text" class="form-control input-sm" placeholder=""></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="info middle-align" width="150">팩스번호</th>
+                                        <td colspan="3"><input type="text" class="form-control input-sm" placeholder=""></td>
+                                    </tr>
+                                    <tr>
+                                        <th class="info middle-align" width="150">핸드폰번호</th>
+                                        <td colspan="3"><input type="text" class="form-control input-sm" placeholder=""></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+
+                                <div class="form-group">
+                                    <div class="text-center">
+                                        <button type="reset" class="btn btn-inverse waves-effect m-l-5">
+                                            취소
+                                        </button>
+                                        <button type="submit" class="btn btn-primary waves-effect m-l-5 waves-light">
+                                            저장
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div> <!-- container -->
+                </div> <!-- content -->
+
+
+<?php
+    include_once ('./include/footer.html');
+?>

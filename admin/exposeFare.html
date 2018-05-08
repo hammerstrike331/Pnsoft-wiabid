@@ -1,0 +1,488 @@
+<?php
+session_start();
+include_once('lib/common.php');
+
+// 관리자 세션 확인
+if(!isset($_SESSION['ADMIN_GRPNAME'])) {
+    alertMove('로그인 후 이용해 주세요', "index.html");
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <?php
+    include_once ('./include/head.html');
+    ?>
+
+</head>
+<body class="fixed-left">
+
+<!-- Begin page -->
+<div id="wrapper">
+
+    <?php
+    include_once ('./include/menu.html');
+    ?>
+
+    <!-- ============================================================== -->
+    <!-- Start right Content here -->
+    <!-- ============================================================== -->
+<?php
+//  일반쿼리
+    $sql_common = " FROM `tcmn_fwd_trf` ";
+    $sql_search = " where (1) ";
+    $sql_order = " ORDER BY INP_YMD desc ";
+
+###################################################################
+// 검색 옵션
+    $SA_CLS_CD = addslashes($_GET['SA_CLS_CD']);
+    $CARRIER = addslashes($_GET['CARRIER']);
+    $POL_CD = addslashes($_GET['POL_CD']);
+    $POD_CD = addslashes($_GET['POD_CD']);
+
+    $SA_CLS_CD = clean_xss_tags($SA_CLS_CD);
+    $CARRIER = clean_xss_tags($CARRIER);
+    $POL_CD = clean_xss_tags($POL_CD);
+    $POD_CD = clean_xss_tags($POD_CD);
+    
+    if(!$SA_CLS_CD) {
+        $SA_CLS_CD = "SEA";
+    }
+
+    $sql_search .= " and SA_CLS_CD = '{$SA_CLS_CD}'";
+
+    if($CARRIER) {
+        $sql_search .= " and INP_USR LIKE '%{$CARRIER}%'";
+    }
+
+    if($POL_CD) {
+        $sqlPOL = "SELECT LOC_CD FROM `tcmn_unloc_code`  WHERE LOC_NM = '{$POL_CD}'";
+        $POL_CD_ = sql_fetch($sqlPOL);
+        $POL_CD_ = $POL_CD_[LOC_CD];
+        $sql_search .= " and POL_CD = '{$POL_CD_}'";
+    }
+
+    if($POD_CD) {
+        $sqlPOD = "SELECT LOC_CD FROM `tcmn_unloc_code`  WHERE LOC_NM = '{$POD_CD}'";
+        $POD_CD_ = sql_fetch($sqlPOD);
+        $POD_CD_ = $POD_CD_[LOC_CD];
+        $sql_search .= " and POD_CD = '{$POD_CD_}'";
+    }
+
+###################################################################
+
+    $sql1 = "select count(*) as cnt {$sql_common}";
+    $row1 = sql_fetch($sql1);
+    $total_member = $row1['cnt'];
+
+    $sql = "select count(*) as cnt {$sql_common} {$sql_search} ";
+    $row = sql_fetch($sql);
+    $total_count = $row['cnt'];
+
+    $pageNum = (int)$_GET['pageNum'];
+
+    if(!$pageNum) {
+        $rows = 10;
+    } else {
+        $rows = $pageNum;
+    }
+
+    $qstr = "faq_typ_cd=".$faq_typ_cd."&use_yn=".$use_yn."&pageNum=".$pageNum."&page=".$page."&SA_CLS_CD=".$SA_CLS_CD."&CARRIER=".$CARRIER."&POL_CD=".$POL_CD."&POD_CD=".$POD_CD;
+
+    $page = (int)$_GET['page'];
+
+    $total_page  = ceil($total_count / $rows);  // 전체 페이지 계산
+    if ($page < 1) { $page = 1; } // 페이지가 없으면 첫 페이지 (1 페이지)
+    $from_record = ($page - 1) * $rows; // 시작 열을 구함
+
+    $list_page_rows = $rows;
+    //순번
+    $list_num = $total_count - ($page - 1) * $list_page_rows;
+
+    $sql = " SELECT * {$sql_common} {$sql_search} {$sql_order} limit {$from_record}, {$rows} ";
+    $result = sql_query($sql);
+    // print_r($sql);exit;
+?>
+
+    <div class="content-page">
+        <!-- Start content -->
+        <div class="content">
+            <div class="container">
+                <!--해운-->
+                <!--해운-->
+                <div class="row">
+                    <div class="col-lg-9 col-xs-12">
+                        <div class="card-box p-b-0">
+                            <h5 class="m-b-10"><b>운임 검색</b></h5>
+                            <hr class="m-t-0">
+                            <div class="row">
+                                <form class="form-horizontal group-border-dashed" name="search">
+                                    <input type="hidden" name="TEMP_POL_CD" value="<?php echo $POL_CD; ?>">
+                                    <input type="hidden" name="TEMP_POD_CD" value="<?php echo $POD_CD; ?>">
+                                    <div class="col-sm-12">
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">구분</label>
+                                                    <div class="col-sm-5">
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="Radio1" value="SEA" name="SA_CLS_CD" <?php if ($SA_CLS_CD=='SEA') { echo 'checked'; }?> >
+                                                            <label for="Radio1"> 해운 </label>
+                                                        </div>
+                                                        <div class="radio radio-inline">
+                                                            <input type="radio" id="Radio2" value="AIR" name="SA_CLS_CD" <?php if ($SA_CLS_CD=='AIR') { echo 'checked'; }?> >
+                                                            <label for="Radio2"> 항공 </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-3 control-label">Carrier</label>
+                                                    <div class="col-sm-5">
+                                                        <input type="text" class="form-control" name="CARRIER" value="<?php echo $CARRIER;?>"/>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">선적항</label>
+                                                    <div class="col-sm-5 port">
+                                                        <input type="text" name="POL_CD" class="form-control searchPort" id="seaPOL_CD" placeholder="선적항" data-type="SEA" data-path="<?php echo RT_PATH; ?>" value="<?php echo $POL_CD; ?>" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-3 control-label">양하(도착)항</label>
+                                                    <div class="col-sm-5 port">
+                                                        <input type="text" name="POD_CD" class="form-control searchPort" id="seaPOD_CD" placeholder="양하항" data-type="SEA" data-path="<?php echo RT_PATH; ?>" value="<?php echo $POD_CD; ?>" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="form-group">
+                                                    <div class="col-sm-offset-5 col-sm-7 m-t-15">
+                                                        <button type="submit" class="btn btn-primary waves-effect waves-light">
+                                                            검색
+                                                        </button>
+                                                        <button type="reset" class="btn btn-inverse waves-effect m-l-5" onclick="location.href='exposeFare.html'">
+                                                            초기화
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-xs-12">
+                        <div class="alert alert-info text-center p-30">
+                            <h4><strong>해운</strong> 운임 노출</h4>
+                            <p>노출 허용시: 메인 > Freight Rate에 노출됨</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card-box p-b-0">
+                            <h5><b>운임 목록</b><span class="text-muted font-13 m-l-15"> 검색결과 <span class="font-bold text-dark"><?php echo number_format($total_count)?></span> 건</span></h5>
+                            <hr class="m-t-0">
+                            <div class="table-responsive">
+                                <?php if ($SA_CLS_CD == "SEA") { ?>
+                                <table class="table table-bordered table-hover text-center middle">
+                                    <thead>
+                                        <tr class="bg-lightdark">
+                                            <th class="text-center">NO</th>
+                                            <th class="text-center">선적항</th>
+                                            <th class="text-center">양하항</th>
+                                            <th class="text-center">Carrier</th>
+                                            <th class="text-center">20</th>
+                                            <th class="text-center">40</th>
+                                            <th class="text-center">4HC</th>
+                                            <th class="text-center">T/Time</th>
+                                            <th class="text-center">노출여부</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                    <?php 
+                                    for ($i = 0; $row = sql_fetch_array($result); $i++) {
+                                        $num = $list_num - $i;
+
+                                        $p1_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$row[POL_CD]' ");
+                                        $p2_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$row[POD_CD]' ");
+
+                                        $c_type = array('-', 'fcl', 'lcl', 'bulk', 'air');
+                                        $type_i = $row['type'];
+                                        if ($row[CURR_CD] == "USD") {
+                                            $echo_cd = "$";
+                                        } elseif ($row[CURR_CD] == "KRW") {
+                                            $echo_cd = "₩";
+                                        } elseif ($row[CURR_CD] == "EUR") {
+                                            $echo_cd = "€";
+                                        } elseif ($row[CURR_CD] == "CNY") {
+                                            $echo_cd = "¥";
+                                        } elseif ($row[CURR_CD] == "JPY") {
+                                            $echo_cd = "¥";
+                                        }
+                                    ?>
+
+                                    <tr>
+                                        <td scope="row"><?php echo $num?></td>
+                                        <td><?php if(strlen($p1_h[LOC_NM]) > 45) echo substr($p1_h[LOC_NM], 0, 42)."..."; else echo $p1_h[LOC_NM];?>
+                                        </td>
+                                        <td><?php if(strlen($p2_h[LOC_NM]) > 45) echo substr($p2_h[LOC_NM], 0, 42)."..."; else echo $p2_h[LOC_NM];?>
+                                        </td>
+                                        <td><a href="<?php echo RT_PATH; ?>/html/my/my_info.html?tab=4&mb_id=<?php echo $row[INP_NO]; ?>"><?php echo $row[INP_USR] ?></a>
+                                        </td>
+                                        <td><?php echo  $echo_cd ?><?php echo  $row[TRF_20] ?></td>
+                                        <td><?php echo  $echo_cd ?><?php echo  $row[TRF_40] ?></td>
+                                        <td><?php echo  $echo_cd ?><?php echo  $row[TRF_4H] ?></td>
+                                        <td><?php echo  $row[TRS_DAYS_CNT] ?></td>
+                                        <td>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="DISP_YN<?php echo $row[SEQ]?>" value="Y" name="<?php echo $row[SEQ]?>" <?php  if($row[DISP_YN] == 'Y') echo "checked"; ?>>
+                                                <label for="DISP_YN<?php echo $row[SEQ]?>"> 허용</label>
+                                            </div>
+                                            <div class="radio radio-inline">
+                                                <input type="radio" id="DISP_YN_<?php echo $row[SEQ]?>" value="N" name="<?php echo $row[SEQ]?>" <?php  if($row[DISP_YN] == 'N') echo "checked"; ?>>
+                                                <label for="DISP_YN_<?php echo $row[SEQ]?>"> 허용안함 </label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?php  }//for?>
+                                    </tbody>
+                                </table>
+                                <?php } else if ($SA_CLS_CD == "AIR") {  ?>
+                                <table class="table table-bordered table-hover text-center middle">
+                                    <thead>
+                                    <tr class="bg-lightdark">
+                                        <th class="text-center">NO</th>
+                                        <th class="text-center">선적항</th>
+                                        <th class="text-center">도착항</th>
+                                        <th class="text-center">Carrier</th>
+                                        <th class="text-center">Min</th>
+                                        <th class="text-center">Nor</th>
+                                        <th class="text-center">+45</th>
+                                        <th class="text-center">+100</th>
+                                        <th class="text-center">+300</th>
+                                        <th class="text-center">+500</th>
+                                        <th class="text-center">+1000</th>
+                                        <th class="text-center">FCS</th>
+                                        <th class="text-center">SSC</th>
+                                        <th class="text-center">노출여부</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php 
+                                    for ($i = 0; $row = sql_fetch_array($result); $i++) {
+                                        $num = $list_num - $i;
+
+                                        $p1_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$row[POL_CD]' ");
+                                        $p2_h = sql_fetch("select * from tcmn_unloc_code where LOC_CD = '$row[POD_CD]' ");
+
+                                        $c_type = array('-', 'fcl', 'lcl', 'bulk', 'air');
+                                        $type_i = $row['type'];
+                                        if ($row[CURR_CD] == "USD") {
+                                            $echo_cd = "$";
+                                        } elseif ($row[CURR_CD] == "KRW") {
+                                            $echo_cd = "₩";
+                                        } elseif ($row[CURR_CD] == "EUR") {
+                                            $echo_cd = "€";
+                                        } elseif ($row[CURR_CD] == "CNY") {
+                                            $echo_cd = "¥";
+                                        } elseif ($row[CURR_CD] == "JPY") {
+                                            $echo_cd = "¥";
+                                        }
+                                    ?>
+                                        <tr>
+                                            <td scope="row"><?php echo $num?></td>
+                                            <td><?php if(strlen($p1_h[LOC_NM]) > 43) echo substr($p1_h[LOC_NM], 0, 43)."..."; else echo $p1_h[LOC_NM];?></td>
+                                            <td><?php if(strlen($p2_h[LOC_NM]) > 43) echo substr($p2_h[LOC_NM], 0, 43)."..."; else echo $p2_h[LOC_NM];?></td>
+                                            <td><a href="<?php echo RT_PATH; ?>/html/my/my_info.html?tab=5&mb_id=<?php echo $row[INP_NO]; ?>"><?php echo $row[INP_USR] ?></a>
+                                            </td>
+                                            <td><?php echo  $echo_cd ?><?php echo  $row[TRF_MIN] ?></td>
+                                            <td><?php echo  $echo_cd ?><?php echo  $row[TRF_N] ?></td>
+                                            <td><?php echo  $echo_cd ?><?php echo  $row[TRF_45] ?></td>
+                                            <td><?php echo  $echo_cd ?><?php echo  $row[TRF_100] ?></td>
+                                            <td><?php echo  $echo_cd ?><?php echo  $row[TRF_300] ?></td>
+                                            <td><?php echo  $echo_cd ?><?php echo  $row[TRF_500] ?></td>
+                                            <td><?php echo  $echo_cd ?><?php echo  $row[TRF_1000] ?></td>
+                                            <td><?php echo  $echo_cd ?><?php echo  $row[TRF_FSC] ?></td>
+                                            <td><?php echo  $echo_cd ?><?php echo  $row[TRF_SSC] ?></td>
+                                            <td>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="DISP_YN<?php echo $row[SEQ]?>" value="Y" name="<?php echo $row[SEQ]?>" <?php  if($row[DISP_YN] == 'Y') echo "checked"; ?>>
+                                                    <label for="DISP_YN<?php echo $row[SEQ]?>"> 허용</label>
+                                                </div>
+                                                <div class="radio radio-inline">
+                                                    <input type="radio" id="DISP_YN_<?php echo $row[SEQ]?>" value="N" name="<?php echo $row[SEQ]?>" <?php  if($row[DISP_YN] == 'N') echo "checked"; ?>>
+                                                    <label for="DISP_YN_<?php echo $row[SEQ]?>"> 허용안함 </label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php  }//for?>
+                                    </tbody>
+                                </table>
+                                <?php  }//if air?>
+                            </div>
+                            <div class="clearfix">
+                                <div class="pull-right">
+                                    <select class="form-control" size="1" name="pageNum" id="pageNum" onchange="viewCount(this.options[this.selectedIndex].value)">
+                                        <option <?php  if($pageNum=='10') echo "selected"; ?>>10</option>
+                                        <option <?php  if($pageNum=='25') echo "selected"; ?>>25</option>
+                                        <option <?php  if($pageNum=='50') echo "selected"; ?>>50</option>
+                                        <option <?php  if($pageNum=='100')  echo "selected"; ?>>100</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <?php echo get_paging2(5, $page, $total_page, $_SERVER['SCRIPT_NAME'].'?'.$qstr.'&amp;page='); ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- end row -->
+
+    <script type="text/javascript">
+        function viewCount(val) {
+            self.location = "<?php echo $_SERVER[PHP_SELF]?>?<?php echo  $qstr ?>&pageNum=" + val;
+        }
+        
+        var f = document.search;
+        
+        // if(f.TEMP_POL_CD.value){        
+        //     f.POL_CD.value = f.TEMP_POL_CD.value;       
+        // }
+        // if(f.TEMP_POD_CD.value){        
+        //     f.POD_CD.value = f.TEMP_POD_CD.value;       
+        // }
+
+        $(document).ready(function() {
+            $("td input[type=radio]").change(function() {
+                var SEQ = $(this).attr('name');
+                var value = $(this).val();
+
+                var params = "SEQ=" + SEQ + "&value=" + value +  "&type=fare";
+                $.ajax({
+                    url: "<?php echo RT_PATH; ?>/admin/php/ajax_update_fwd.php",
+                    type: "POST",
+                    data: params,
+                    success: function (result) {
+                        console.log(result);
+                    }
+                });
+            });
+
+            /////////////// 선적/양하항 search input //////////////////
+
+            $("input.searchPort").focusin(function(){
+                $(this).val("");
+                $(".popmenuCont").remove();
+            });
+            $("input.searchPort").focusout(function(){
+                setTimeout(function(){ $(".popmenuCont").remove(); }, 500);
+            });
+
+            $("input.searchPort").keyup(function() {
+                var text = $(this).val();
+                var type = $(this).data("type");
+                var path = $(this).data("path");
+                var self = $(this);
+
+                var params = "type=" + type + "&text=" + text;
+                $.ajax({
+                    url: path + "/php/ajax_get_port.php",
+                    type: "POST",
+                    data: params,
+                    success: function (result) {
+
+                        if (result) {
+                            $(".popmenuCont").remove();
+                            self.after(result);
+                        } else {
+                            
+                        }
+                    },
+                    error: function () {
+                        alert("에러 발생");
+                    }
+                });
+            });
+
+            $(document).on("click", ".port ul.popmenu li", function() {
+                var text = $(this).text();
+                $(this).parent().parent().prev().val(text);
+                $(".popmenuCont").remove();
+            });
+
+        });
+    </script>
+
+<style type="text/css">
+
+    /* popup menu */
+    ul.popmenu {
+        position: absolute;
+        right: 0;
+        top: 40px;
+        width: 50%;
+        max-height: 260px;
+        cursor: pointer;
+        background: #e6e9f0;
+        z-index: 5;
+        overflow: auto;
+        -webkit-box-shadow: 0 8px 14px 0 rgba(0,0,0,.1), 0 4px 15px 0 rgba(0,0,0,.15);
+        box-shadow: 0 8px 14px 0 rgba(0,0,0,.1), 0 4px 15px 0 rgba(0,0,0,.15);
+    }
+    ul.popmenu li {
+        position: relative;
+        display: block;
+        width: 93%;
+        padding: 0 10px;
+        border-bottom: 1px dotted #fff;
+        color: #000;
+        text-align: left;
+        -webkit-transition: all .3s;
+        transition: all .3s;
+        font-size: 13px;
+        margin: 0;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        word-wrap: normal;
+        overflow: hidden;
+    }
+    ul.popmenu li.selected, ul.popmenu li:hover,ul.popmenu li:first-child {
+        color: #fff;
+        background: #61ccfd;
+        padding-left: 20px;
+    } 
+    .port .popmenuCont { position: relative; top: 0; left: 0; }
+    .port ul.popmenu {
+        width: 200px;
+        top: 0;
+        left: 0;
+        padding: 0;
+    }
+    .port ul.popmenu li { width: 100%; }
+
+    @media (max-width: 767px) {
+        ul.popmenu {
+            top: 82px;
+            width: 100%;
+        }
+
+    }
+</style>
+<?php
+include_once ('./include/footer.html');
+?>
